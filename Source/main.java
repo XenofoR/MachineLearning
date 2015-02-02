@@ -1,8 +1,9 @@
 
 class main
 {
-	public static void main() throws Exception
+	public main() throws Exception
 	{
+		
 	}
 	
 }
