@@ -1,0 +1,8 @@
+MaxDepth: int
+NumTrees: int
+Numfeatures: int
+Sets: 87
+InputPath: path
+OutputPath : path
+Files: ish.arff, isg.arff etc,
+TestType: 1-3 //1 = active 2 = super, 3 = both
