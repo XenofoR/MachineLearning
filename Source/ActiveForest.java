@@ -7,12 +7,12 @@ public class ActiveForest extends RegressionForest {
 	}
 
 
-	void Run(String p_data) {
-		// TODO Auto-generated method stub
-		
+	double[] Run(String p_data) throws Exception {
+		double[] returnValue = new double[1]; //TODO: FIX SIZE
+		return returnValue;
 	}
 
-	void Train(String p_trainingData) {
+	void Train(String p_trainingData) throws Exception {
 		// TODO Auto-generated method stub
 		
 	}
