@@ -17,10 +17,11 @@ public class SupervisedForest extends RegressionForest {
 		
 		m_evaluator.crossValidateModel(m_forest, m_structure, 10, new Random(1));
 		
-		double[] values = new double[2];
+		double[] values = new double[3];
 		
 		values[0] = m_evaluator.meanAbsoluteError();
 		values[1] = m_evaluator.errorRate();
+		values[2] = m_forest.measureOutOfBagError();
 		return values;
 	}
 
