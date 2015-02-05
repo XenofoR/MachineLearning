@@ -1,18 +1,23 @@
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.Calendar;
 import java.util.Scanner;
 import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import java.text.SimpleDateFormat;
 public class TestEnvironment {
 	
 	private RegressionForest m_supervisedForest;
 	private RegressionForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_testSize;
 	String m_test;
-	String m_inputPath, m_outputPath;
+	String m_inputPath, m_outputPath, m_currentTest;
 	public TestEnvironment()
 	{
 		
@@ -21,24 +26,26 @@ public class TestEnvironment {
 	public void Init(String p_testFile) throws IOException
 	{
 		Path path = FileSystems.getDefault().getPath(p_testFile);
-
+		m_currentTest = path.getFileName().toString();
 		ProcessFile(path);
 		
 	}
 	
 	public void Run() throws Exception
 	{
+		double[] activeResults  = new double[2];
+		double[] supervisedResults = new double[2];
 		if(m_testType == 1)
 		{
 			m_activeForest = new ActiveForest(m_depth, m_trees, m_features);
 			for(int i = 0; i < m_testSize; i++)
-				m_activeForest.Train(m_inputPath + m_test);
+				activeResults = m_activeForest.Train(m_inputPath + m_test);
 		}
 		else if(m_testType == 2)
 		{
 			m_supervisedForest = new SupervisedForest(m_depth, m_trees, m_features);
 			for(int i = 0; i < m_testSize; i++)
-				m_supervisedForest.Train(m_inputPath + m_test);
+				supervisedResults = m_supervisedForest.Train(m_inputPath + m_test);
 		}
 		else if(m_testType ==3)
 		{
@@ -46,16 +53,43 @@ public class TestEnvironment {
 			m_supervisedForest = new SupervisedForest(m_depth, m_trees, m_features);
 			for(int i = 0; i < m_testSize; i++)
 			{
-				m_supervisedForest.Train(m_inputPath + m_test);
-				m_activeForest.Train(m_inputPath + m_test);
+				supervisedResults = m_supervisedForest.Train(m_inputPath + m_test);
+				activeResults = m_activeForest.Train(m_inputPath + m_test);
 			}
 		}
 		else
-			System.out.println("Invalid testType: " + m_testType);
+		{
+			System.out.println("Aborting! Invalid testType: " + m_testType);
+			return;
+		}
+		
+		WriteResultFile(activeResults, supervisedResults);
+		
 				
 	}
 	
-	
+	private void WriteResultFile(double[] p_activeRes, double[] p_supervisedRes) throws Exception
+	{
+		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
+		Calendar cal = Calendar.getInstance();
+		String target = m_outputPath +timeAndDate.format(cal.getTime())+ " "+ m_currentTest;
+		Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
+		
+		w.write("Dataset: " + m_test + "\n");
+		if(m_testType == 1 || m_testType == 3)
+		{
+			w.write("TestType: Active"  + "\n");
+			w.write("Mean absolute error(MAE): " +p_activeRes[0] + "\n");
+			w.write("Root mean squared error: " + p_activeRes[1] + "\n");
+		}
+		else if(m_testType == 2 || m_testType == 3)
+		{
+			w.write("TestType: Supervised" + "\n");
+			w.write("Mean absolute error(MAE): " +p_supervisedRes[0] + "\n");
+			w.write("Root mean squared error: " + p_supervisedRes[1] + "\n");
+		}
+		w.close();
+	}
 	private void ProcessFile(Path p_path) throws IOException
 	{
 		
