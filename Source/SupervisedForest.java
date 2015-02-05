@@ -1,6 +1,7 @@
-import java.io.File;
 import java.util.Iterator;
 import java.util.Random;
+
+import weka.classifiers.Evaluation;
 
 public class SupervisedForest extends RegressionForest {
 
@@ -8,14 +9,19 @@ public class SupervisedForest extends RegressionForest {
 		super(p_maxDepth, p_numTrees, p_features);
 	}
 
-	void Train(String p_data) throws Exception {
+	double[] Train(String p_data) throws Exception {
 		
 		ReadFile(p_data);
 		
-		String[] Options = new String[1];
+		m_evaluator = new Evaluation(m_structure);
 		
-		m_evaluator.crossValidateModel(m_forest, m_structure, 10, new Random(1), Options);
-
+		m_evaluator.crossValidateModel(m_forest, m_structure, 10, new Random(1));
+		
+		double[] values = new double[2];
+		
+		values[0] = m_evaluator.meanAbsoluteError();
+		values[1] = m_evaluator.errorRate();
+		return values;
 	}
 
 	double[] Run(String p_data) throws Exception {

@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
 import java.net.URI;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -10,7 +11,7 @@ public class TestEnvironment {
 	private RegressionForest m_supervisedForest;
 	private RegressionForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_testSize;
-	String[] m_test;
+	String m_test;
 	String m_inputPath, m_outputPath;
 	public TestEnvironment()
 	{
@@ -19,7 +20,8 @@ public class TestEnvironment {
 	
 	public void Init(String p_testFile) throws IOException
 	{
-		Path path = Paths.get(URI.create(p_testFile));
+		Path path = FileSystems.getDefault().getPath(p_testFile);
+
 		ProcessFile(path);
 		
 	}
@@ -30,13 +32,13 @@ public class TestEnvironment {
 		{
 			m_activeForest = new ActiveForest(m_depth, m_trees, m_features);
 			for(int i = 0; i < m_testSize; i++)
-				m_activeForest.Train(m_test[i]);
+				m_activeForest.Train(m_inputPath + m_test);
 		}
 		else if(m_testType == 2)
 		{
 			m_supervisedForest = new SupervisedForest(m_depth, m_trees, m_features);
 			for(int i = 0; i < m_testSize; i++)
-				m_supervisedForest.Train(m_test[i]);
+				m_supervisedForest.Train(m_inputPath + m_test);
 		}
 		else if(m_testType ==3)
 		{
@@ -44,8 +46,8 @@ public class TestEnvironment {
 			m_supervisedForest = new SupervisedForest(m_depth, m_trees, m_features);
 			for(int i = 0; i < m_testSize; i++)
 			{
-				m_supervisedForest.Train(m_test[i]);
-				m_activeForest.Train(m_test[i]);
+				m_supervisedForest.Train(m_inputPath + m_test);
+				m_activeForest.Train(m_inputPath + m_test);
 			}
 		}
 		else
@@ -56,7 +58,8 @@ public class TestEnvironment {
 	
 	private void ProcessFile(Path p_path) throws IOException
 	{
-		try (Scanner scanner = new Scanner(p_path, "utf-8"))
+		
+		try (Scanner scanner = new Scanner(p_path))
 		{
 			while(scanner.hasNextLine())
 				ProcessLine(scanner.nextLine());
@@ -65,9 +68,10 @@ public class TestEnvironment {
 	}
 	private void ProcessLine(String p_line)
 	{
+
 		//http://www.javapractices.com/topic/TopicAction.do?Id=42s
 		Scanner scanner  = new Scanner(p_line);
-		scanner.useDelimiter(":");
+		scanner.useDelimiter("=");
 		if(scanner.hasNext())
 		{
 			String id = scanner.next();
@@ -84,21 +88,17 @@ public class TestEnvironment {
 				break;
 			case("Sets"):
 				m_testSize = scanner.nextInt();
-				m_test = new String[m_testSize];
 				break;
 			case("InputPath"):
 				m_inputPath = scanner.next();
 				break;
 			case("OutputPath"):
-				m_inputPath = scanner.next();
+				m_outputPath = scanner.next();
 				break;
 			case("Files"):
-				scanner.useDelimiter(",");
-				for(int i  = 0; i < m_testSize; i++)
-				{
-					m_test[i] = scanner.next();
-				}
-				scanner.useDelimiter(":");
+
+				m_test = scanner.next();
+				scanner.useDelimiter("=");
 				break;
 			case("TestType"):
 				m_testType = scanner.nextInt();

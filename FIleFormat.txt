@@ -1,6 +1,6 @@
 MaxDepth: int
 NumTrees: int
-Numfeatures: int
+NumFeatures: int
 Sets: 87
 InputPath: path
 OutputPath : path

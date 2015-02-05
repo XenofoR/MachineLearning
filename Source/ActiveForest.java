@@ -12,9 +12,14 @@ public class ActiveForest extends RegressionForest {
 		return returnValue;
 	}
 
-	void Train(String p_trainingData) throws Exception {
-		// TODO Auto-generated method stub
+	double[] Train(String p_trainingData) throws Exception {
 		
+		
+		double[] values = new double[2];
+		
+		values[0] = m_evaluator.meanAbsoluteError();
+		values[1] = m_evaluator.errorRate();
+		return values;
 	}
 
 	
