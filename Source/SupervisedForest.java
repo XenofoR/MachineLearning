@@ -21,6 +21,7 @@ public class SupervisedForest extends RegressionForest {
 		
 		values[0] = m_evaluator.meanAbsoluteError();
 		values[1] = m_evaluator.errorRate();
+		
 		return values;
 	}
 

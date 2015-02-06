@@ -3,7 +3,7 @@ import java.io.File;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.classifiers.trees.RandomForest;
-import weka.classifiers.Evaluation;
+import weka.classifiers.Evaluation;;
 
 public abstract class RegressionForest 
 {
@@ -22,10 +22,6 @@ public abstract class RegressionForest
 		m_loader = new Loader();
 	}
 	
-	public String GetResult()
-	{
-		return "hai";
-	}
 	
 	abstract double[] Train(String p_data) throws Exception; 
 	
