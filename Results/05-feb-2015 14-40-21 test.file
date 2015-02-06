@@ -1,4 +1,0 @@
-Dataset: concrete_slump.csv
-TestType: Supervised
-Mean absolute error(MAE): 2.887527254199413
-Root mean squared error: 3.8989179373375835
