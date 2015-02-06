@@ -33,28 +33,27 @@ public class TestEnvironment {
 	
 	public void Run() throws Exception
 	{
-		double[] activeResults  = new double[3];
-		double[] supervisedResults = new double[3];
-		if(m_testType == 1)
+		
+		String[] activeResults = new String[2];
+		String[] supervisedResults = new String[2];
+		if(m_testType == 1 || m_testType == 3)
 		{
 			m_activeForest = new ActiveForest(m_depth, m_trees, m_features);
-			for(int i = 0; i < m_testSize; i++)
-				activeResults = m_activeForest.Train(m_inputPath + m_test);
-		}
-		else if(m_testType == 2)
-		{
-			m_supervisedForest = new SupervisedForest(m_depth, m_trees, m_features);
-			for(int i = 0; i < m_testSize; i++)
-				supervisedResults = m_supervisedForest.Train(m_inputPath + m_test);
-		}
-		else if(m_testType ==3)
-		{
-			m_activeForest = new ActiveForest(m_depth, m_trees, m_features);
-			m_supervisedForest = new SupervisedForest(m_depth, m_trees, m_features);
+			m_activeForest.SetData(m_inputPath + m_test);
 			for(int i = 0; i < m_testSize; i++)
 			{
-				supervisedResults = m_supervisedForest.Train(m_inputPath + m_test);
-				activeResults = m_activeForest.Train(m_inputPath + m_test);
+				activeResults[0] = m_activeForest.CrossValidate();
+				activeResults[1] = m_activeForest.Train();
+			}
+		}
+		else if(m_testType == 2 || m_testType == 3)
+		{
+			m_supervisedForest = new SupervisedForest(m_depth, m_trees, m_features);
+			m_supervisedForest.SetData(m_inputPath + m_test);
+			for(int i = 0; i < m_testSize; i++)
+			{
+				supervisedResults[0] = m_supervisedForest.CrossValidate();
+				supervisedResults[1] = m_supervisedForest.Train();
 			}
 		}
 		else
@@ -68,7 +67,7 @@ public class TestEnvironment {
 				
 	}
 	
-	private void WriteResultFile(double[] p_activeRes, double[] p_supervisedRes) throws Exception
+	private void WriteResultFile(String[] p_activeRes, String[] p_supervisedRes) throws Exception
 	{
 		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
 		Calendar cal = Calendar.getInstance();
@@ -78,17 +77,15 @@ public class TestEnvironment {
 		w.write("Dataset: " + m_test + "\n");
 		if(m_testType == 1 || m_testType == 3)
 		{
-			w.write("TestType: Active"  + "\n");
-			w.write("Mean absolute error(MAE): " +p_activeRes[0] + "\n");
-			w.write("Root mean squared error: " + p_activeRes[1] + "\n");
-			w.write("Out-of-bag error: " + p_supervisedRes[2] + "\n");
+			w.write("TestType: Active"  + "\n\n");
+			w.write("====Crossvalidation results==== "  +p_activeRes[0] + "\n");
+			w.write("====Training results====" + "\n"+ p_activeRes[1] + "\n");
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{
-			w.write("TestType: Supervised" + "\n");
-			w.write("Mean absolute error(MAE): " +p_supervisedRes[0] + "\n");
-			w.write("Root mean squared error: " + p_supervisedRes[1] + "\n");
-			w.write("Out-of-bag error: " + p_supervisedRes[2] + "\n");
+			w.write("TestType: Supervised" + "\n\n" );
+			w.write("====Crossvalidation results==== " +p_supervisedRes[0] + "\n");
+			w.write("====Training results====" + "\n"+ p_supervisedRes[1] + "\n");
 		}
 		w.close();
 	}
