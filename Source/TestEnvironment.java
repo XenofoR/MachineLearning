@@ -33,8 +33,8 @@ public class TestEnvironment {
 	
 	public void Run() throws Exception
 	{
-		double[] activeResults  = new double[2];
-		double[] supervisedResults = new double[2];
+		double[] activeResults  = new double[3];
+		double[] supervisedResults = new double[3];
 		if(m_testType == 1)
 		{
 			m_activeForest = new ActiveForest(m_depth, m_trees, m_features);
@@ -81,12 +81,14 @@ public class TestEnvironment {
 			w.write("TestType: Active"  + "\n");
 			w.write("Mean absolute error(MAE): " +p_activeRes[0] + "\n");
 			w.write("Root mean squared error: " + p_activeRes[1] + "\n");
+			w.write("Out-of-bag error: " + p_supervisedRes[2] + "\n");
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{
 			w.write("TestType: Supervised" + "\n");
 			w.write("Mean absolute error(MAE): " +p_supervisedRes[0] + "\n");
 			w.write("Root mean squared error: " + p_supervisedRes[1] + "\n");
+			w.write("Out-of-bag error: " + p_supervisedRes[2] + "\n");
 		}
 		w.close();
 	}
