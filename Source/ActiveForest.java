@@ -6,22 +6,24 @@ public class ActiveForest extends RegressionForest {
 		// TODO Auto-generated constructor stub
 	}
 
+	void SetData(String p_data)
+	{
+		
+	}
 
-	double[] Run(String p_data) throws Exception {
+	double[] Run() throws Exception {
 		double[] returnValue = new double[1]; //TODO: FIX SIZE
 		return returnValue;
 	}
 
-	double[] Train(String p_trainingData) throws Exception {
+	String Train() throws Exception {
 		
-		
-		double[] values = new double[2];
-		
-		values[0] = m_evaluator.meanAbsoluteError();
-		values[1] = m_evaluator.errorRate();
-		return values;
+		return "Not ready yet";
 	}
 
-	
+	String CrossValidate() throws Exception
+	{
+		return "Not ready yet";
+	}
 
 }
