@@ -175,7 +175,7 @@ public class TestEnvironment {
 	{
 		Instances[] returnStructure = new Instances[2];
 		
-		Instances tempStructure = p_structure; //Need a temporary structure so that we can remove instances that have been selected
+		Instances tempStructure = new Instances(p_structure); //Need a temporary structure so that we can remove instances that have been selected
 		
 		int numLabled = (int)(m_alSplitPercentage * p_structure.numInstances());
 		
@@ -191,9 +191,8 @@ public class TestEnvironment {
 			returnStructure[0].add(selected);
 			tempStructure.remove(j);
 		}
-		int i = tempStructure.numAttributes()-1;
-		tempStructure.deleteAttributeAt(tempStructure.numAttributes());
-		
+		tempStructure.setClassIndex(-1); //This makes weka treat the data as unlabeled
+		System.out.println(tempStructure.toString());
 		returnStructure[1] = tempStructure;
 		
 		return returnStructure;
