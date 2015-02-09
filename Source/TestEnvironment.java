@@ -192,7 +192,7 @@ public class TestEnvironment {
 			tempStructure.remove(j);
 		}
 		tempStructure.setClassIndex(-1); //This makes weka treat the data as unlabeled
-		System.out.println(tempStructure.toString());
+		
 		returnStructure[1] = tempStructure;
 		
 		return returnStructure;
