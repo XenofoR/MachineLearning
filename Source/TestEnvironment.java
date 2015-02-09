@@ -11,8 +11,13 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import weka.core.Instances;
+import weka.core.Instance;
+
+import weka.classifiers.Evaluation;
 public class TestEnvironment {
-	
+	private Loader m_loader;
+	private Instances m_structure;
 	private RegressionForest m_supervisedForest;
 	private RegressionForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_testSize;
@@ -29,6 +34,8 @@ public class TestEnvironment {
 		m_currentTest = path.getFileName().toString();
 		ProcessFile(path);
 		
+		m_loader = new Loader();
+		
 	}
 	
 	public void Run() throws Exception
@@ -36,10 +43,11 @@ public class TestEnvironment {
 		
 		String[] activeResults = new String[2];
 		String[] supervisedResults = new String[2];
+		CreateDataStructure(m_inputPath + m_test);
 		if(m_testType == 1 || m_testType == 3)
 		{
 			m_activeForest = new ActiveForest(m_depth, m_trees, m_features);
-			m_activeForest.SetData(m_inputPath + m_test);
+			m_activeForest.SetData(m_structure);
 			for(int i = 0; i < m_testSize; i++)
 			{
 				activeResults[0] = m_activeForest.CrossValidate();
@@ -49,7 +57,7 @@ public class TestEnvironment {
 		else if(m_testType == 2 || m_testType == 3)
 		{
 			m_supervisedForest = new SupervisedForest(m_depth, m_trees, m_features);
-			m_supervisedForest.SetData(m_inputPath + m_test);
+			m_supervisedForest.SetData(m_structure);
 			for(int i = 0; i < m_testSize; i++)
 			{
 				supervisedResults[0] = m_supervisedForest.CrossValidate();
@@ -143,6 +151,25 @@ public class TestEnvironment {
 		}
 		scanner.close();
 		
+	}
+	
+	private void CreateDataStructure(String p_file) throws Exception
+	{
+		File file = new File(p_file);
+				
+		m_loader.setFile(file);
+				
+		m_structure = m_loader.getStructure();
+				
+		m_structure.setClassIndex(m_structure.numAttributes() - 1);
+
+	}
+	
+	private Instances[] CreateUnlabledDataStructure(Instances p_structure)
+	{
+		Instances[] returnStructure = new Instances[2];
+		
+		return returnStructure;
 	}
 
 }

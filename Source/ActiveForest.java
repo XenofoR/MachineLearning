@@ -1,3 +1,5 @@
+import weka.core.Instances;
+
 
 public class ActiveForest extends RegressionForest {
 
@@ -5,8 +7,12 @@ public class ActiveForest extends RegressionForest {
 		super(p_maxDepth, p_numTrees, p_features);
 		// TODO Auto-generated constructor stub
 	}
-
-	void SetData(String p_data)
+	
+	void SetData(Instances p_data)
+	{
+		
+	}
+	void SetData(Instances p_labledData, Instances p_unlabledData)throws Exception
 	{
 		
 	}

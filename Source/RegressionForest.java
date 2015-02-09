@@ -8,7 +8,6 @@ import weka.classifiers.Evaluation;
 public abstract class RegressionForest 
 {
 	protected int m_maxDepth, m_numTrees, m_features;
-	protected Loader m_loader;
 	protected Instances m_structure;
 	protected RandomForest m_forest;
 	protected Evaluation m_evaluator;
@@ -19,10 +18,10 @@ public abstract class RegressionForest
 		m_features = p_features;
 		
 		m_forest = new RandomForest();
-		m_loader = new Loader();
+		
 	}
 	
-	abstract void SetData(String p_data) throws Exception;
+	abstract void SetData(Instances p_data) throws Exception;
 	
 	abstract String Train() throws Exception; 
 	
@@ -30,18 +29,6 @@ public abstract class RegressionForest
 	
 	abstract double[] Run() throws Exception;
 	
-	protected void ReadFile(String p_file) throws Exception
-	{
-		File file = new File(p_file);
-		
-		m_loader.setFile(file);
-		
-		m_structure = m_loader.getStructure();
-		
-		m_structure.setClassIndex(m_structure.numAttributes() - 1);
-		
-		m_evaluator = new Evaluation(m_structure);
-	}
 	
 	
 	

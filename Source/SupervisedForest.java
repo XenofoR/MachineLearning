@@ -3,6 +3,7 @@ import java.util.Random;
 
 
 import weka.classifiers.Evaluation;
+import weka.core.Instances;
 
 public class SupervisedForest extends RegressionForest {
 
@@ -10,9 +11,9 @@ public class SupervisedForest extends RegressionForest {
 		super(p_maxDepth, p_numTrees, p_features);
 	}
 
-	void SetData(String p_data) throws Exception
+	void SetData(Instances p_data) throws Exception
 	{
-		ReadFile(p_data);
+		m_structure = p_data;
 		
 		m_evaluator = new Evaluation(m_structure);
 		m_forest.setNumTrees(m_numTrees);
