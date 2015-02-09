@@ -29,7 +29,7 @@ public class SupervisedForest extends RegressionForest {
 	
 	String CrossValidate() throws Exception
 	{
-		m_evaluator.crossValidateModel(m_forest, m_structure, 10, new Random(1));
+		m_evaluator.crossValidateModel(m_forest, m_structure, 10, new Random());
 		
 		return m_evaluator.toSummaryString();
 	}

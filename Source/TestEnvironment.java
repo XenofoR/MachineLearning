@@ -11,6 +11,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Random;
 import weka.core.Instances;
 import weka.core.Instance;
 
@@ -21,6 +22,7 @@ public class TestEnvironment {
 	private RegressionForest m_supervisedForest;
 	private RegressionForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_testSize;
+	float m_alSplitPercentage;
 	String m_test;
 	String m_inputPath, m_outputPath, m_currentTest;
 	public TestEnvironment()
@@ -40,10 +42,11 @@ public class TestEnvironment {
 	
 	public void Run() throws Exception
 	{
-		
 		String[] activeResults = new String[2];
 		String[] supervisedResults = new String[2];
 		CreateDataStructure(m_inputPath + m_test);
+		SplitDataStructure(m_structure);
+		
 		if(m_testType == 1 || m_testType == 3)
 		{
 			m_activeForest = new ActiveForest(m_depth, m_trees, m_features);
@@ -137,12 +140,14 @@ public class TestEnvironment {
 				m_outputPath = scanner.next();
 				break;
 			case("Files"):
-
 				m_test = scanner.next();
 				scanner.useDelimiter("=");
 				break;
 			case("TestType"):
 				m_testType = scanner.nextInt();
+				break;
+			case("SplitLevel"):
+				m_alSplitPercentage = Float.parseFloat(scanner.next());
 				break;
 			default:
 				System.out.println("Bad line found in test file: " + id);
@@ -165,9 +170,31 @@ public class TestEnvironment {
 
 	}
 	
-	private Instances[] CreateUnlabledDataStructure(Instances p_structure)
+	/**Splits the datastructure into one labled part and one unlabled part */
+	private Instances[] SplitDataStructure(Instances p_structure) 
 	{
 		Instances[] returnStructure = new Instances[2];
+		
+		Instances tempStructure = p_structure; //Need a temporary structure so that we can remove instances that have been selected
+		
+		int numLabled = (int)(m_alSplitPercentage * p_structure.numInstances());
+		
+		returnStructure[0] = new Instances(p_structure, numLabled);
+		returnStructure[1] = new Instances(p_structure, p_structure.numInstances() - numLabled);
+		
+		Random ran = new Random();
+		for(int i = 0; i < numLabled; i++)
+		{
+			int j = ran.nextInt(tempStructure.numInstances());
+			Instance selected = tempStructure.get(j);
+			
+			returnStructure[0].add(selected);
+			tempStructure.remove(j);
+		}
+		int i = tempStructure.numAttributes()-1;
+		tempStructure.deleteAttributeAt(tempStructure.numAttributes());
+		
+		returnStructure[1] = tempStructure;
 		
 		return returnStructure;
 	}
