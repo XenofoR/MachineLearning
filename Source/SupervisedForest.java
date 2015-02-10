@@ -5,7 +5,7 @@ import java.util.Random;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
 
-public class SupervisedForest extends RegressionForest {
+public class SupervisedForest extends weka.classifiers.trees.RandomForest {
 
 	String m_info;
 	public SupervisedForest() {

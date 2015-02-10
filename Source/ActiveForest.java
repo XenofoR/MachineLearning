@@ -2,7 +2,7 @@ import weka.core.Instances;
 import weka.core.Instance;
 
 
-public class ActiveForest extends RegressionForest {
+public class ActiveForest extends weka.classifiers.trees.RandomForest {
 
 	//Instances m_unlabledStructure;
 	public ActiveForest() {

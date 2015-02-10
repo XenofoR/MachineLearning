@@ -19,8 +19,8 @@ import weka.classifiers.Evaluation;
 public class TestEnvironment {
 	private Loader m_loader;
 	private Instances m_structure;
-	private RegressionForest m_supervisedForest;
-	private RegressionForest m_activeForest;
+	private SupervisedForest m_supervisedForest;
+	private ActiveForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_testSize;
 	float m_alSplitPercentage;
 	Evaluation m_evaluator;
