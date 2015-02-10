@@ -4,12 +4,21 @@ import weka.core.Instance;
 
 public class ActiveForest extends RegressionForest {
 
-	Instances m_unlabledStructure;
-	public ActiveForest(int p_maxDepth, int p_numTrees, int p_features) {
-		super(p_maxDepth, p_numTrees, p_features);
+	//Instances m_unlabledStructure;
+	public ActiveForest() {
+		super();
 		// TODO Auto-generated constructor stub
 	}
+	public String Train(Instances p_data) throws Exception {
+		
+		return "Not ready yet";
+	}
+	public String GetInfo() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	/** Should not be called on Active version */
+	/*
 	void SetData(Instances p_data)
 	{
 	}
@@ -38,5 +47,7 @@ public class ActiveForest extends RegressionForest {
 	{
 		return null;
 	}
-
+ */
+	
+	
 }

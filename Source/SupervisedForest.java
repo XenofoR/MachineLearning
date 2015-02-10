@@ -7,10 +7,25 @@ import weka.core.Instances;
 
 public class SupervisedForest extends RegressionForest {
 
-	public SupervisedForest(int p_maxDepth, int p_numTrees, int p_features) {
-		super(p_maxDepth, p_numTrees, p_features);
+	String m_info;
+	public SupervisedForest() {
+		super();
 	}
-
+	
+	public void buildClassifier(Instances p_data) throws Exception
+	{
+		super.buildClassifier(p_data);
+		
+		m_info = toString();
+		//Insert Future stuff here?
+		
+	}
+	public String GetInfo()
+	{
+		return m_info;
+	}
+	
+/*
 	void SetData(Instances p_data) throws Exception
 	{
 		m_structure = p_data;
@@ -45,7 +60,7 @@ public class SupervisedForest extends RegressionForest {
 		
 		return returnValue;
 	}
-
+*/
 
 
 }

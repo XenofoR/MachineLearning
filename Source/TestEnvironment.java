@@ -23,6 +23,7 @@ public class TestEnvironment {
 	private RegressionForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_testSize;
 	float m_alSplitPercentage;
+	Evaluation m_evaluator;
 	String m_test;
 	String m_inputPath, m_outputPath, m_currentTest;
 	public TestEnvironment()
@@ -46,25 +47,36 @@ public class TestEnvironment {
 		String[] supervisedResults = new String[2];
 		CreateDataStructure(m_inputPath + m_test);
 		SplitDataStructure(m_structure);
-		
+		m_evaluator = new Evaluation(m_structure);
 		if(m_testType == 1 || m_testType == 3)
 		{
-			m_activeForest = new ActiveForest(m_depth, m_trees, m_features);
-			m_activeForest.SetData(m_structure);
+			m_activeForest = new ActiveForest();
+			m_activeForest.setNumTrees(m_trees);
+			m_activeForest.setMaxDepth(m_depth);
+			//m_activeForest.SetData(m_structure);
+			
 			for(int i = 0; i < m_testSize; i++)
 			{
-				activeResults[0] = m_activeForest.CrossValidate();
-				activeResults[1] = m_activeForest.Train();
+				m_evaluator.crossValidateModel(m_activeForest, m_structure, 10, new Random());
+				activeResults[0] = m_evaluator.toSummaryString();
+				m_activeForest.buildClassifier(m_structure);
+				activeResults[1] = m_activeForest.toString();
 			}
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{
-			m_supervisedForest = new SupervisedForest(m_depth, m_trees, m_features);
-			m_supervisedForest.SetData(m_structure);
+			m_supervisedForest = new SupervisedForest();
+			m_supervisedForest.setNumTrees(m_trees);
+			m_supervisedForest.setMaxDepth(m_depth);
+			//m_supervisedForest.SetData(m_structure);
 			for(int i = 0; i < m_testSize; i++)
 			{
-				supervisedResults[0] = m_supervisedForest.CrossValidate();
-				supervisedResults[1] = m_supervisedForest.Train();
+				m_evaluator.crossValidateModel(m_supervisedForest, m_structure, 10, new Random());
+				supervisedResults[0] = m_evaluator.toSummaryString();
+				m_supervisedForest.buildClassifier(m_structure);
+				supervisedResults[1] = m_supervisedForest.toString();
+				
+				
 			}
 		}
 		else
