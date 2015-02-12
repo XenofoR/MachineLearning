@@ -14,6 +14,7 @@ public class SupervisedForest extends weka.classifiers.trees.RandomForest {
 	
 	public void buildClassifier(Instances p_data) throws Exception
 	{
+		
 		super.buildClassifier(p_data);
 		
 		m_info = toString();

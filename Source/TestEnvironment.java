@@ -66,6 +66,8 @@ public class TestEnvironment {
 		else if(m_testType == 2 || m_testType == 3)
 		{
 			m_supervisedForest = new SupervisedForest();
+			m_supervisedForest.setPrintTrees(true);
+			//m_structure.setClassIndex(-1);
 			m_supervisedForest.setNumTrees(m_trees);
 			m_supervisedForest.setMaxDepth(m_depth);
 			//m_supervisedForest.SetData(m_structure);
