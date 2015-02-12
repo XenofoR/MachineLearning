@@ -1,7 +1,7 @@
 import weka.core.Instances;
 import weka.core.Instance;
 
-
+//https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomForest.java
 public class ActiveForest extends weka.classifiers.trees.RandomForest {
 
 	//Instances m_unlabledStructure;
