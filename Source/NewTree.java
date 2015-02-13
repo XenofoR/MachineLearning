@@ -231,7 +231,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        double currSplit = p_labeledData.classAttribute().isNominal() ? distribution(
 		          props, dists, attIndex, p_labeledData) : numericDistribution(props, dists,
 		          attIndex, totalSubsetWeights, p_labeledData, tempNumericVals);
-
+		         //Calculate information gain
 		        double currVal = p_labeledData.classAttribute().isNominal() ? gain(dists[0],
 		          priorVal(dists[0])) : tempNumericVals[attIndex];
 
