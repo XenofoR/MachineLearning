@@ -3,16 +3,18 @@ import weka.core.Instance;
 
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomForest.java
 public class ActiveForest extends weka.classifiers.trees.RandomForest {
-
+	Bilbo m_bagger;
 	//Instances m_unlabledStructure;
 	public ActiveForest() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-	public String Train(Instances p_data) throws Exception {
+	
+	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData)
+	{
 		
-		return "Not ready yet";
 	}
+	
 	public String GetInfo() {
 		// TODO Auto-generated method stub
 		return null;
