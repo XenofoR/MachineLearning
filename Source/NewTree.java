@@ -27,53 +27,65 @@ import weka.core.WeightedInstancesHandler;
 public class NewTree extends weka.classifiers.trees.RandomTree
 {
 	InnerTree m_Tree;
-	public void buildClassifier(Instances data) throws Exception {
+	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
 	    // Make sure K value is in range
-	    if (m_KValue > data.numAttributes() - 1) {
-	      m_KValue = data.numAttributes() - 1;
+	    if (m_KValue > p_labeledData.numAttributes() - 1) {
+	      m_KValue = p_labeledData.numAttributes() - 1;
 	    }
 	    if (m_KValue < 1) {
-	      m_KValue = (int) Utils.log2(data.numAttributes() - 1) + 1;
+	      m_KValue = (int) Utils.log2(p_labeledData.numAttributes() - 1) + 1;
 	    }
 
 	    // can classifier handle the data?
-	    getCapabilities().testWithFail(data);
+	    getCapabilities().testWithFail(p_labeledData);
 
 	    // remove instances with missing class
-	    data = new Instances(data);
-	    data.deleteWithMissingClass();
+	    p_labeledData = new Instances(p_labeledData);
+	    p_labeledData.deleteWithMissingClass();
 
 	    // only class? -> build ZeroR model
-	    if (data.numAttributes() == 1) {
+	    if (p_labeledData.numAttributes() == 1) {
 	      System.err
 	        .println("Cannot build model (only class attribute present in data!), "
 	          + "using ZeroR model instead!");
 	      m_zeroR = new weka.classifiers.rules.ZeroR();
-	      m_zeroR.buildClassifier(data);
+	      m_zeroR.buildClassifier(p_labeledData);
 	      return;
 	    } else {
 	      m_zeroR = null;
 	    }
 
 	    // Figure out appropriate datasets
-	    Instances train = null;
-	    Instances backfit = null;
-	    Random rand = data.getRandomNumberGenerator(m_randomSeed);
+	    Instances labeledTrain = null;
+	    Instances labeledBackfit = null;
+	    Instances unlabeledTrain = null;
+	    Instances unlabeledBackfit = null;
+	    Random rand = p_labeledData.getRandomNumberGenerator(m_randomSeed);
 	    if (m_NumFolds <= 0) {
-	      train = data;
+	      labeledTrain = p_labeledData;
 	    } else {
-	      data.randomize(rand);
-	      data.stratify(m_NumFolds);
-	      train = data.trainCV(m_NumFolds, 1, rand);
-	      backfit = data.testCV(m_NumFolds, 1);
+	      p_labeledData.randomize(rand);
+	      p_labeledData.stratify(m_NumFolds);
+	      labeledTrain = p_labeledData.trainCV(m_NumFolds, 1, rand);
+	      labeledBackfit = p_labeledData.testCV(m_NumFolds, 1);
+	    }
+	    
+	    rand = p_labeledData.getRandomNumberGenerator(m_randomSeed);
+	    if (m_NumFolds <= 0) {
+	    	unlabeledTrain = p_unlabeledData;
+	    } else {
+	      p_unlabeledData.randomize(rand);
+	      p_unlabeledData.stratify(m_NumFolds);
+	      unlabeledTrain = p_unlabeledData.trainCV(m_NumFolds, 1, rand);
+	      unlabeledBackfit = p_unlabeledData.testCV(m_NumFolds, 1);
 	    }
 
 	    // Create the attribute indices window
-	    int[] attIndicesWindow = new int[data.numAttributes() - 1];
+	    int[] attIndicesWindow = new int[p_labeledData.numAttributes() - 1];
 	    int j = 0;
 	    for (int i = 0; i < attIndicesWindow.length; i++) {
-	      if (j == data.classIndex()) {
+	      if (j == p_labeledData.classIndex()) {
 	        j++; // do not include the class
 	      }
 	      attIndicesWindow[i] = j++;
@@ -83,10 +95,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    double totalSumSquared = 0;
 
 	    // Compute initial class counts
-	    double[] classProbs = new double[train.numClasses()];
-	    for (int i = 0; i < train.numInstances(); i++) {
-	      Instance inst = train.instance(i);
-	      if (data.classAttribute().isNominal()) {
+	    double[] classProbs = new double[labeledTrain.numClasses()];
+	    for (int i = 0; i < labeledTrain.numInstances(); i++) {
+	      Instance inst = labeledTrain.instance(i);
+	      if (p_labeledData.classAttribute().isNominal()) {
 	        classProbs[(int) inst.classValue()] += inst.weight();
 	        totalWeight += inst.weight();
 	      } else {
@@ -98,7 +110,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    }
 
 	    double trainVariance = 0;
-	    if (data.classAttribute().isNumeric()) {
+	    if (p_labeledData.classAttribute().isNumeric()) {
 	      trainVariance = NewTree.singleVariance(classProbs[0], totalSumSquared,
 	        totalWeight) / totalWeight;
 	      classProbs[0] /= totalWeight;
@@ -106,42 +118,42 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 	    // Build tree
 	    m_Tree = new InnerTree();
-	    m_Info = new Instances(data, 0);
-	    m_Tree.buildTree(train, classProbs, attIndicesWindow, totalWeight, rand, 0,
+	    m_Info = new Instances(p_labeledData, 0);
+	    m_Tree.buildTree(labeledTrain, unlabeledTrain,  classProbs, attIndicesWindow, totalWeight, rand, 0,
 	      m_MinVarianceProp * trainVariance);
 
 	    // Backfit if required
-	    if (backfit != null) {
-	      m_Tree.backfitData(backfit);
+	    if (labeledBackfit != null) {
+	      m_Tree.backfitData(labeledBackfit); //TODO change to handle two instances
 	    }
 	  }
 	
 	protected class InnerTree extends Tree
 	{
 		protected InnerTree[] m_Successors;
-		protected void buildTree(Instances data, double[] classProbs,
-		      int[] attIndicesWindow, double totalWeight, Random random, int depth,
+		protected void buildTree(Instances p_labeledData, Instances p_unlabeledData, double[] p_classProbs,
+		      int[] p_attIndicesWindow, double p_totalWeight, Random p_random, int p_depth,
 		      double minVariance) throws Exception {
 			
 		      // Make leaf if there are no training instances
-		      if (data.numInstances() == 0) {
+		      if (p_labeledData.numInstances() == 0) {
 		        m_Attribute = -1;
 		        m_ClassDistribution = null;
 		        m_Prop = null;
 
-		        if (data.classAttribute().isNumeric()) {
+		        if (p_labeledData.classAttribute().isNumeric()) {
 		          m_Distribution = new double[2];
 		        }
 		        return;
 		      }
 
 		      double priorVar = 0;
-		      if (data.classAttribute().isNumeric()) {
+		      if (p_labeledData.classAttribute().isNumeric()) {
 
 		        // Compute prior variance
 		        double totalSum = 0, totalSumSquared = 0, totalSumOfWeights = 0;
-		        for (int i = 0; i < data.numInstances(); i++) {
-		          Instance inst = data.instance(i);
+		        for (int i = 0; i < p_labeledData.numInstances(); i++) {
+		          Instance inst = p_labeledData.instance(i);
 		          totalSum += inst.classValue() * inst.weight();
 		          totalSumSquared += inst.classValue() * inst.classValue()
 		            * inst.weight();
@@ -153,34 +165,34 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 		      // Check if node doesn't contain enough instances or is pure
 		      // or maximum depth reached
-		      if (data.classAttribute().isNominal()) {
-		        totalWeight = Utils.sum(classProbs);
+		      if (p_labeledData.classAttribute().isNominal()) {
+		        p_totalWeight = Utils.sum(p_classProbs);
 		      }
 		      // System.err.println("Total weight " + totalWeight);
 		      // double sum = Utils.sum(classProbs);
-		      if (totalWeight < 2 * m_MinNum ||
+		      if (p_totalWeight < 2 * m_MinNum ||
 
 		      // Nominal case
-		        (data.classAttribute().isNominal() && Utils.eq(
-		          classProbs[Utils.maxIndex(classProbs)], Utils.sum(classProbs)))
+		        (p_labeledData.classAttribute().isNominal() && Utils.eq(
+		          p_classProbs[Utils.maxIndex(p_classProbs)], Utils.sum(p_classProbs)))
 
 		        ||
 
 		        // Numeric case
-		        (data.classAttribute().isNumeric() && priorVar / totalWeight < minVariance)
+		        (p_labeledData.classAttribute().isNumeric() && priorVar / p_totalWeight < minVariance)
 
 		        ||
 
 		        // check tree depth
-		        ((getMaxDepth() > 0) && (depth >= getMaxDepth()))) {
+		        ((getMaxDepth() > 0) && (p_depth >= getMaxDepth()))) {
 
 		        // Make leaf
 		        m_Attribute = -1;
-		        m_ClassDistribution = classProbs.clone();
-		        if (data.classAttribute().isNumeric()) {
+		        m_ClassDistribution = p_classProbs.clone();
+		        if (p_labeledData.classAttribute().isNumeric()) {
 		          m_Distribution = new double[2];
 		          m_Distribution[0] = priorVar;
-		          m_Distribution[1] = totalWeight;
+		          m_Distribution[1] = p_totalWeight;
 		        }
 
 		        m_Prop = null;
@@ -198,29 +210,29 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      // Handles to get arrays out of distribution method
 		      double[][] props = new double[1][0];
 		      double[][][] dists = new double[1][0][0];
-		      double[][] totalSubsetWeights = new double[data.numAttributes()][0];
+		      double[][] totalSubsetWeights = new double[p_labeledData.numAttributes()][0];
 
 		      // Investigate K random attributes
 		      int attIndex = 0;
-		      int windowSize = attIndicesWindow.length;
+		      int windowSize = p_attIndicesWindow.length;
 		      int k = m_KValue;
 		      boolean gainFound = false;
-		      double[] tempNumericVals = new double[data.numAttributes()];
+		      double[] tempNumericVals = new double[p_labeledData.numAttributes()];
 		      while ((windowSize > 0) && (k-- > 0 || !gainFound)) {
 
-		        int chosenIndex = random.nextInt(windowSize);
-		        attIndex = attIndicesWindow[chosenIndex];
+		        int chosenIndex = p_random.nextInt(windowSize);
+		        attIndex = p_attIndicesWindow[chosenIndex];
 
 		        // shift chosen attIndex out of window
-		        attIndicesWindow[chosenIndex] = attIndicesWindow[windowSize - 1];
-		        attIndicesWindow[windowSize - 1] = attIndex;
+		        p_attIndicesWindow[chosenIndex] = p_attIndicesWindow[windowSize - 1];
+		        p_attIndicesWindow[windowSize - 1] = attIndex;
 		        windowSize--;
 
-		        double currSplit = data.classAttribute().isNominal() ? distribution(
-		          props, dists, attIndex, data) : numericDistribution(props, dists,
-		          attIndex, totalSubsetWeights, data, tempNumericVals);
+		        double currSplit = p_labeledData.classAttribute().isNominal() ? distribution(
+		          props, dists, attIndex, p_labeledData) : numericDistribution(props, dists,
+		          attIndex, totalSubsetWeights, p_labeledData, tempNumericVals);
 
-		        double currVal = data.classAttribute().isNominal() ? gain(dists[0],
+		        double currVal = p_labeledData.classAttribute().isNominal() ? gain(dists[0],
 		          priorVal(dists[0])) : tempNumericVals[attIndex];
 
 		        if (Utils.gr(currVal, 0)) {
@@ -245,15 +257,15 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        // Build subtrees
 		        m_SplitPoint = split;
 		        m_Prop = bestProps;
-		        Instances[] subsets = splitData(data);
+		        Instances[] subsets = splitData(p_labeledData);
 		        m_Successors = new InnerTree[bestDists.length];
 		        double[] attTotalSubsetWeights = totalSubsetWeights[bestIndex];
 
 		        for (int i = 0; i < bestDists.length; i++) {
 		          m_Successors[i] = new InnerTree();
-		          m_Successors[i].buildTree(subsets[i], bestDists[i], attIndicesWindow,
-		            data.classAttribute().isNominal() ? 0 : attTotalSubsetWeights[i],
-		            random, depth + 1, minVariance);
+		          m_Successors[i].buildTree(subsets[i], bestDists[i], p_attIndicesWindow,
+		            p_labeledData.classAttribute().isNominal() ? 0 : attTotalSubsetWeights[i],
+		            p_random, p_depth + 1, minVariance);
 		        }
 
 		        // If all successors are non-empty, we don't need to store the class
@@ -266,17 +278,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		          }
 		        }
 		        if (emptySuccessor) {
-		          m_ClassDistribution = classProbs.clone();
+		          m_ClassDistribution = p_classProbs.clone();
 		        }
 		      } else {
 
 		        // Make leaf
 		        m_Attribute = -1;
-		        m_ClassDistribution = classProbs.clone();
-		        if (data.classAttribute().isNumeric()) {
+		        m_ClassDistribution = p_classProbs.clone();
+		        if (p_labeledData.classAttribute().isNumeric()) {
 		          m_Distribution = new double[2];
 		          m_Distribution[0] = priorVar;
-		          m_Distribution[1] = totalWeight;
+		          m_Distribution[1] = p_totalWeight;
 		        }
 		      }
 		    }
