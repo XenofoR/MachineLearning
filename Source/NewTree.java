@@ -26,6 +26,96 @@ import weka.core.WeightedInstancesHandler;
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomTree.java
 public class NewTree extends weka.classifiers.trees.RandomTree
 {
+	InnerTree m_Tree;
+	public void buildClassifier(Instances data) throws Exception {
+
+	    // Make sure K value is in range
+	    if (m_KValue > data.numAttributes() - 1) {
+	      m_KValue = data.numAttributes() - 1;
+	    }
+	    if (m_KValue < 1) {
+	      m_KValue = (int) Utils.log2(data.numAttributes() - 1) + 1;
+	    }
+
+	    // can classifier handle the data?
+	    getCapabilities().testWithFail(data);
+
+	    // remove instances with missing class
+	    data = new Instances(data);
+	    data.deleteWithMissingClass();
+
+	    // only class? -> build ZeroR model
+	    if (data.numAttributes() == 1) {
+	      System.err
+	        .println("Cannot build model (only class attribute present in data!), "
+	          + "using ZeroR model instead!");
+	      m_zeroR = new weka.classifiers.rules.ZeroR();
+	      m_zeroR.buildClassifier(data);
+	      return;
+	    } else {
+	      m_zeroR = null;
+	    }
+
+	    // Figure out appropriate datasets
+	    Instances train = null;
+	    Instances backfit = null;
+	    Random rand = data.getRandomNumberGenerator(m_randomSeed);
+	    if (m_NumFolds <= 0) {
+	      train = data;
+	    } else {
+	      data.randomize(rand);
+	      data.stratify(m_NumFolds);
+	      train = data.trainCV(m_NumFolds, 1, rand);
+	      backfit = data.testCV(m_NumFolds, 1);
+	    }
+
+	    // Create the attribute indices window
+	    int[] attIndicesWindow = new int[data.numAttributes() - 1];
+	    int j = 0;
+	    for (int i = 0; i < attIndicesWindow.length; i++) {
+	      if (j == data.classIndex()) {
+	        j++; // do not include the class
+	      }
+	      attIndicesWindow[i] = j++;
+	    }
+
+	    double totalWeight = 0;
+	    double totalSumSquared = 0;
+
+	    // Compute initial class counts
+	    double[] classProbs = new double[train.numClasses()];
+	    for (int i = 0; i < train.numInstances(); i++) {
+	      Instance inst = train.instance(i);
+	      if (data.classAttribute().isNominal()) {
+	        classProbs[(int) inst.classValue()] += inst.weight();
+	        totalWeight += inst.weight();
+	      } else {
+	        classProbs[0] += inst.classValue() * inst.weight();
+	        totalSumSquared += inst.classValue() * inst.classValue()
+	          * inst.weight();
+	        totalWeight += inst.weight();
+	      }
+	    }
+
+	    double trainVariance = 0;
+	    if (data.classAttribute().isNumeric()) {
+	      trainVariance = NewTree.singleVariance(classProbs[0], totalSumSquared,
+	        totalWeight) / totalWeight;
+	      classProbs[0] /= totalWeight;
+	    }
+
+	    // Build tree
+	    m_Tree = new InnerTree();
+	    m_Info = new Instances(data, 0);
+	    m_Tree.buildTree(train, classProbs, attIndicesWindow, totalWeight, rand, 0,
+	      m_MinVarianceProp * trainVariance);
+
+	    // Backfit if required
+	    if (backfit != null) {
+	      m_Tree.backfitData(backfit);
+	    }
+	  }
+	
 	protected class InnerTree extends Tree
 	{
 		protected InnerTree[] m_Successors;
