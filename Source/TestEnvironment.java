@@ -67,6 +67,7 @@ public class TestEnvironment {
 		{
 			m_supervisedForest = new SupervisedForest();
 			m_supervisedForest.setDebug(true);
+			m_supervisedForest.setPrintTrees(true);
 			//m_structure.setClassIndex(-1);
 			m_supervisedForest.setNumTrees(m_trees);
 			m_supervisedForest.setMaxDepth(m_depth);
