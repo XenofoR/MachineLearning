@@ -14,7 +14,6 @@ import java.text.SimpleDateFormat;
 import java.util.Random;
 import weka.core.Instances;
 import weka.core.Instance;
-
 import weka.classifiers.Evaluation;
 public class TestEnvironment {
 	private Loader m_loader;
@@ -46,7 +45,6 @@ public class TestEnvironment {
 		String[] activeResults = new String[2];
 		String[] supervisedResults = new String[2];
 		CreateDataStructure(m_inputPath + m_test);
-		SplitDataStructure(m_structure);
 		m_evaluator = new Evaluation(m_structure);
 		if(m_testType == 1 || m_testType == 3)
 		{
@@ -65,22 +63,36 @@ public class TestEnvironment {
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{
+			NewTree tree = new NewTree();
 			m_supervisedForest = new SupervisedForest();
 			m_supervisedForest.setDebug(true);
 			m_supervisedForest.setPrintTrees(true);
 			//m_structure.setClassIndex(-1);
 			m_supervisedForest.setNumTrees(m_trees);
 			m_supervisedForest.setMaxDepth(m_depth);
-			
 			//m_supervisedForest.SetData(m_structure);
+			
+			//TEST ONLY, REMOVE ONCE DONE
+			Instances test, test2;
+			File file = new File(m_inputPath + "burp.csv");
+			File file2 = new File(m_inputPath + "unburp.csv");
+			
+			m_loader.setFile(file);
+					
+			test = new Instances(m_loader.getStructure());
+					
+			test.setClassIndex(test.numAttributes() - 1);
+			
+			m_loader.setFile(file2);
+			test2 = new Instances(m_loader.getStructure());
+			test2.setClassIndex(-1);
 			for(int i = 0; i < m_testSize; i++)
 			{
-				m_evaluator.crossValidateModel(m_supervisedForest, m_structure, 10, new Random());
+				/*m_evaluator.crossValidateModel(m_supervisedForest, m_structure, 10, new Random());
 				supervisedResults[0] = m_evaluator.toSummaryString();
 				m_supervisedForest.buildClassifier(m_structure);
-				supervisedResults[1] = m_supervisedForest.toString();
-				
-				
+				supervisedResults[1] = m_supervisedForest.toString();*/
+				tree.buildClassifier(test, test2);
 			}
 		}
 		else
