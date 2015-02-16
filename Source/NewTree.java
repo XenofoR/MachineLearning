@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Vector;
+import java.lang.Math;
 
 import javax.swing.DebugGraphics;
 
@@ -142,11 +143,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    }
 	  }
 	
-	private static double Covariance(int p_sumParentInstances, int p_numChildren, Instances[] p_instances) throws Exception
+	private static double Covariance(int p_sumParentInstances, Instances[] p_instances) throws Exception
 	{
 		double hejhoppiklingonskogen = 0.0;
 		
-		for(int i = 0; i < p_numChildren; i++)
+		for(int i = 0; i < 2; i++)
 		{
 			hejhoppiklingonskogen +=  (p_instances[i].numInstances() / p_sumParentInstances) * SingleCovariance(p_instances[i]);
 		}
@@ -155,11 +156,14 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	private static double SingleCovariance(Instances p_instances) throws Exception
 	{
+		if(p_instances.numInstances() == 0)
+			return 0;
+		
 		PrincipalComponents covarianceMatrixBuilderThingamajig = new PrincipalComponents();
 		covarianceMatrixBuilderThingamajig.buildEvaluator(p_instances);
 		covarianceMatrixBuilderThingamajig.setCenterData(true);
 		double[][] mrCovarianceMatrix = covarianceMatrixBuilderThingamajig.getCorrelationMatrix();
-		return 0.0;
+		return Math.abs(Math.log(determinant(mrCovarianceMatrix, p_instances.numAttributes()-1)));
 	}
 	
 	protected class InnerTree extends Tree
@@ -266,8 +270,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 		        double currSplit = p_labeledData.classAttribute().isNominal() ? distribution(
 		          props, dists, attIndex, p_labeledData) : numericDistribution(props, dists,
-		          attIndex, totalSubsetWeights, p_labeledData, tempNumericVals);
-		         //Calculate information gaind
+		          attIndex, totalSubsetWeights, p_labeledData, p_unlabeledData, tempNumericVals);
+		         //Calculate information gain
 		         
 		        double currVal = p_labeledData.classAttribute().isNominal() ? gain(dists[0],
 		          priorVal(dists[0])) : tempNumericVals[attIndex];
@@ -332,17 +336,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		    }
 		
 		protected double numericDistribution(double[][] props, double[][][] dists,
-			      int att, double[][] subsetWeights, Instances data, double[] vals)
+			      int att, double[][] subsetWeights, Instances p_labeledData, Instances p_unlabeledData, double[] vals)
 			      throws Exception {
 				
 			      double splitPoint = Double.NaN;
-			      Attribute attribute = data.attribute(att);
+			      Attribute attribute = p_labeledData.attribute(att);
 			      double[][] dist = null;
 			      double[] sums = null;
 			      double[] sumSquared = null;
 			      double[] sumOfWeights = null;
 			      double totalSum = 0, totalSumSquared = 0, totalSumOfWeights = 0;
-			      int indexOfFirstMissingValue = data.numInstances();
+			      int indexOfFirstMissingValue = p_labeledData.numInstances();
 
 			      if (attribute.isNominal()) {
 			        sums = new double[attribute.numValues()];
@@ -350,12 +354,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        sumOfWeights = new double[attribute.numValues()];
 			        int attVal;
 
-			        for (int i = 0; i < data.numInstances(); i++) {
-			          Instance inst = data.instance(i);
+			        for (int i = 0; i < p_labeledData.numInstances(); i++) {
+			          Instance inst = p_labeledData.instance(i);
 			          if (inst.isMissing(att)) {
 
 			            // Skip missing values at this stage
-			            if (indexOfFirstMissingValue == data.numInstances()) {
+			            if (indexOfFirstMissingValue == p_labeledData.numInstances()) {
 			              indexOfFirstMissingValue = i;
 			            }
 			            continue;
@@ -381,11 +385,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        double[] currSumOfWeights = new double[2];
 
 			        // Sort data
-			        data.sort(att);
+			        p_labeledData.sort(att);
 
 			        // Move all instances into second subset
-			        for (int j = 0; j < data.numInstances(); j++) {
-			          Instance inst = data.instance(j);
+			        for (int j = 0; j < p_labeledData.numInstances(); j++) {
+			          Instance inst = p_labeledData.instance(j);
 			          if (inst.isMissing(att)) {
 
 			            // Can stop as soon as we hit a missing value
@@ -408,15 +412,24 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        sumOfWeights[1] = currSumOfWeights[1];
 
 			        // Try all possible split points
-			        double currSplit = data.instance(0).value(att);
+			        double currSplit = p_labeledData.instance(0).value(att);
 			        double currVal, bestVal = Double.MAX_VALUE;
 
-			        for (int i = 0; i < indexOfFirstMissingValue; i++) {
-			          Instance inst = data.instance(i);
+			        for (int i = 0; i < indexOfFirstMissingValue + p_unlabeledData.numInstances(); i++) {
+			        	Instance inst;
+			        	if(i < indexOfFirstMissingValue)
+			        		inst = p_labeledData.instance(i);
+			        	else
+			        		inst = p_unlabeledData.instance(i - indexOfFirstMissingValue);
+			        	
 			          //TODO: THIS IS PLACE TO ENTER CLUSTER ALGORITHM
 			          if (inst.value(att) > currSplit) {
+			        	double k = variance(currSums, currSumSquared,
+					              currSumOfWeights);
 			            currVal = variance(currSums, currSumSquared,
-			              currSumOfWeights);
+			              currSumOfWeights) + (1.5 * Covariance(p_unlabeledData.numInstances(), splitData(p_unlabeledData, currSplit, att)));
+			            double derp = k-currVal;
+			            System.out.println(derp);
 			            if (currVal < bestVal) {
 			              bestVal = currVal;
 			              splitPoint = (inst.value(att) + currSplit) / 2.0;
@@ -463,8 +476,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      }
 
 			      // Distribute weights for instances with missing values
-			      for (int i = indexOfFirstMissingValue; i < data.numInstances(); i++) {
-			        Instance inst = data.instance(i);
+			      for (int i = indexOfFirstMissingValue; i < p_labeledData.numInstances(); i++) {
+			        Instance inst = p_labeledData.instance(i);
 
 			        for (int j = 0; j < sums.length; j++) {
 			          sums[j] += props[0][j] * inst.classValue() * inst.weight();
@@ -480,7 +493,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      }
 
 			      // Compute final distribution
-			      dist = new double[sums.length][data.numClasses()];
+			      dist = new double[sums.length][p_labeledData.numClasses()];
 			      for (int j = 0; j < sums.length; j++) {
 			        if (sumOfWeights[j] > 0) {
 			          dist[j][0] = sums[j] / sumOfWeights[j];
@@ -502,6 +515,94 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 			      return splitPoint;
 			    }
+		
+		protected Instances[] splitData(Instances p_data, double p_splitPoint, int p_attr) throws Exception {
+
+		      // Allocate array of Instances objects
+		      Instances[] subsets = new Instances[2];
+		      for (int i = 0; i < 2; i++) {
+		        subsets[i] = new Instances(p_data, p_data.numInstances());
+		      }
+
+		      // Go through the data
+		      for (int i = 0; i < p_data.numInstances(); i++) {
+
+		        // Get instance
+		        Instance inst = p_data.instance(i);
+
+		        // Does the instance have a missing value?
+		        if (inst.isMissing(p_attr)) {
+
+		          continue;
+		        }
+
+		        // Do we have a nominal attribute?
+		        if (p_data.attribute(p_attr).isNominal()) {
+		          subsets[(int) inst.value(p_attr)].add(inst);
+
+		          // Proceed to next instance
+		          continue;
+		        }
+
+		        // Do we have a numeric attribute?
+		        if (p_data.attribute(p_attr).isNumeric()) {
+		          subsets[(inst.value(p_attr) < p_splitPoint) ? 0 : 1].add(inst);
+
+		          // Proceed to next instance
+		          continue;
+		        }
+
+		        // Else throw an exception
+		        throw new IllegalArgumentException("Unknown attribute type");
+		      }
+
+		      // Save memory
+		      for (int i = 0; i < 2; i++) {
+		        subsets[i].compactify();
+		      }
+
+		      // Return the subsets
+		      return subsets;
+		    }
+	}
+	
+	static private double[][] CalculateCovarianceMatrix(Instances p_data)
+	{
+		double[][] matrix = new double[p_data.numInstances()][p_data.numInstances()];
+		
+		return matrix;
+	}
+	
+	//https://technomanor.wordpress.com/2012/03/04/determinant-of-n-x-n-square-matrix/
+	 static private double determinant(double a[][], int n){
+		double det = 0.0f;
+		int p = 0, q = 0, sign = 1;
+
+		if(n==1){
+			det = a[0][0];
+		}
+		else{
+			double b[][] = new double[n-1][n-1];
+			for(int x = 0 ; x < n ; x++){
+				p=0;q=0;
+				for(int i = 1;i < n; i++){
+					for(int j = 0; j < n;j++){
+						if(j != x){
+							b[p][q++] = a[i][j];
+							if(q % (n-1) == 0){
+								p++;
+								q=0;
+							}
+						}
+					}
+				}
+				det = det + a[0][x] *
+	                              determinant(b, n-1) *
+	                              sign;
+				sign = -sign;
+			}
+		}
+		return det;
 	}
 }
 	//Override standard stuff here
