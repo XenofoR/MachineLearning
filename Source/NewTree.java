@@ -6,6 +6,8 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Vector;
 
+import javax.swing.DebugGraphics;
+
 import weka.attributeSelection.PrincipalComponents;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
@@ -27,7 +29,18 @@ import weka.core.WeightedInstancesHandler;
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomTree.java
 public class NewTree extends weka.classifiers.trees.RandomTree
 {
+	
+	
+	
 	InnerTree m_Tree;
+	Utilities.DebugLevel m_debugLevel = Utilities.DebugLevel.NONE;
+	Utilities.DebugType m_debugType = Utilities.DebugType.NONE;
+	
+	public void SetDebug(Utilities.DebugLevel p_level, Utilities.DebugType p_type)
+	{
+		m_debugLevel  = p_level;
+		m_debugType = p_type;
+	}
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
 	    // Make sure K value is in range
@@ -457,6 +470,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          sums[j] += props[0][j] * inst.classValue() * inst.weight();
 			          sumSquared[j] += props[0][j] * inst.classValue() * inst.classValue()
 			            * inst.weight();
+			          //J == 0 || 1
 			          sumOfWeights[j] += props[0][j] * inst.weight();
 			        }
 			        totalSum += inst.classValue() * inst.weight();
