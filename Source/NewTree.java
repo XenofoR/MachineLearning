@@ -28,6 +28,12 @@ import weka.core.Utils;
 import weka.core.WeightedInstancesHandler;
 
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomTree.java
+/*
+ Changes made:
+ - buildClassifier() takes two instances instead of one.
+ - added our own implementation of splitData() which can split an instance on a specific attribute index and splitPoint.
+ - numericDistribution() also takes a second instance set now and we added our covariance calculation to the best split calculation
+ */
 public class NewTree extends weka.classifiers.trees.RandomTree
 {
 	
@@ -430,8 +436,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        double currSplit = p_labeledData.instance(0).value(att);
 			        double currVal, bestVal = Double.MAX_VALUE;
 
-			        for (int i = 0; i < indexOfFirstMissingValue + p_unlabeledData.numInstances(); i++) 
-			        {
+			        //For clustering we need to consider both labeled and unlabeled data, so we move them to one set
+			        Instances clusterData = new Instances(p_labeledData);
+			        clusterData.setClassIndex(-1);
+			        clusterData.addAll(p_unlabeledData);
+			        for (int i = 0; i < indexOfFirstMissingValue + p_unlabeledData.numInstances(); i++) {
+
 			        	Instance inst;
 			        	if(i < indexOfFirstMissingValue)
 			        		inst = p_labeledData.instance(i);
@@ -443,7 +453,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
 			            currVal = variance(currSums, currSumSquared,
-			              currSumOfWeights) + (1.5 * Covariance(p_unlabeledData.numInstances(), splitData(p_unlabeledData, currSplit, att)));
+			              currSumOfWeights) + (1.5 * Covariance(clusterData.numInstances(), splitData(clusterData, currSplit, att)));
 			            double derp = k-currVal;
 			            System.out.println(derp);
 			            if (currVal < bestVal) {
@@ -549,7 +559,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        // Get instance
 		        Instance inst = p_data.instance(i);
 
-		        // Does the instance have a missing value?
+		        // We will disregard missing attributes entirely, thus these instances will not effect the density
 		        if (inst.isMissing(p_attr)) {
 
 		          continue;
@@ -585,12 +595,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		    }
 	}
 	
-	static private double[][] CalculateCovarianceMatrix(Instances p_data)
-	{
-		double[][] matrix = new double[p_data.numInstances()][p_data.numInstances()];
-		
-		return matrix;
-	}
 	
 	
 	 
