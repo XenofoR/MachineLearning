@@ -143,11 +143,14 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	private static double SingleCovariance(Instances p_instances) throws Exception
 	{
+		if(p_instances.numInstances() == 0)
+			return 0;
+		
 		PrincipalComponents covarianceMatrixBuilderThingamajig = new PrincipalComponents();
 		covarianceMatrixBuilderThingamajig.buildEvaluator(p_instances);
 		covarianceMatrixBuilderThingamajig.setCenterData(true);
 		double[][] mrCovarianceMatrix = covarianceMatrixBuilderThingamajig.getCorrelationMatrix();
-		return Math.log(determinant(mrCovarianceMatrix, p_instances.numInstances()));
+		return Math.abs(Math.log(determinant(mrCovarianceMatrix, p_instances.numAttributes()-1)));
 	}
 	
 	protected class InnerTree extends Tree
@@ -408,10 +411,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	
 			          //TODO: THIS IS PLACE TO ENTER CLUSTER ALGORITHM
 			          if (inst.value(att) > currSplit) {
-			        	//currVal = variance(currSums, currSumSquared,
-					      //        currSumOfWeights);
+			        	double k = variance(currSums, currSumSquared,
+					              currSumOfWeights);
 			            currVal = variance(currSums, currSumSquared,
-			              currSumOfWeights) + Covariance(p_unlabeledData.numInstances(), splitData(p_unlabeledData, currSplit, att));
+			              currSumOfWeights) + (1.5 * Covariance(p_unlabeledData.numInstances(), splitData(p_unlabeledData, currSplit, att)));
+			            double derp = k-currVal;
+			            System.out.println(derp);
 			            if (currVal < bestVal) {
 			              bestVal = currVal;
 			              splitPoint = (inst.value(att) + currSplit) / 2.0;
@@ -545,6 +550,13 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      // Return the subsets
 		      return subsets;
 		    }
+	}
+	
+	static private double[][] CalculateCovarianceMatrix(Instances p_data)
+	{
+		double[][] matrix = new double[p_data.numInstances()][p_data.numInstances()];
+		
+		return matrix;
 	}
 	
 	//https://technomanor.wordpress.com/2012/03/04/determinant-of-n-x-n-square-matrix/

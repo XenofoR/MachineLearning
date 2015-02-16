@@ -72,27 +72,15 @@ public class TestEnvironment {
 			m_supervisedForest.setMaxDepth(m_depth);
 			//m_supervisedForest.SetData(m_structure);
 			
-			//TEST ONLY, REMOVE ONCE DONE
-			Instances test, test2;
-			File file = new File(m_inputPath + "burp.csv");
-			File file2 = new File(m_inputPath + "unburp.csv");
+			Instances[] test = SplitDataStructure(m_structure);
 			
-			m_loader.setFile(file);
-					
-			test = new Instances(m_loader.getStructure());
-					
-			test.setClassIndex(test.numAttributes() - 1);
-			
-			m_loader.setFile(file2);
-			test2 = new Instances(m_loader.getStructure());
-			test2.setClassIndex(-1);
 			for(int i = 0; i < m_testSize; i++)
 			{
 				/*m_evaluator.crossValidateModel(m_supervisedForest, m_structure, 10, new Random());
 				supervisedResults[0] = m_evaluator.toSummaryString();
 				m_supervisedForest.buildClassifier(m_structure);
 				supervisedResults[1] = m_supervisedForest.toString();*/
-				tree.buildClassifier(test, test2);
+				tree.buildClassifier(test[0], test[1]);
 			}
 		}
 		else
