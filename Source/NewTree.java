@@ -150,20 +150,35 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		for(int i = 0; i < 2; i++)
 		{
 			hejhoppiklingonskogen +=  (p_instances[i].numInstances() / p_sumParentInstances) * SingleCovariance(p_instances[i]);
+			System.out.println(hejhoppiklingonskogen);
 		}
 		return hejhoppiklingonskogen;
 	}
-	
+	//TODO: Apperently we need tod o the unsupervised term with both unlabeled and labeled data
 	private static double SingleCovariance(Instances p_instances) throws Exception
 	{
 		if(p_instances.numInstances() == 0)
 			return 0;
 		
 		PrincipalComponents covarianceMatrixBuilderThingamajig = new PrincipalComponents();
-		covarianceMatrixBuilderThingamajig.buildEvaluator(p_instances);
 		covarianceMatrixBuilderThingamajig.setCenterData(true);
-		double[][] mrCovarianceMatrix = covarianceMatrixBuilderThingamajig.getCorrelationMatrix();
-		return Math.abs(Math.log(determinant(mrCovarianceMatrix, p_instances.numAttributes()-1)));
+		try 
+		{
+			covarianceMatrixBuilderThingamajig.buildEvaluator(p_instances);
+		}
+		catch(Exception E)
+		{
+			System.out.println("Exception caught, code:" + E.getMessage());
+			System.out.println(p_instances.toString());
+		}
+		
+		double[][] mrCovarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];// = covarianceMatrixBuilderThingamajig.getCorrelationMatrix();
+		Utilities.CalculateCovarianceMatrix(p_instances, mrCovarianceMatrix);
+		double det = Utilities.determinant(mrCovarianceMatrix);
+		if(det <= 0)
+			return 0.0;
+		System.out.println(det);
+		return Math.log(det);
 	}
 	
 	protected class InnerTree extends Tree
@@ -415,7 +430,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        double currSplit = p_labeledData.instance(0).value(att);
 			        double currVal, bestVal = Double.MAX_VALUE;
 
-			        for (int i = 0; i < indexOfFirstMissingValue + p_unlabeledData.numInstances(); i++) {
+			        for (int i = 0; i < indexOfFirstMissingValue + p_unlabeledData.numInstances(); i++) 
+			        {
 			        	Instance inst;
 			        	if(i < indexOfFirstMissingValue)
 			        		inst = p_labeledData.instance(i);
@@ -448,17 +464,20 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          }
 
 			          currSplit = inst.value(att);
-
-			          double classVal = inst.classValue() * inst.weight();
-			          double classValSquared = inst.classValue() * classVal;
-
-			          currSums[0] += classVal;
-			          currSumSquared[0] += classValSquared;
-			          currSumOfWeights[0] += inst.weight();
-
-			          currSums[1] -= classVal;
-			          currSumSquared[1] -= classValSquared;
-			          currSumOfWeights[1] -= inst.weight();
+			          
+			          if(inst.classIsMissing() == false)
+			          {
+				          double classVal = inst.classValue() * inst.weight();
+				          double classValSquared = inst.classValue() * classVal;
+	
+				          currSums[0] += classVal;
+				          currSumSquared[0] += classValSquared;
+				          currSumOfWeights[0] += inst.weight();
+	
+				          currSums[1] -= classVal;
+				          currSumSquared[1] -= classValSquared;
+				          currSumOfWeights[1] -= inst.weight();
+			          }
 			        }
 			      }
 
@@ -573,36 +592,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		return matrix;
 	}
 	
-	//https://technomanor.wordpress.com/2012/03/04/determinant-of-n-x-n-square-matrix/
-	 static private double determinant(double a[][], int n){
-		double det = 0.0f;
-		int p = 0, q = 0, sign = 1;
-
-		if(n==1){
-			det = a[0][0];
-		}
-		else{
-			double b[][] = new double[n-1][n-1];
-			for(int x = 0 ; x < n ; x++){
-				p=0;q=0;
-				for(int i = 1;i < n; i++){
-					for(int j = 0; j < n;j++){
-						if(j != x){
-							b[p][q++] = a[i][j];
-							if(q % (n-1) == 0){
-								p++;
-								q=0;
-							}
-						}
-					}
-				}
-				det = det + a[0][x] *
-	                              determinant(b, n-1) *
-	                              sign;
-				sign = -sign;
-			}
-		}
-		return det;
-	}
+	
+	 
 }
 	//Override standard stuff here
