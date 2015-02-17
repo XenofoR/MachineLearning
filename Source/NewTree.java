@@ -153,12 +153,13 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	private static double Covariance(int p_sumParentInstances, Instances[] p_instances) throws Exception
 	{
 		double hejhoppiklingonskogen = 0.0;
-		
+		System.out.println("Entering Covariance");
 		for(int i = 0; i < 2; i++)
 		{
 			hejhoppiklingonskogen +=  (p_instances[i].numInstances() / p_sumParentInstances) * SingleCovariance(p_instances[i]);
 			System.out.println(hejhoppiklingonskogen);
 		}
+		System.out.println("Leaving Covariance");
 		return hejhoppiklingonskogen;
 	}
 	
@@ -174,14 +175,123 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		det = Math.abs(det);
 		if(det <= 0)
 			return 0.0;
-		System.out.println(det);
+		//System.out.println(det);
 		return Math.log(det);
 	}
+	public String toString() {
+
+	    // only ZeroR model?
+	    if (m_zeroR != null) {
+	      StringBuffer buf = new StringBuffer();
+	      buf.append(this.getClass().getName().replaceAll(".*\\.", "") + "\n");
+	      buf.append(this.getClass().getName().replaceAll(".*\\.", "")
+	        .replaceAll(".", "=")
+	        + "\n\n");
+	      buf
+	        .append("Warning: No model could be built, hence ZeroR model is used:\n\n");
+	      buf.append(m_zeroR.toString());
+	      return buf.toString();
+	    }
+
+	    if (m_Tree == null) {
+	      return "RandomTree: no model has been built yet.";
+	    } else {
+	      return "\nRandomTree\n==========\n"
+	        + m_Tree.toString(0)
+	        + "\n"
+	        + "\nSize of the tree : "
+	        + m_Tree.numNodes()
+	        + (getMaxDepth() > 0 ? ("\nMax depth of tree: " + getMaxDepth()) : (""));
+	    }
+	  }
 	
 	protected class InnerTree extends Tree
 	{
+		 public int numNodes() {
+
+		      if (m_Attribute == -1) {
+		        return 1;
+		      } else {
+		        int size = 1;
+		        for (Tree m_Successor : m_Successors) {
+		          size += m_Successor.numNodes();
+		        }
+		        return size;
+		      }
+		    }
+		protected String toString(int level) {
+
+		      try {
+		        StringBuffer text = new StringBuffer();
+
+		        if (m_Attribute == -1) {
+
+		          // Output leaf info
+		          return leafString();
+		        } else if (m_Info.attribute(m_Attribute).isNominal()) {
+
+		          // For nominal attributes
+		          for (int i = 0; i < m_Successors.length; i++) {
+		            text.append("\n");
+		            for (int j = 0; j < level; j++) {
+		              text.append("|   ");
+		            }
+		            text.append(m_Info.attribute(m_Attribute).name() + " = "
+		              + m_Info.attribute(m_Attribute).value(i));
+		            text.append(m_Successors[i].toString(level + 1));
+		          }
+		        } else {
+
+		          // For numeric attributes
+		          text.append("\n");
+		          for (int j = 0; j < level; j++) {
+		            text.append("|   ");
+		          }
+		          text.append(m_Info.attribute(m_Attribute).name() + " < "
+		            + Utils.doubleToString(m_SplitPoint, 2));
+		          text.append(m_Successors[0].toString(level + 1));
+		          text.append("\n");
+		          for (int j = 0; j < level; j++) {
+		            text.append("|   ");
+		          }
+		          text.append(m_Info.attribute(m_Attribute).name() + " >= "
+		            + Utils.doubleToString(m_SplitPoint, 2));
+		          text.append(m_Successors[1].toString(level + 1));
+		        }
+
+		        return text.toString();
+		      } catch (Exception e) {
+		        e.printStackTrace();
+		        return "RandomTree: tree can't be printed";
+		      }
+		    }
 		protected InnerTree[] m_Successors;
-		
+		public String toString() {
+
+		    // only ZeroR model?
+		    if (m_zeroR != null) {
+		      StringBuffer buf = new StringBuffer();
+		      buf.append(this.getClass().getName().replaceAll(".*\\.", "") + "\n");
+		      buf.append(this.getClass().getName().replaceAll(".*\\.", "")
+		        .replaceAll(".", "=")
+		        + "\n\n");
+		      buf
+		        .append("Warning: No model could be built, hence ZeroR model is used:\n\n");
+		      buf.append(m_zeroR.toString());
+		      return buf.toString();
+		    }
+
+		    if (m_Tree == null) {
+		      return "RandomTree: no model has been built yet.";
+		    } else {
+		      return "\nRandomTree\n==========\n"
+		        + m_Tree.toString(0)
+		        + "\n"
+		        + "\nSize of the tree : "
+		        + m_Tree.numNodes()
+		        + (getMaxDepth() > 0 ? ("\nMax depth of tree: " + getMaxDepth()) : (""));
+		    }
+		  }
 		protected void buildTree(Instances p_labeledData, Instances p_unlabeledData, double[] p_classProbs,
 		      int[] p_attIndicesWindow, double p_totalWeight, Random p_random, int p_depth,
 		      double minVariance) throws Exception {
