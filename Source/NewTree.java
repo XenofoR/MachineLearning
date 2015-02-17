@@ -161,15 +161,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		}
 		return hejhoppiklingonskogen;
 	}
-	//TODO: Apperently we need tod o the unsupervised term with both unlabeled and labeled data
+	
 	private static double SingleCovariance(Instances p_instances) throws Exception
 	{
 		if(p_instances.numInstances() == 0)
 			return 0;
-		
+
 		double[][] mrCovarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
+
 		Utilities.CalculateCovarianceMatrix(p_instances, mrCovarianceMatrix);
 		double det = Utilities.determinant(mrCovarianceMatrix);
+		det = Math.abs(det);
 		if(det <= 0)
 			return 0.0;
 		System.out.println(det);
