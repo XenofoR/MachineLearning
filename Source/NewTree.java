@@ -33,6 +33,7 @@ import weka.core.WeightedInstancesHandler;
  - buildClassifier() takes two instances instead of one.
  - added our own implementation of splitData() which can split an instance on a specific attribute index and splitPoint.
  - numericDistribution() also takes a second instance set now and we added our covariance calculation to the best split calculation
+ - numericDistrubution() added cluster gain calculation to the final gain calculation
  */
 public class NewTree extends weka.classifiers.trees.RandomTree
 {
@@ -160,30 +161,19 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		}
 		return hejhoppiklingonskogen;
 	}
-	//TODO: Apperently we need tod o the unsupervised term with both unlabeled and labeled data
+	
 	private static double SingleCovariance(Instances p_instances) throws Exception
 	{
 		if(p_instances.numInstances() == 0)
 			return 0;
-		
-		PrincipalComponents covarianceMatrixBuilderThingamajig = new PrincipalComponents();
-		covarianceMatrixBuilderThingamajig.setCenterData(true);
-		try 
-		{
-			covarianceMatrixBuilderThingamajig.buildEvaluator(p_instances);
-		}
-		catch(Exception E)
-		{
-			System.out.println("Exception caught, code:" + E.getMessage());
-			System.out.println(p_instances.toString());
-		}
-		//double[][] test = covarianceMatrixBuilderThingamajig.getCorrelationMatrix();
-		double[][] mrCovarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];// = covarianceMatrixBuilderThingamajig.getCorrelationMatrix();
+
+		double[][] mrCovarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
+
 		Utilities.CalculateCovarianceMatrix(p_instances, mrCovarianceMatrix);
 		double det = Utilities.determinant(mrCovarianceMatrix);
 		det = Math.abs(det);
 		if(det <= 0)
-			System.out.println("This should never ever ever..etc.. happen");
+			return 0.0;
 		System.out.println(det);
 		return Math.log(det);
 	}
@@ -476,7 +466,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 			          currSplit = inst.value(att);
 			          
-			          if(inst.classIsMissing() == false)
+			          if(inst.classIndex() != -1)
 			          {
 				          double classVal = inst.classValue() * inst.weight();
 				          double classValSquared = inst.classValue() * classVal;
@@ -531,12 +521,18 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          dist[j][0] = totalSum / totalSumOfWeights;
 			        }
 			      }
-			      // INFORMATION GAIN 4.2 CRIMINISISISISISIISISIS(2012)
 			      // Compute variance gain
 			      double priorVar = singleVariance(totalSum, totalSumSquared,
 			        totalSumOfWeights);
 			      double var = variance(sums, sumSquared, sumOfWeights);
-			      double gain = priorVar - var;
+			      
+			      //Add cluster gain over the parent to the final gain calculations.
+			      Instances clusterInstances = new Instances(p_labeledData);
+			      clusterInstances.addAll(p_unlabeledData);
+			      clusterInstances.setClassIndex(-1);
+			      double clusterPrior = SingleCovariance(clusterInstances);
+			      double clusterVar = 1.5 * Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
+			      double gain = (priorVar - var) + (clusterPrior - clusterVar);
 
 			      // Return distribution and split point
 			      subsetWeights[att] = sumOfWeights;
