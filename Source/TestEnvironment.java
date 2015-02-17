@@ -73,7 +73,7 @@ public class TestEnvironment {
 			m_supervisedForest.setNumTrees(m_trees);
 			m_supervisedForest.setMaxDepth(m_depth);
 			//m_supervisedForest.SetData(m_structure);
-			
+			tree.SetDebug(Utilities.g_debug_MEDIUM, Utilities.DebugType.CONSOLE);
 			Instances[] test = SplitDataStructure(m_structure);
 			
 			for(int i = 0; i < m_testSize; i++)

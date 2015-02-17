@@ -4,13 +4,10 @@ import weka.core.Instances;
 
 public class Utilities
 {
-	public enum DebugLevel
-	{
-		HIGH,
-		MEDIUM,
-		LOW,
-		NONE
-	}
+	public final static int g_debug_NONE = 0;
+	public final static int g_debug_LOW = 1;
+	public final static int g_debug_MEDIUM = 2;
+	public final static int g_debug_HIGH = 3;
 	public enum DebugType
 	{
 		FILE,
