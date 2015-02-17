@@ -82,7 +82,7 @@ public class TestEnvironment {
 				supervisedResults[0] = m_evaluator.toSummaryString();
 				m_supervisedForest.buildClassifier(m_structure);
 				supervisedResults[1] = m_supervisedForest.toString();*/
-				rTree.buildClassifier(m_structure);
+				//rTree.buildClassifier(m_structure);
 				tree.buildClassifier(test[0], test[1]);
 				//tree.buildClassifier(m_structure);
 				supervisedResults[0] = tree.toString();
