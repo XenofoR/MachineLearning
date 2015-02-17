@@ -177,12 +177,13 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			System.out.println("Exception caught, code:" + E.getMessage());
 			System.out.println(p_instances.toString());
 		}
-		
+		//double[][] test = covarianceMatrixBuilderThingamajig.getCorrelationMatrix();
 		double[][] mrCovarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];// = covarianceMatrixBuilderThingamajig.getCorrelationMatrix();
 		Utilities.CalculateCovarianceMatrix(p_instances, mrCovarianceMatrix);
 		double det = Utilities.determinant(mrCovarianceMatrix);
+		det = Math.abs(det);
 		if(det <= 0)
-			return 0.0;
+			System.out.println("This should never ever ever..etc.. happen");
 		System.out.println(det);
 		return Math.log(det);
 	}
