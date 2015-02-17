@@ -177,9 +177,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			return 0;
 
 		double[][] mrCovarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
-
 		Utilities.CalculateCovarianceMatrix(p_instances, mrCovarianceMatrix);
-		double det = Utilities.determinant(mrCovarianceMatrix);
+		double det = Utilities.cholesky(mrCovarianceMatrix);
 		det = Math.abs(det);
 		if(det <= 0)
 			return 0.0;
