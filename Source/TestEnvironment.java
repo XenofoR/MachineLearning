@@ -15,6 +15,7 @@ import java.util.Random;
 import weka.core.Instances;
 import weka.core.Instance;
 import weka.classifiers.Evaluation;
+import weka.classifiers.trees.RandomTree;
 public class TestEnvironment {
 	private Loader m_loader;
 	private Instances m_structure;
@@ -64,6 +65,7 @@ public class TestEnvironment {
 		else if(m_testType == 2 || m_testType == 3)
 		{
 			NewTree tree = new NewTree();
+			//RandomTree tree = new RandomTree();
 			m_supervisedForest = new SupervisedForest();
 			m_supervisedForest.setDebug(true);
 			m_supervisedForest.setPrintTrees(true);
@@ -81,6 +83,8 @@ public class TestEnvironment {
 				m_supervisedForest.buildClassifier(m_structure);
 				supervisedResults[1] = m_supervisedForest.toString();*/
 				tree.buildClassifier(test[0], test[1]);
+				//tree.buildClassifier(m_structure);
+				System.out.println(tree.toString());
 			}
 		}
 		else

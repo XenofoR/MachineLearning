@@ -52,6 +52,7 @@ public class Utilities
 	    return(sum); //returns determinant value. once stack is finished, returns final determinant.
 	}
 	
+	//http://www.cs.otago.ac.nz/cosc453/student_tutorials/principal_components.pdf
 	static public void CalculateCovarianceMatrix(Instances p_instances, double[][] p_destination)
 	{
 		for(int i = 0; i < p_instances.numInstances() ;i++)
