@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
@@ -8,6 +9,8 @@ import java.util.Vector;
 import java.lang.Math;
 
 import javax.swing.DebugGraphics;
+
+
 
 
 
@@ -147,13 +150,15 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	private double Covariance(int p_sumParentInstances, Instances[] p_instances) throws Exception
 	{
-		double hejhoppiklingonskogen = 0.0;
+		double hejhoppiklingonskogen = 0.0, parentByChild, singleResult;
 		Debugger.DebugPrint("Entering Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		Debugger.DebugPrint("SumParents = " + p_sumParentInstances + "\n" + "Sum child1 = " + p_instances[0].numInstances() + "\n" + "Sum child2 = " + p_instances[1].numInstances(),
 							Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		for(int i = 0; i < 2; i++)
 		{
-			hejhoppiklingonskogen +=  (p_instances[i].numInstances() / p_sumParentInstances) * SingleCovariance(p_instances[i]);
+			parentByChild = (double)p_instances[i].numInstances() / (double)p_sumParentInstances;
+			singleResult =  SingleCovariance(p_instances[i]);			
+			hejhoppiklingonskogen += (parentByChild * singleResult) ;
 			Debugger.DebugPrint("Covariance value= " + hejhoppiklingonskogen, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		}
 		Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
@@ -162,13 +167,16 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	private double SingleCovariance(Instances p_instances) throws Exception
 	{
-		if(p_instances.numInstances() == 0)
+		if(p_instances.numInstances() < 2)
 			return 0;
 
 		double[][] mrCovarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
 		Utilities.CalculateCovarianceMatrix(p_instances, mrCovarianceMatrix);
-		double det = Utilities.CalcDeterminantWithLU(mrCovarianceMatrix);
+		
+		double det = Utilities.CalculateDeterminant(mrCovarianceMatrix);
+		Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		det = Math.abs(det);
+		
 		if(det <= 0)
 			return 0.0;
 		//System.out.println(det);
@@ -551,8 +559,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
 			        	double c = (1.5 * Covariance(clusterData.numInstances(), splitData(clusterData, currSplit, att)));
-			            currVal = k+ c;			         
-			            Debugger.DebugPrint("Diff between variance and covariane? = " + (k-c), Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			            currVal = k+ c;
+			            k -= c;
+			            Debugger.DebugPrint("Diff between variance and covariane? = " + k, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			            if (currVal < bestVal) {
 			              bestVal = currVal;
 			              splitPoint = (inst.value(att) + currSplit) / 2.0;

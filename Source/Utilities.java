@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.unsupervised.attribute.Copy;
@@ -8,38 +10,7 @@ public class Utilities
 	
 	
 	//http://professorjava.weebly.com/matrix-determinant.html
-	static public double determinant(double p_matrix[][])
-	 {
-		int sum = 0; 
-	    int s;
-	    if(p_matrix.length==1)
-	    {  //bottom case of recursion. size 1 matrix determinant is itself.
-	      return(p_matrix[0][0]);
-	    }
-	    for(int i = 0;i < p_matrix.length; i++)
-	    { //finds determinant using row-by-row expansion
-	      double[][]smaller= new double[p_matrix.length - 1][p_matrix.length - 1]; //creates smaller matrix- values not in same row, column
-	      for(int a = 1; a < p_matrix.length; a++)
-	      {
-	        for(int b = 0; b < p_matrix.length; b++){
-	          if(b<i){
-	            smaller[a-1][b]=p_matrix[a][b];
-	          }
-	          else if(b>i){
-	            smaller[a-1][b-1]=p_matrix[a][b];
-	          }
-	        }
-	      }
-	      if(i%2==0){ //sign changes based on i
-	        s = 1;
-	      }
-	      else{
-	        s =-1;
-	      }
-	      sum+=s*p_matrix[0][i]*(determinant(smaller)); //recursive step: determinant of larger determined by smaller.
-	    }
-	    return(sum); //returns determinant value. once stack is finished, returns final determinant.
-	}
+	
 	
 	//http://www.cs.otago.ac.nz/cosc453/student_tutorials/principal_components.pdf
 	static public void CalculateCovarianceMatrix(Instances p_instances, double[][] p_destination)
@@ -56,6 +27,13 @@ public class Utilities
 		}
 		Scale(p_destination, 1.0/(p_instances.numInstances()-1));
 	}
+	
+	static public double CalculateDeterminant(double[][] p_matrix)
+	{
+		//In case we ever implement another method for calculating
+		return CalcDeterminantWithLU(p_matrix);
+	}
+	
 	
 	private static void OuterProduct(double[] p_row, double[] p_column, double[][] p_destination)
 	{
@@ -102,61 +80,11 @@ public class Utilities
 				p_matrix[i][j] *= p_scale;
 	}
 	
-	//http://introcs.cs.princeton.edu/java/95linear/Cholesky.java.html
-	public static double cholesky(double[][] A) {
-		double det = 0.0;
-        if (!isSquare(A)) {
-            throw new RuntimeException("Matrix is not square");
-        }
-        if (!isSymmetric(A)) {
-            throw new RuntimeException("Matrix is not symmetric");
-        }
 
-        int N  = A.length;
-        double[][] L = new double[N][N];
-
-        for (int i = 0; i < N; i++)  {
-            for (int j = 0; j <= i; j++) {
-                double sum = 0.0;
-                for (int k = 0; k < j; k++) {
-                    sum += L[i][k] * L[j][k];
-                }
-                if (i == j) L[i][i] = Math.sqrt(A[i][i] - sum);
-                else        L[i][j] = 1.0 / L[j][j] * (A[i][j] - sum);
-            }
-            if (L[i][i] <= 0) {
-                throw new RuntimeException("Matrix not positive definite");
-            }
-        }
-        det = L[0][0];
-        for(int i = 1; i < L.length; i++)
-        {
-        	det*= L[i][i];
-        }
-        
-        return det;
-    }
 	
-	private static boolean isSymmetric(double[][] A) {
-        int N = A.length;
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < i; j++) {
-                if (A[i][j] != A[j][i]) return false;
-            }
-        }
-        return true;
-    }
 
-    // is symmetric
-    private static boolean isSquare(double[][] A) {
-        int N = A.length;
-        for (int i = 0; i < N; i++) {
-            if (A[i].length != N) return false;
-        }
-        return true;
-    }
     
-    public static double CalcDeterminantWithLU(double[][] p_matrix)
+    private static double CalcDeterminantWithLU(double[][] p_matrix)
     {
     	double det = 0.0;
     	double[][] matrix = p_matrix.clone();
@@ -229,7 +157,7 @@ public class Utilities
     	det = matrix[0][0];
     	for(int i = 1; i < matrix.length; i++)
     		det *= matrix[i][i];
-    	
+ 
     	return det * pivSign;
     }
     

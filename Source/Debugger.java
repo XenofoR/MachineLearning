@@ -56,7 +56,7 @@ public  class Debugger
 			return false;
 		if(p_debugType == DebugType.CONSOLE || p_debugType == DebugType.BOTH)
 		{
-			if(p_minDebugLevel >= m_globalDebugLevel)
+			if(p_minDebugLevel <= m_globalDebugLevel)
 			{
 				System.out.println(p_debugData);
 				return true;
@@ -64,17 +64,20 @@ public  class Debugger
 		}
 		if(p_debugType == DebugType.FILE || p_debugType == DebugType.BOTH)
 		{
-			try{
-			Writer w = new BufferedWriter(new FileWriter(m_debugFilePath, true));
-			w.write(p_debugData);
-			w.close();
-			}
-			catch(Exception E)
+			if(p_minDebugLevel <= m_globalDebugLevel)
 			{
-				System.out.println("Exception found when attempting to write to file: " + E.toString());
-				return false;
+				try{
+				Writer w = new BufferedWriter(new FileWriter(m_debugFilePath, true));
+				w.write(p_debugData);
+				w.close();
+				}
+				catch(Exception E)
+				{
+					System.out.println("Exception found when attempting to write to file: " + E.toString());
+					return false;
+				}
+				return true;
 			}
-			return true;
 		}
 		return false;
 	}
