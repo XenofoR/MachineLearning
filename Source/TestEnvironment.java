@@ -21,11 +21,13 @@ public class TestEnvironment {
 	private Instances m_structure;
 	private SupervisedForest m_supervisedForest;
 	private ActiveForest m_activeForest;
+	private Plotter m_plotter;
 	int m_depth, m_trees, m_features, m_testType, m_testSize;
 	float m_alSplitPercentage;
 	Evaluation m_evaluator;
 	String m_test;
 	String m_inputPath, m_outputPath, m_currentTest;
+	boolean m_plot;
 	public TestEnvironment()
 	{
 		
@@ -36,18 +38,31 @@ public class TestEnvironment {
 		Path path = FileSystems.getDefault().getPath(p_testFile);
 		m_currentTest = path.getFileName().toString();
 		ProcessFile(path);
-		
+		m_plotter = new Plotter();
+		m_plotter.Init();
 		m_loader = new Loader();
 		
 	}
 	
 	public void Run() throws Exception
 	{
-		Debugger.Init(Debugger.g_debug_HIGH, null);
 		String[] activeResults = new String[2];
 		String[] supervisedResults = new String[2];
 		CreateDataStructure(m_inputPath + m_test);
 		m_evaluator = new Evaluation(m_structure);
+		if(m_plot)
+		{
+			double[] x = new double[m_structure.numInstances()];
+			double[] y = new double[m_structure.numInstances()];
+			for(int i = 0; i < m_structure.numInstances(); i++)
+			{
+				
+				x[i] = m_structure.instance(i).toDoubleArray()[0];
+				y[i] = m_structure.instance(i).toDoubleArray()[1];
+			}
+			m_plotter.Set2dPlotValues(x, y);
+			m_plotter.Display2dPlot();
+		}
 		if(m_testType == 1 || m_testType == 3)
 		{
 			m_activeForest = new ActiveForest();
@@ -98,7 +113,10 @@ public class TestEnvironment {
 		
 		WriteResultFile(activeResults, supervisedResults);
 		
-				
+		while(true)
+		{
+			
+		}
 	}
 	
 	private void WriteResultFile(String[] p_activeRes, String[] p_supervisedRes) throws Exception
@@ -172,6 +190,19 @@ public class TestEnvironment {
 			case("SplitLevel"):
 				m_alSplitPercentage = Float.parseFloat(scanner.next());
 				break;
+			case("Plot"):
+				m_plot = scanner.nextBoolean();
+				break;
+			case("DebugLevel"):
+				String temp = scanner.next();
+				if(temp.equals("NONE") == true)
+					Debugger.Init(Debugger.g_debug_NONE, null);
+				else if(temp.equals("LOW") == true)
+					Debugger.Init(Debugger.g_debug_LOW, null);
+				else if(temp.equals("MEDIUM") == true)
+					Debugger.Init(Debugger.g_debug_MEDIUM, null);
+				else if(temp.equals("HIGH") == true)
+					Debugger.Init(Debugger.g_debug_HIGH, null);
 			default:
 				System.out.println("Bad line found in test file: " + id);
 				break;
