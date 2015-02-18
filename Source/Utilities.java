@@ -160,7 +160,6 @@ public class Utilities
     {
     	double det = 0.0;
     	double[][] matrix = p_matrix.clone();
-    	boolean sing = isNonsingular(matrix);
     	int pivSign = 1;
     	int[] piv = new int[matrix.length];
     	
