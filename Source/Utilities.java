@@ -53,7 +53,7 @@ public class Utilities
 			OuterProduct(tempVector, tempVector, tempMatrix);
 			Add(p_destination, tempMatrix, p_destination);
 		}
-		Scale(p_destination, 1.0/(p_instances.numAttributes()-2));
+		Scale(p_destination, 1.0/(p_instances.numInstances()-1));
 	}
 	
 	private static void OuterProduct(double[] p_row, double[] p_column, double[][] p_destination)
