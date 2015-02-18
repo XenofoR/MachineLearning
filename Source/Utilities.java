@@ -5,19 +5,7 @@ import weka.filters.unsupervised.attribute.Copy;
 
 public class Utilities
 {
-	public enum DebugLevel
-	{
-		HIGH,
-		MEDIUM,
-		LOW,
-		NONE
-	}
-	public enum DebugType
-	{
-		FILE,
-		CONSOLE,
-		NONE
-	}
+	
 	
 	//http://professorjava.weebly.com/matrix-determinant.html
 	static public double determinant(double p_matrix[][])

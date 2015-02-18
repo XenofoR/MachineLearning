@@ -9,6 +9,8 @@ import java.lang.Math;
 
 import javax.swing.DebugGraphics;
 
+
+
 import weka.attributeSelection.PrincipalComponents;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
@@ -41,14 +43,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	
 	InnerTree m_Tree;
-	Utilities.DebugLevel m_debugLevel = Utilities.DebugLevel.NONE;
-	Utilities.DebugType m_debugType = Utilities.DebugType.NONE;
-	
-	public void SetDebug(Utilities.DebugLevel p_level, Utilities.DebugType p_type)
-	{
-		m_debugLevel  = p_level;
-		m_debugType = p_type;
-	}
+
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
 	    // Make sure K value is in range
@@ -150,20 +145,22 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    }
 	  }
 	
-	private static double Covariance(int p_sumParentInstances, Instances[] p_instances) throws Exception
+	private double Covariance(int p_sumParentInstances, Instances[] p_instances) throws Exception
 	{
 		double hejhoppiklingonskogen = 0.0;
-		System.out.println("Entering Covariance");
+		Debugger.DebugPrint("Entering Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+		Debugger.DebugPrint("SumParents = " + p_sumParentInstances + "\n" + "Sum child1 = " + p_instances[0].numInstances() + "\n" + "Sum child2 = " + p_instances[1].numInstances(),
+							Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		for(int i = 0; i < 2; i++)
 		{
 			hejhoppiklingonskogen +=  (p_instances[i].numInstances() / p_sumParentInstances) * SingleCovariance(p_instances[i]);
-			System.out.println(hejhoppiklingonskogen);
+			Debugger.DebugPrint("Covariance value= " + hejhoppiklingonskogen, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		}
-		System.out.println("Leaving Covariance");
+		Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		return hejhoppiklingonskogen;
 	}
 	
-	private static double SingleCovariance(Instances p_instances) throws Exception
+	private double SingleCovariance(Instances p_instances) throws Exception
 	{
 		if(p_instances.numInstances() == 0)
 			return 0;
@@ -540,7 +537,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        Instances clusterData = new Instances(p_labeledData);
 			        clusterData.setClassIndex(-1);
 			        clusterData.addAll(p_unlabeledData);
-			        for (int i = 0; i < indexOfFirstMissingValue + p_unlabeledData.numInstances(); i++) {
+			        int endfor = indexOfFirstMissingValue + p_unlabeledData.numInstances();
+			        for (int i = 0; i < endfor; i++) {
 
 			        	Instance inst;
 			        	if(i < indexOfFirstMissingValue)
@@ -552,10 +550,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
-			            currVal = variance(currSums, currSumSquared,
-			              currSumOfWeights) + (1.5 * Covariance(clusterData.numInstances(), splitData(clusterData, currSplit, att)));
-			            double derp = k-currVal;
-			            System.out.println(derp);
+			        	double c = (1.5 * Covariance(clusterData.numInstances(), splitData(clusterData, currSplit, att)));
+			            currVal = k+ c;			         
+			            Debugger.DebugPrint("Diff between variance and covariane? = " + (k-c), Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			            if (currVal < bestVal) {
 			              bestVal = currVal;
 			              splitPoint = (inst.value(att) + currSplit) / 2.0;

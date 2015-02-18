@@ -43,6 +43,7 @@ public class TestEnvironment {
 	
 	public void Run() throws Exception
 	{
+		Debugger.Init(Debugger.g_debug_MEDIUM, null);
 		String[] activeResults = new String[2];
 		String[] supervisedResults = new String[2];
 		CreateDataStructure(m_inputPath + m_test);
