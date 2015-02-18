@@ -203,6 +203,7 @@ public class TestEnvironment {
 					Debugger.Init(Debugger.g_debug_MEDIUM, null);
 				else if(temp.equals("HIGH") == true)
 					Debugger.Init(Debugger.g_debug_HIGH, null);
+				break;
 			default:
 				System.out.println("Bad line found in test file: " + id);
 				break;
