@@ -1,5 +1,6 @@
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.filters.unsupervised.attribute.Copy;
 
 
 public class Utilities
@@ -155,6 +156,89 @@ public class Utilities
         return true;
     }
     
+    public static double CalcDeterminantWithLU(double[][] p_matrix)
+    {
+    	double det = 0.0;
+    	double[][] matrix = p_matrix.clone();
+    	boolean sing = isNonsingular(matrix);
+    	int pivSign = 1;
+    	int[] piv = new int[matrix.length];
+    	
+    	for(int i = 0; i < matrix.length; i++)
+    		piv[i] = i;
+    	
+    	double[] LUrowi;
+    	double[] LUcolj = new double[matrix.length];
+    	
+    	// Outer loop
+    	for(int j = 0; j < matrix.length; j++)
+    	{
+    		for(int i = 0; i < matrix.length; i++)
+    		{
+    		LUcolj[i] = matrix[i][j];
+    		}
+    		
+    		//Apply previous transformations
+    		for(int i = 0; i < matrix.length; i++)
+    		{
+    			LUrowi = matrix[i];
+    			
+    			
+    			//Dot product
+    			int kmax = Math.min(i, j);
+    			double s = 0.0;
+    			for(int k = 0; k < kmax; k++)
+    			{
+    				s += LUrowi[k] * LUcolj[k];
+    			}
+    			
+    			LUrowi[j] = LUcolj[i] -= s;
+    		}
+    		
+    		//Find pivot and exchange if necessary
+    		
+    		int p = j;
+    		for(int i = j + 1; i < matrix.length; i++)
+    		{
+    			if(Math.abs(LUcolj[i]) > Math.abs(LUcolj[p]))
+    				p = i;
+    		}
+    		if(p != j)
+    		{
+    			for(int k = 0; k < matrix.length; k++)
+    			{
+    				double t = matrix[p][k];
+    				matrix[p][k] = matrix[j][k];
+    				matrix[j][k] = t;
+    			}
+    			int k = piv[p];
+    			piv[p] = piv[j];
+    			piv[j] = k;
+    			pivSign = -pivSign;
+    		}
+    		
+    		//Compute multipliers
+    		if(j < matrix.length & matrix[j][j] != 0.0)
+    		{
+    			for(int i = j + 1; i < matrix.length; i++)
+    			{
+    				matrix[i][j] /= matrix[j][j];
+    			}
+    		}
+    	}
+    	det = matrix[0][0];
+    	for(int i = 1; i < matrix.length; i++)
+    		det *= matrix[i][i];
+    	
+    	return det * pivSign;
+    }
     
+    private static boolean isNonsingular(double[][] p_matrix) {
+        for (int j = 0; j < p_matrix.length; j++) {
+          if (p_matrix[j][j] == 0)
+            return false;
+        }
+        return true;
+      }
 	
 }
