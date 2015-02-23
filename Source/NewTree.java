@@ -46,6 +46,15 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	
 	InnerTree m_Tree;
+	
+	public String PrintCovarianceMatrices()
+	{
+		String output = "";
+		
+		output = m_Tree.PrintCovarianceMatrices();
+		
+		return output;
+	}
 
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
@@ -148,40 +157,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    }
 	  }
 	
-	private double Covariance(int p_sumParentInstances, Instances[] p_instances) throws Exception
-	{
-		double hejhoppiklingonskogen = 0.0, parentByChild, singleResult;
-		Debugger.DebugPrint("Entering Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-		Debugger.DebugPrint("SumParents = " + p_sumParentInstances + "\n" + "Sum child1 = " + p_instances[0].numInstances() + "\n" + "Sum child2 = " + p_instances[1].numInstances(),
-							Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
-		for(int i = 0; i < 2; i++)
-		{
-			parentByChild = (double)p_instances[i].numInstances() / (double)p_sumParentInstances;
-			singleResult =  SingleCovariance(p_instances[i]);			
-			hejhoppiklingonskogen += (parentByChild * singleResult) ;
-			Debugger.DebugPrint("Covariance value= " + hejhoppiklingonskogen, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
-		}
-		Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-		return hejhoppiklingonskogen;
-	}
 	
-	private double SingleCovariance(Instances p_instances) throws Exception
-	{
-		if(p_instances.numInstances() < 2)
-			return 0;
-
-		double[][] mrCovarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
-		Utilities.CalculateCovarianceMatrix(p_instances, mrCovarianceMatrix);
-		
-		double det = Utilities.CalculateDeterminant(mrCovarianceMatrix);
-		Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
-		det = Math.abs(det);
-		
-		if(det <= 0)
-			return 0.0;
-		//System.out.println(det);
-		return Math.log(det);
-	}
 	public String toString() {
 
 	    // only ZeroR model?
@@ -211,6 +187,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	protected class InnerTree extends Tree
 	{
+		double[][] m_covarianceMatrix = null;
 		 public int numNodes() {
 
 		      if (m_Attribute == -1) {
@@ -223,6 +200,24 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        return size;
 		      }
 		    }
+		 
+		 public String PrintCovarianceMatrices()
+			{
+				String output = "\n";
+				
+				if(m_covarianceMatrix != null)
+				{
+					output += Arrays.deepToString(m_covarianceMatrix);
+				}
+				else
+				{
+					output += "SPLIT";
+					for(int i = 0; i < 2; i++)
+						output += m_Successors[i].PrintCovarianceMatrices();
+				}
+				return output;
+			}
+		 
 		protected String toString(int level) {
 
 		      try {
@@ -301,7 +296,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      double minVariance) throws Exception {
 			
 		      // Make leaf if there are no training instances
-		      if (p_labeledData.numInstances() == 0) {
+		      if (p_labeledData.numInstances() == 0 && p_unlabeledData.numInstances() == 0) {
 		        m_Attribute = -1;
 		        m_ClassDistribution = null;
 		        m_Prop = null;
@@ -324,8 +319,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		            * inst.weight();
 		          totalSumOfWeights += inst.weight();
 		        }
+		        Instances instance = new Instances(p_labeledData);
+		        instance.addAll(p_unlabeledData);
 		        priorVar = NewTree.singleVariance(totalSum, totalSumSquared,
-		          totalSumOfWeights);
+		          totalSumOfWeights) + SingleCovariance(instance);
 		      }
 
 		      // Check if node doesn't contain enough instances or is pure
@@ -359,7 +356,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		          m_Distribution[0] = priorVar;
 		          m_Distribution[1] = p_totalWeight;
 		        }
-
+		        Instances instance = new Instances(p_labeledData);
+		        instance.addAll(p_unlabeledData);
+		        m_covarianceMatrix = new double[instance.numAttributes()-1][instance.numAttributes()-1];
+		        Utilities.CalculateCovarianceMatrix(instance, m_covarianceMatrix);
 		        m_Prop = null;
 		        return;
 		      }
@@ -453,11 +453,20 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        // Make leaf
 		        m_Attribute = -1;
 		        m_ClassDistribution = p_classProbs.clone();
+		       
 		        if (p_labeledData.classAttribute().isNumeric()) {
 		          m_Distribution = new double[2];
 		          m_Distribution[0] = priorVar;
 		          m_Distribution[1] = p_totalWeight;
 		        }
+		      }
+		      //We are a leaf, so we save the covariance matrix
+		      if(m_Attribute == -1)
+		      {
+		    	  Instances instances = new Instances(p_labeledData);
+			      instances.addAll(p_unlabeledData);
+			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
+			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix);
 		      }
 		    }
 		
@@ -656,6 +665,40 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 			      return splitPoint;
 			    }
+		
+		private double Covariance(int p_sumParentInstances, Instances[] p_instances) throws Exception
+		{
+			double hejhoppiklingonskogen = 0.0, parentByChild, singleResult;
+			Debugger.DebugPrint("Entering Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			Debugger.DebugPrint("SumParents = " + p_sumParentInstances + "\n" + "Sum child1 = " + p_instances[0].numInstances() + "\n" + "Sum child2 = " + p_instances[1].numInstances(),
+								Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			for(int i = 0; i < 2; i++)
+			{
+				parentByChild = (double)p_instances[i].numInstances() / (double)p_sumParentInstances;
+				singleResult =  SingleCovariance(p_instances[i]);			
+				hejhoppiklingonskogen += (parentByChild * singleResult) ;
+				Debugger.DebugPrint("Covariance value= " + hejhoppiklingonskogen, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			}
+			Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			return hejhoppiklingonskogen;
+		}
+		
+		private double SingleCovariance(Instances p_instances) throws Exception
+		{
+			if(p_instances.numInstances() < 2)
+				return 0;
+
+			double[][] covarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
+			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix);
+			
+			double det = Utilities.CalculateDeterminant(covarianceMatrix);
+			Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			det = Math.abs(det);
+			
+			if(det <= 0)
+				return 0.0;
+			return Math.log(det);
+		}
 		
 		protected Instances[] splitData(Instances p_data, double p_splitPoint, int p_attr) throws Exception {
 

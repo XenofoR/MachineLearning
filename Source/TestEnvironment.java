@@ -101,8 +101,8 @@ public class TestEnvironment {
 				rTree.buildClassifier(m_structure);
 				tree.buildClassifier(test[0], test[1]);
 				//tree.buildClassifier(m_structure);
-				supervisedResults[0] = tree.toString();
-				supervisedResults[1] = rTree.toString();
+				supervisedResults[0] = tree.toString() + tree.PrintCovarianceMatrices();
+				//supervisedResults[1] = rTree.toString();
 			}
 		}
 		else
