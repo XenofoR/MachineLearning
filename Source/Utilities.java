@@ -1,5 +1,7 @@
 import java.util.Arrays;
 
+
+
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.unsupervised.attribute.Copy;
@@ -16,6 +18,7 @@ public class Utilities
 	static public void CalculateCovarianceMatrix(Instances p_instances, double[][] p_destination)
 	{
 		
+		
 		double[] mean = Mean(p_instances);
 		for(int i = 0; i < p_instances.numInstances() ;i++)
 		{			
@@ -25,8 +28,16 @@ public class Utilities
 			OuterProduct(tempVector, tempVector, tempMatrix);
 			Add(p_destination, tempMatrix, p_destination);
 		}
-		double scaleVar = 1.0/(p_instances.numInstances()-1) != 0 ? (1.0/(p_instances.numInstances()-1)) : 1;
-		Scale(p_destination, scaleVar );
+		double scaleVar = 1.0/(p_instances.numInstances()-1);
+		if(scaleVar != 0)
+		{
+			Scale(p_destination, scaleVar );
+		}
+		else
+		{
+			Debugger.DebugPrint("CalculateCovarianceMatrix only recieved 1 instance  results will be a zero matrix", Debugger.g_debug_HIGH, Debugger.DebugType.CONSOLE);
+			Scale(p_destination, 1 );
+		}	
 	}
 	
 	static public double CalculateDeterminant(double[][] p_matrix)
