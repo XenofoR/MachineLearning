@@ -38,6 +38,8 @@ import weka.core.WeightedInstancesHandler;
  - buildClassifier() takes two instances instead of one.
  - added our own implementation of splitData() which can split an instance on a specific attribute index and splitPoint.
  - numericDistribution() also takes a second instance set now and we added our covariance calculation to the best split calculation
+ - InnerTree contains two new functions singleCovariance() and Covariance() to mirror how weka does regression
+ - BuildTree in InnerTree now constructs a member covarianceMatrix if the tree represents a leaf.
  - numericDistrubution() added cluster gain calculation to the final gain calculation
  */
 public class NewTree extends weka.classifiers.trees.RandomTree
