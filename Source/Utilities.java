@@ -25,7 +25,8 @@ public class Utilities
 			OuterProduct(tempVector, tempVector, tempMatrix);
 			Add(p_destination, tempMatrix, p_destination);
 		}
-		Scale(p_destination, 1.0/(p_instances.numInstances()-1));
+		double scaleVar = 1.0/(p_instances.numInstances()-1) != 0 ? (1.0/(p_instances.numInstances()-1)) : 1;
+		Scale(p_destination, scaleVar );
 	}
 	
 	static public double CalculateDeterminant(double[][] p_matrix)
