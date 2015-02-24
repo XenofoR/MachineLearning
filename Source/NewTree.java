@@ -687,8 +687,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		
 		private double SingleCovariance(Instances p_instances) throws Exception
 		{
-			if(p_instances.numInstances() < 2)
-				return 0;
+			//if(p_instances.numInstances() < 2)
+				//return 0;
 
 			double[][] covarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
 			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix);
