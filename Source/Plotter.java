@@ -63,10 +63,10 @@ public class Plotter
 	{
 		if(m_plot == false)
 			return;
-		double x[] = new double[p_instances.numInstances()-1];
-		double y[] = new double[p_instances.numInstances()-1];
+		double x[] = new double[p_instances.numInstances()];
+		double y[] = new double[p_instances.numInstances()];
 		XYSeries series = new XYSeries("Cluster" + m_counter);
-		for(int i = 0; i < p_instances.numInstances() -1; i++)
+		for(int i = 0; i < p_instances.numInstances(); i++)
 		{
 			x[i] = p_instances.instance(i).toDoubleArray()[0];
 			y[i] = p_instances.instance(i).toDoubleArray()[1];
@@ -92,7 +92,7 @@ public class Plotter
 			return;
 		//Something is missing....
 		//m_scatter = new FastScatterPlot(m_data, m_xAxis, m_yAxis);
-		m_chart = ChartFactory.createScatterPlot("test", "The fuck", "Useless shit", m_data);
+		m_chart = ChartFactory.createScatterPlot("Clusters", "X", "Y", m_data);
 		
 		Shape shape = ShapeUtilities.createDiamond(3);
 		XYPlot tempPlot = (XYPlot) m_chart.getPlot();
