@@ -46,23 +46,12 @@ public class TestEnvironment {
 	
 	public void Run() throws Exception
 	{
+		m_plotter.SetPlot(m_plot);
 		String[] activeResults = new String[2];
 		String[] supervisedResults = new String[2];
 		CreateDataStructure(m_inputPath + m_test);
 		m_evaluator = new Evaluation(m_structure);
-		if(m_plot)
-		{
-			double[] x = new double[m_structure.numInstances()];
-			double[] y = new double[m_structure.numInstances()];
-			for(int i = 0; i < m_structure.numInstances(); i++)
-			{
-				
-				x[i] = m_structure.instance(i).toDoubleArray()[0];
-				y[i] = m_structure.instance(i).toDoubleArray()[1];
-			}
-			m_plotter.Set2dPlotValues(x, y);
-			m_plotter.Display2dPlot();
-		}
+	
 		if(m_testType == 1 || m_testType == 3)
 		{
 			m_activeForest = new ActiveForest();
@@ -112,11 +101,8 @@ public class TestEnvironment {
 		}
 		
 		WriteResultFile(activeResults, supervisedResults);
+		Plotter.Display2dPlot();
 		
-		while(true)
-		{
-			
-		}
 	}
 	
 	private void WriteResultFile(String[] p_activeRes, String[] p_supervisedRes) throws Exception

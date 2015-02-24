@@ -360,6 +360,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        instance.addAll(p_unlabeledData);
 		        m_covarianceMatrix = new double[instance.numAttributes()-1][instance.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instance, m_covarianceMatrix);
+		        Plotter.Set2dPlotValues(instance);
 		        m_Prop = null;
 		        return;
 		      }
@@ -467,6 +468,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      instances.addAll(p_unlabeledData);
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix);
+			      Plotter.Set2dPlotValues(instances);
 		      }
 		    }
 		

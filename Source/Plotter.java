@@ -15,46 +15,64 @@ import org.jfree.ui.RefineryUtilities;
 import org.jfree.util.ShapeUtilities;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import weka.core.Instances;
+
 
 public class Plotter
 {
 	//FastScatterPlot m_scatter;
-	JFreeChart m_chart;
-	NumberAxis m_xAxis, m_yAxis;
-	//float m_data[][];
-	XYSeriesCollection m_data;
-	ApplicationFrame m_frame;
+	static JFreeChart m_chart;
+	 //float m_data[][];
+	static XYSeriesCollection m_data;
+	static ApplicationFrame m_frame;
+	static int m_counter = 0;
+	static boolean m_plot;
 	Plotter()
 	{
 		
 	}
-	public void Init()
+	static public void Init()
 	{
-		m_xAxis = new NumberAxis("X");
-		m_xAxis.setAutoRangeIncludesZero(false);
-		m_yAxis = new NumberAxis("Y");
-		m_yAxis.setAutoRangeIncludesZero(false);
+		
 		m_frame = new ApplicationFrame("Test");
 		m_data = new XYSeriesCollection();
 	}
-	public void Set2dPlotValues(double[] x, double[] y) 
+	static public void SetPlot(boolean p_plot)
 	{
+		m_plot = p_plot;
+	}
+	static public void Set2dPlotValues(double[] x, double[] y) 
+	{
+		if(m_plot == false)
+			return;
+		XYSeries series = new XYSeries("Cluster" + m_counter);
 		
-		float minX = Float.MAX_VALUE;
-		float maxX = -Float.MAX_VALUE;
-		float minY = Float.MAX_VALUE;
-		float maxY = -Float.MAX_VALUE;
-		//Find values to use as plot range
+	//	double temp[][] = {x,y};
+		//int xl = x.length, yl = y.length;
 		for(int i = 0; i < x.length; i++)
-		{	
-			minX = (float) (x[i] < minX ? x[i] : minX);
-			maxX = (float) (x[i] > maxX ? x[i] : maxX);
-			minY = (float) (y[i] < minY ? x[i] : minY);
-			maxY = (float) (y[i] > maxY ? x[i] : maxY);
+		{
+			//for(int j = 0; j < y.length; j++)
+			{
+				series.add(x[i], y[i]);
+			}
 		}
-		XYSeries series = new XYSeries("Stuff");
-		m_xAxis.setRange(minX, maxX);
-		m_yAxis.setRange(minY, maxY);
+		m_data.addSeries(series);	
+		m_counter++;
+	}
+	static public void Set2dPlotValues(Instances p_instances) 
+	{
+		if(m_plot == false)
+			return;
+		double x[] = new double[p_instances.numInstances()-1];
+		double y[] = new double[p_instances.numInstances()-1];
+		XYSeries series = new XYSeries("Cluster" + m_counter);
+		for(int i = 0; i < p_instances.numInstances() -1; i++)
+		{
+			x[i] = p_instances.instance(i).toDoubleArray()[0];
+			y[i] = p_instances.instance(i).toDoubleArray()[1];
+		}
+				
+		
 	//	double temp[][] = {x,y};
 		//int xl = x.length, yl = y.length;
 		for(int i = 0; i < x.length; i++)
@@ -65,11 +83,13 @@ public class Plotter
 			}
 		}
 		m_data.addSeries(series);
-		
+		m_counter++;
 	}
 	//http://www.java2s.com/Code/Java/Chart/JFreeChartFastScatterPlotDemo.htm
-	public void Display2dPlot() 
+	static public void Display2dPlot() 
 	{
+		if(m_plot == false)
+			return;
 		//Something is missing....
 		//m_scatter = new FastScatterPlot(m_data, m_xAxis, m_yAxis);
 		m_chart = ChartFactory.createScatterPlot("test", "The fuck", "Useless shit", m_data);
