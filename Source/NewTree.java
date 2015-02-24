@@ -129,15 +129,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    double[] classProbs = new double[labeledTrain.numClasses()];
 	    for (int i = 0; i < labeledTrain.numInstances(); i++) {
 	      Instance inst = labeledTrain.instance(i);
-	      if (p_labeledData.classAttribute().isNominal()) {
-	        classProbs[(int) inst.classValue()] += inst.weight();
-	        totalWeight += inst.weight();
-	      } else {
-	        classProbs[0] += inst.classValue() * inst.weight();
-	        totalSumSquared += inst.classValue() * inst.classValue()
-	          * inst.weight();
-	        totalWeight += inst.weight();
-	      }
+
+	      classProbs[0] += inst.classValue() * inst.weight();
+	      totalSumSquared += inst.classValue() * inst.classValue()
+	        * inst.weight();
+	      totalWeight += inst.weight();
 	    }
 
 	    double trainVariance = 0;
@@ -190,6 +186,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	protected class InnerTree extends Tree
 	{
 		double[][] m_covarianceMatrix = null;
+		protected InnerTree[] m_Successors;
+		
 		 public int numNodes() {
 
 		      if (m_Attribute == -1) {
@@ -229,19 +227,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 		          // Output leaf info
 		          return leafString();
-		        } else if (m_Info.attribute(m_Attribute).isNominal()) {
-
-		          // For nominal attributes
-		          for (int i = 0; i < m_Successors.length; i++) {
-		            text.append("\n");
-		            for (int j = 0; j < level; j++) {
-		              text.append("|   ");
-		            }
-		            text.append(m_Info.attribute(m_Attribute).name() + " = "
-		              + m_Info.attribute(m_Attribute).value(i));
-		            text.append(m_Successors[i].toString(level + 1));
-		          }
-		        } else {
+		        }  else {
 
 		          // For numeric attributes
 		          text.append("\n");
@@ -266,7 +252,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        return "RandomTree: tree can't be printed";
 		      }
 		    }
-		protected InnerTree[] m_Successors;
+		
 		public String toString() {
 
 		    // only ZeroR model?
@@ -327,20 +313,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		          totalSumOfWeights) + SingleCovariance(instance);
 		      }
 
-		      // Check if node doesn't contain enough instances or is pure
-		      // or maximum depth reached
-		      if (p_labeledData.classAttribute().isNominal()) {
-		        p_totalWeight = Utils.sum(p_classProbs);
-		      }
 		      // System.err.println("Total weight " + totalWeight);
 		      // double sum = Utils.sum(classProbs);
 		      if (p_totalWeight < 2 * m_MinNum ||
-
-		      // Nominal case
-		        (p_labeledData.classAttribute().isNominal() && Utils.eq(
-		          p_classProbs[Utils.maxIndex(p_classProbs)], Utils.sum(p_classProbs)))
-
-		        ||
 
 		        // Numeric case
 		        (p_labeledData.classAttribute().isNumeric() && priorVar / p_totalWeight < minVariance)
@@ -358,10 +333,13 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		          m_Distribution[0] = priorVar;
 		          m_Distribution[1] = p_totalWeight;
 		        }
+		        
+		        //Construct covarianceMatrix for the cluster contained in this leaf
 		        Instances instance = new Instances(p_labeledData);
 		        instance.addAll(p_unlabeledData);
 		        m_covarianceMatrix = new double[instance.numAttributes()-1][instance.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instance, m_covarianceMatrix);
+		        
 		        m_Prop = null;
 		        return;
 		      }
@@ -456,11 +434,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_Attribute = -1;
 		        m_ClassDistribution = p_classProbs.clone();
 		       
-		        if (p_labeledData.classAttribute().isNumeric()) {
-		          m_Distribution = new double[2];
-		          m_Distribution[0] = priorVar;
-		          m_Distribution[1] = p_totalWeight;
-		        }
+		        m_Distribution = new double[2];
+		        m_Distribution[0] = priorVar;
+		        m_Distribution[1] = p_totalWeight;
 		      }
 		      //We are a leaf, so we save the covariance matrix
 		      if(m_Attribute == -1)
@@ -485,34 +461,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      double totalSum = 0, totalSumSquared = 0, totalSumOfWeights = 0;
 			      int indexOfFirstMissingValue = p_labeledData.numInstances();
 
-			      if (attribute.isNominal()) {
-			        sums = new double[attribute.numValues()];
-			        sumSquared = new double[attribute.numValues()];
-			        sumOfWeights = new double[attribute.numValues()];
-			        int attVal;
-
-			        for (int i = 0; i < p_labeledData.numInstances(); i++) {
-			          Instance inst = p_labeledData.instance(i);
-			          if (inst.isMissing(att)) {
-
-			            // Skip missing values at this stage
-			            if (indexOfFirstMissingValue == p_labeledData.numInstances()) {
-			              indexOfFirstMissingValue = i;
-			            }
-			            continue;
-			          }
-
-			          attVal = (int) inst.value(att);
-			          sums[attVal] += inst.classValue() * inst.weight();
-			          sumSquared[attVal] += inst.classValue() * inst.classValue()
-			            * inst.weight();
-			          sumOfWeights[attVal] += inst.weight();
-			        }
-
-			        totalSum = Utils.sum(sums);
-			        totalSumSquared = Utils.sum(sumSquared);
-			        totalSumOfWeights = Utils.sum(sumOfWeights);
-			      } else {
 			        // For numeric attributes
 			        sums = new double[2];
 			        sumSquared = new double[2];
@@ -606,7 +554,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				          currSumOfWeights[1] -= inst.weight();
 			          }
 			        }
-			      }
 
 			      // Compute weights
 			      props[0] = new double[sums.length];
@@ -719,14 +666,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        // We will disregard missing attributes entirely, thus these instances will not effect the density
 		        if (inst.isMissing(p_attr)) {
 
-		          continue;
-		        }
-
-		        // Do we have a nominal attribute?
-		        if (p_data.attribute(p_attr).isNominal()) {
-		          subsets[(int) inst.value(p_attr)].add(inst);
-
-		          // Proceed to next instance
 		          continue;
 		        }
 
