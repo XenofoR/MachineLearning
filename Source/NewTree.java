@@ -187,7 +187,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	{
 		double[][] m_covarianceMatrix = null;
 		protected InnerTree[] m_Successors;
-		
+		double m_fish = 1.5;
 		 public int numNodes() {
 
 		      if (m_Attribute == -1) {
@@ -513,11 +513,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	else
 			        		inst = p_unlabeledData.instance(i - indexOfFirstMissingValue);
 			        	
-			          //TODO: THIS IS PLACE TO ENTER CLUSTER ALGORITHM
+			          //TODO: CHANGE THE FISK to a non static value
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
-			        	double c = (1.5 * Covariance(clusterData.numInstances(), splitData(clusterData, currSplit, att)));
+			        	double c = (m_fish * Covariance(clusterData.numInstances(), splitData(clusterData, currSplit, att)));
 			            currVal = k+ c;
 			            k -= c;
 			            Debugger.DebugPrint("Diff between variance and covariane? = " + k, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
@@ -600,11 +600,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      double var = variance(sums, sumSquared, sumOfWeights);
 			      
 			      //Add cluster gain over the parent to the final gain calculations.
+			      //TODO: change the FISK to a non static value
 			      Instances clusterInstances = new Instances(p_labeledData);
 			      clusterInstances.addAll(p_unlabeledData);
 			      clusterInstances.setClassIndex(-1);
 			      double clusterPrior = SingleCovariance(clusterInstances);
-			      double clusterVar = 1.5 * Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
+			      double clusterVar = m_fish * Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
 			      double gain = (priorVar - var) + (clusterPrior - clusterVar);
 
 			      // Return distribution and split point
