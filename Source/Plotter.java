@@ -21,27 +21,27 @@ import weka.core.Instances;
 public class Plotter
 {
 	//FastScatterPlot m_scatter;
-	static JFreeChart m_chart;
+	JFreeChart m_chart;
 	 //float m_data[][];
-	static XYSeriesCollection m_data;
-	static ApplicationFrame m_frame;
-	static int m_counter = 0;
-	static boolean m_plot;
+	XYSeriesCollection m_data;
+	ApplicationFrame m_frame;
+	int m_counter = 0;
+	boolean m_plot;
 	Plotter()
 	{
 		
 	}
-	static public void Init()
+	public void Init(String p_name)
 	{
 		
-		m_frame = new ApplicationFrame("Test");
+		m_frame = new ApplicationFrame(p_name);
 		m_data = new XYSeriesCollection();
 	}
-	static public void SetPlot(boolean p_plot)
+	public void SetPlot(boolean p_plot)
 	{
 		m_plot = p_plot;
 	}
-	static public void Set2dPlotValues(double[] x, double[] y) 
+	public void Set2dPlotValues(double[] x, double[] y) 
 	{
 		if(m_plot == false)
 			return;
@@ -59,7 +59,7 @@ public class Plotter
 		m_data.addSeries(series);	
 		m_counter++;
 	}
-	static public void Set2dPlotValues(Instances p_instances) 
+	public void Set2dPlotValues(Instances p_instances) 
 	{
 		if(m_plot == false)
 			return;
@@ -86,7 +86,7 @@ public class Plotter
 		m_counter++;
 	}
 	//http://www.java2s.com/Code/Java/Chart/JFreeChartFastScatterPlotDemo.htm
-	static public void Display2dPlot() 
+	public void Display2dPlot() 
 	{
 		if(m_plot == false)
 			return;

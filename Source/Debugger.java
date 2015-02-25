@@ -12,6 +12,7 @@ public  class Debugger
 	public final static int g_debug_LOW = 1;
 	public final static int g_debug_MEDIUM = 2;
 	public final static int g_debug_HIGH = 3;
+	static boolean g_plot = false;;
 	private static int m_globalDebugLevel = g_debug_NONE;
 	private static String m_debugFilePath;
 	public enum DebugType

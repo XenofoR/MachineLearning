@@ -21,13 +21,12 @@ public class TestEnvironment {
 	private Instances m_structure;
 	private SupervisedForest m_supervisedForest;
 	private ActiveForest m_activeForest;
-	private Plotter m_plotter;
 	int m_depth, m_trees, m_features, m_testType, m_testSize;
 	float m_alSplitPercentage;
 	Evaluation m_evaluator;
 	String m_test;
 	String m_inputPath, m_outputPath, m_currentTest;
-	boolean m_plot;
+	
 	public TestEnvironment()
 	{
 		
@@ -38,15 +37,12 @@ public class TestEnvironment {
 		Path path = FileSystems.getDefault().getPath(p_testFile);
 		m_currentTest = path.getFileName().toString();
 		ProcessFile(path);
-		m_plotter = new Plotter();
-		m_plotter.Init();
 		m_loader = new Loader();
 		
 	}
 	
 	public void Run() throws Exception
 	{
-		m_plotter.SetPlot(m_plot);
 		String[] activeResults = new String[2];
 		String[] supervisedResults = new String[2];
 		CreateDataStructure(m_inputPath + m_test);
@@ -101,7 +97,6 @@ public class TestEnvironment {
 		}
 		
 		WriteResultFile(activeResults, supervisedResults);
-		Plotter.Display2dPlot();
 		
 	}
 	
@@ -177,7 +172,7 @@ public class TestEnvironment {
 				m_alSplitPercentage = Float.parseFloat(scanner.next());
 				break;
 			case("Plot"):
-				m_plot = scanner.nextBoolean();
+				Debugger.g_plot = scanner.nextBoolean();
 				break;
 			case("DebugLevel"):
 				String temp = scanner.next();

@@ -45,7 +45,7 @@ import weka.core.WeightedInstancesHandler;
 public class NewTree extends weka.classifiers.trees.RandomTree
 {
 	
-	
+	private Plotter m_plotter;
 	
 	InnerTree m_Tree;
 	
@@ -58,6 +58,14 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		return output;
 	}
 
+	public NewTree()
+	{
+		super();
+		m_plotter = new Plotter();
+		m_plotter.Init("IAM A TREE");
+		m_plotter.SetPlot(Debugger.g_plot);
+	}
+	
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
 	    // Make sure K value is in range
@@ -153,6 +161,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    if (labeledBackfit != null) {
 	      m_Tree.backfitData(labeledBackfit); //TODO change to handle two instances
 	    }
+	    m_plotter.Display2dPlot();
 	  }
 	
 	
@@ -187,6 +196,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	{
 		double[][] m_covarianceMatrix = null;
 		protected InnerTree[] m_Successors;
+		
 		double m_fish = 1.5;
 		 public int numNodes() {
 
@@ -340,7 +350,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_covarianceMatrix = new double[instance.numAttributes()-1][instance.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instance, m_covarianceMatrix);
 
-		        Plotter.Set2dPlotValues(instance);
+		        m_plotter.Set2dPlotValues(instance);
 
 		        m_Prop = null;
 		        return;
@@ -447,7 +457,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      instances.addAll(p_unlabeledData);
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix);
-			      Plotter.Set2dPlotValues(instances);
+			     m_plotter.Set2dPlotValues(instances);
 		      }
 		    }
 		
