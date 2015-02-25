@@ -474,6 +474,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 			        // Sort data
 			        p_labeledData.sort(att);
+			        p_unlabeledData.sort(att);
 
 			        // Move all instances into second subset
 			        for (int j = 0; j < p_labeledData.numInstances(); j++) {
@@ -516,7 +517,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	else
 			        		inst = p_unlabeledData.instance(i - indexOfFirstMissingValue);
 			        	
-			          //TODO: CHANGE THE FISK to a non static value
+			          //TODO: CHANGE THE FISK to a non static value and update variance calculation to seperate stuff
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);

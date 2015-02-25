@@ -1,5 +1,6 @@
 import weka.core.Instances;
 import weka.core.Instance;
+import weka.core.Utils;
 
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomForest.java
 public class ActiveForest extends weka.classifiers.trees.RandomForest {
@@ -10,9 +11,36 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData)
-	{
-		
+	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception
+	{	
+		// remove instances with missing class
+		p_labeledData = new Instances(p_labeledData);
+		p_labeledData.deleteWithMissingClass();
+
+	    m_bagger = new Bilbo();
+
+	    // RandomTree implements WeightedInstancesHandler, so we can
+	    // represent copies using weights to achieve speed-up.
+	    m_bagger.setRepresentCopiesUsingWeights(true);
+
+	    NewTree rTree = new NewTree();
+
+	    // set up the random tree options
+	    m_KValue = m_numFeatures;
+	    if (m_KValue < 1) {
+	      m_KValue = (int) Utils.log2(p_labeledData.numAttributes() - 1) + 1;
+	    }
+	    rTree.setKValue(m_KValue);
+	    rTree.setMaxDepth(getMaxDepth());
+	    rTree.setDoNotCheckCapabilities(true);
+
+	    // set up the bagger and build the forest
+	    m_bagger.setClassifier(rTree);
+	    m_bagger.setSeed(m_randomSeed);
+	    m_bagger.setNumIterations(m_numTrees);
+	    m_bagger.setCalcOutOfBag(!getDontCalculateOutOfBagError());
+	    m_bagger.setNumExecutionSlots(m_numExecutionSlots);
+	    m_bagger.buildClassifier(p_labeledData, p_unlabeledData);
 	}
 	
 	public String GetInfo() {

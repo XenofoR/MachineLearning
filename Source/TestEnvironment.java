@@ -69,8 +69,11 @@ public class TestEnvironment {
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{
-			NewTree tree = new NewTree();
-			RandomTree rTree = new RandomTree();
+			m_activeForest = new ActiveForest();
+			m_activeForest.setNumTrees(m_trees);
+			m_activeForest.setMaxDepth(m_depth);
+			//NewTree tree = new NewTree();
+			//RandomTree rTree = new RandomTree();
 			m_supervisedForest = new SupervisedForest();
 			m_supervisedForest.setDebug(true);
 			m_supervisedForest.setPrintTrees(true);
@@ -87,10 +90,10 @@ public class TestEnvironment {
 				supervisedResults[0] = m_evaluator.toSummaryString();
 				m_supervisedForest.buildClassifier(m_structure);
 				supervisedResults[1] = m_supervisedForest.toString();*/
-				rTree.buildClassifier(m_structure);
-				tree.buildClassifier(test[0], test[1]);
+				//rTree.buildClassifier(m_structure);
+				m_activeForest.buildClassifier(test[0], test[1]);
 				//tree.buildClassifier(m_structure);
-				supervisedResults[0] = tree.toString() + tree.PrintCovarianceMatrices();
+				supervisedResults[0] = m_activeForest.toString();// + tree.PrintCovarianceMatrices();
 				//supervisedResults[1] = rTree.toString();
 			}
 		}
