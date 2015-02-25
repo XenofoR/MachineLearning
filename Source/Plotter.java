@@ -1,3 +1,5 @@
+import java.awt.Color;
+import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Window;
 
@@ -7,11 +9,13 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.FastScatterPlot;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.AbstractRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
+import org.jfree.util.PaintUtilities;
 import org.jfree.util.ShapeUtilities;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -59,30 +63,36 @@ public class Plotter
 		m_data.addSeries(series);	
 		m_counter++;
 	}
-	public void Set2dPlotValues(Instances p_instances) 
+	public void Set2dPlotValues(Instances p_Unlabeled, Instances p_labeled) 
 	{
 		if(m_plot == false)
 			return;
-		double x[] = new double[p_instances.numInstances()];
-		double y[] = new double[p_instances.numInstances()];
-		XYSeries series = new XYSeries("Cluster" + m_counter);
-		for(int i = 0; i < p_instances.numInstances(); i++)
+		double x[] = new double[p_Unlabeled.numInstances()];
+		double y[] = new double[p_Unlabeled.numInstances()];
+		XYSeries series = new XYSeries("unlabeled" + m_counter);
+		for(int i = 0; i < p_Unlabeled.numInstances(); i++)
 		{
-			x[i] = p_instances.instance(i).toDoubleArray()[0];
-			y[i] = p_instances.instance(i).toDoubleArray()[1];
+			x[i] = p_Unlabeled.instance(i).toDoubleArray()[0];
+			y[i] = p_Unlabeled.instance(i).toDoubleArray()[1];
 		}
-				
-		
+		double xL[] = new double[p_labeled.numInstances()];		
+		double yL[] = new double[p_labeled.numInstances()];	
+		XYSeries lSeries = new XYSeries("Labels" + m_counter);
+		for(int i = 0; i < p_labeled.numInstances(); i++)
+		{
+			xL[i] = p_labeled.instance(i).toDoubleArray()[0];
+			yL[i] = p_labeled.instance(i).toDoubleArray()[1];
+		}
 	//	double temp[][] = {x,y};
 		//int xl = x.length, yl = y.length;
-		for(int i = 0; i < x.length; i++)
-		{
-			//for(int j = 0; j < y.length; j++)
-			{
-				series.add(x[i], y[i]);
-			}
-		}
+		for(int i = 0; i < p_Unlabeled.numInstances(); i++)	
+			series.add(x[i], y[i]);
+		
+		for(int i = 0; i < p_labeled.numInstances(); i++)	
+			lSeries.add(xL[i], yL[i]);
+		
 		m_data.addSeries(series);
+		m_data.addSeries(lSeries);
 		m_counter++;
 	}
 	//http://www.java2s.com/Code/Java/Chart/JFreeChartFastScatterPlotDemo.htm
@@ -93,11 +103,29 @@ public class Plotter
 		//Something is missing....
 		//m_scatter = new FastScatterPlot(m_data, m_xAxis, m_yAxis);
 		m_chart = ChartFactory.createScatterPlot("Clusters", "X", "Y", m_data);
-		
-		Shape shape = ShapeUtilities.createDiamond(3);
+		// HEJ DU KAN FIXA SHAPES OM DU VILL
+		Shape shape = null;
 		XYPlot tempPlot = (XYPlot) m_chart.getPlot();
 		XYItemRenderer renderer = tempPlot.getRenderer();
-		renderer.setSeriesShape(0, shape);
+		for(int i = 0; i < m_data.getSeriesCount(); i++)
+		{
+			
+			if(i % 2 == 0) //Unlabeled
+			{
+				shape = ShapeUtilities.createDiagonalCross(2, 2);
+			}
+			else //Labeled
+			{
+				
+				shape = ShapeUtilities.createUpTriangle(2);
+				Paint p = ((AbstractRenderer)renderer).lookupSeriesPaint(i-1);
+				renderer.setSeriesPaint(i, p );
+			}
+			
+			
+			renderer.setSeriesShape(i, shape);
+			
+		}
 		
 		ChartPanel panel = new ChartPanel(m_chart,true);
 		panel.setPreferredSize(new java.awt.Dimension(500, 270));
