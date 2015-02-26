@@ -501,7 +501,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        sumOfWeights[1] = currSumOfWeights[1];
 
 			        // Try all possible split points
-			        double currSplit = p_labeledData.instance(0).value(att);
+			        double currSplit;
+			        if(p_labeledData.numInstances() != 0)
+			        	currSplit = p_labeledData.instance(0).value(att);
+			        else
+			        	currSplit = p_unlabeledData.instance(0).value(att);
 			        double currVal, bestVal = Double.MAX_VALUE;
 
 			        //For clustering we need to consider both labeled and unlabeled data, so we move them to one set
