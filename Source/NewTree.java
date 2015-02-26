@@ -521,7 +521,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
-			        	double c = (m_fish * Covariance(clusterData.numInstances(), splitData(clusterData, currSplit, att)));
+			        	double c = (m_fish * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
 			            currVal = k+ c;
 			            k -= c;
 			            Debugger.DebugPrint("Diff between variance and covariane? = " + k, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
