@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Window;
+import java.io.Serializable;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -22,7 +23,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import weka.core.Instances;
 
 
-public class Plotter
+public class Plotter implements Serializable
 {
 	//FastScatterPlot m_scatter;
 	JFreeChart m_chart;

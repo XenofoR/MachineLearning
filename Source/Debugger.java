@@ -1,12 +1,13 @@
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
 
 
-public  class Debugger
+public  class Debugger implements Serializable
 {
 	public final static int g_debug_NONE = 0;
 	public final static int g_debug_LOW = 1;

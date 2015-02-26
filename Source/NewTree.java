@@ -306,6 +306,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      }
 
 		      double priorVar = 0;
+		      double priorCovar = 0;
 		      if (p_labeledData.classAttribute().isNumeric()) {
 
 		        // Compute prior variance
@@ -321,6 +322,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        instance.addAll(p_unlabeledData);
 		        priorVar = NewTree.singleVariance(totalSum, totalSumSquared,
 		          totalSumOfWeights) + SingleCovariance(instance);
+		        priorCovar = SingleCovariance(instance);
 		      }
 
 		      // System.err.println("Total weight " + totalWeight);
@@ -330,6 +332,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        // Numeric case
 		        (p_labeledData.classAttribute().isNumeric() && priorVar / p_totalWeight < minVariance)
 
+		        
 		        ||
 
 		        // check tree depth
