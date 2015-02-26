@@ -54,7 +54,7 @@ public  class Debugger implements Serializable
 	public static boolean DebugPrint(String p_debugData, int p_minDebugLevel, DebugType p_debugType)
 	{
 		
-		if((p_debugType == DebugType.FILE && m_debugFilePath == null) ||  p_minDebugLevel == g_debug_NONE)
+		if((p_debugType == DebugType.FILE && m_debugFilePath == null) ||  m_globalDebugLevel == g_debug_NONE)
 			return false;
 		if(p_debugType == DebugType.CONSOLE || p_debugType == DebugType.BOTH)
 		{
