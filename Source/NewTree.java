@@ -539,7 +539,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
 			        	double c = (m_fish * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
-			            currVal = k+ c;
+			            currVal = k + c;
 			            k -= c;
 			            Debugger.DebugPrint("Diff between variance and covariane? = " + k, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			            if (currVal < bestVal) {
@@ -626,8 +626,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      clusterInstances.addAll(p_unlabeledData);
 			      clusterInstances.setClassIndex(-1);
 			      double clusterPrior = SingleCovariance(clusterInstances);
-			      double clusterVar = m_fish * Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
-			      double gain = (priorVar - var) + (clusterPrior - clusterVar);
+			      double clusterVar = Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
+			      //System.out.println("covariance prior: " + clusterPrior + " covariance current: " + clusterVar);
+			      double gain = (priorVar - var) + m_fish *(clusterPrior - clusterVar);
 
 			      // Return distribution and split point
 			      subsetWeights[att] = sumOfWeights;
@@ -668,7 +669,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			if(det <= 0)
 				return 0.0;
-			return Math.log(det);
+			return (Math.log(det)/Math.log(2));
 		}
 		
 		protected Instances[] splitData(Instances p_data, double p_splitPoint, int p_attr) throws Exception {

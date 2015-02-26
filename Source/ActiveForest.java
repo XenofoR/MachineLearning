@@ -43,41 +43,29 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	    m_bagger.buildClassifier(p_labeledData, p_unlabeledData);
 	}
 	
-	public String GetInfo() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	/** Should not be called on Active version */
-	/*
-	void SetData(Instances p_data)
-	{
-	}
-	void SetData(Instances p_labledData, Instances p_unlabledData)throws Exception
-	{
-		m_structure = p_labledData;
-		m_unlabledStructure = p_unlabledData;
-	}
+	public String toString() {
 
-	double[] Run() throws Exception {
-		double[] returnValue = new double[1]; //TODO: FIX SIZE
-		return returnValue;
-	}
+	    if (m_bagger == null) {
+	      return "Random forest not built yet";
+	    } else {
+	      StringBuffer temp = new StringBuffer();
+	      temp.append("Random forest of "
+	        + m_numTrees
+	        + " trees, each constructed while considering "
+	        + m_KValue
+	        + " random feature"
+	        + (m_KValue == 1 ? "" : "s")
+	        + ".\n"
+	        + (!getDontCalculateOutOfBagError() ? "Out of bag error: "
+	          + Utils.doubleToString(m_bagger.measureOutOfBagError(), 4) : "")
+	        + "\n"
+	        + (getMaxDepth() > 0 ? ("Max. depth of trees: " + getMaxDepth() + "\n")
+	          : ("")) + "\n");
+	      if (m_printTrees) {
+	        temp.append(m_bagger.toString());
+	      }
+	      return temp.toString();
+	    }
+	  }
 
-	String Train() throws Exception {
-		
-		return "Not ready yet";
-	}
-
-	String CrossValidate() throws Exception
-	{
-		return "Not ready yet";
-	}
-	
-	public Instance CalculateLabelRequest()
-	{
-		return null;
-	}
- */
-	
-	
 }

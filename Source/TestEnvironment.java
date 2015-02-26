@@ -100,7 +100,9 @@ public class TestEnvironment {
 			return;
 		}
 		
+		
 		WriteResultFile(activeResults, supervisedResults);
+		
 		
 	}
 	
