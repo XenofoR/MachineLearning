@@ -66,6 +66,15 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_plotter.SetPlot(Debugger.g_plot);
 	}
 	
+	public double[] distributionForInstance(Instance instance) throws Exception {
+
+	    if (m_zeroR != null) {
+	      return m_zeroR.distributionForInstance(instance);
+	    } else {
+	      return m_Tree.distributionForInstance(instance);
+	    }
+	  }
+	
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
 	    // Make sure K value is in range
@@ -289,6 +298,71 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        + (getMaxDepth() > 0 ? ("\nMax depth of tree: " + getMaxDepth()) : (""));
 		    }
 		  }
+		
+		public double[] distributionForInstance(Instance instance) throws Exception {
+
+		      double[] returnedDist = null;
+
+		      if (m_Attribute > -1) {
+
+		        // Node is not a leaf
+		        if (instance.isMissing(m_Attribute)) {
+
+		          // Value is missing
+		          returnedDist = new double[m_Info.numClasses()];
+
+		          // Split instance up
+		          for (int i = 0; i < m_Successors.length; i++) {
+		            double[] help = m_Successors[i].distributionForInstance(instance);
+		            if (help != null) {
+		              for (int j = 0; j < help.length; j++) {
+		                returnedDist[j] += m_Prop[i] * help[j];
+		              }
+		            }
+		          }
+		        } else if (m_Info.attribute(m_Attribute).isNominal()) {
+
+		          // For nominal attributes
+		          returnedDist = m_Successors[(int) instance.value(m_Attribute)]
+		            .distributionForInstance(instance);
+		        } else {
+
+		          // For numeric attributes
+		          if (instance.value(m_Attribute) < m_SplitPoint) {
+		            returnedDist = m_Successors[0].distributionForInstance(instance);
+		          } else {
+		            returnedDist = m_Successors[1].distributionForInstance(instance);
+		          }
+		        }
+		      }
+
+		      // Node is a leaf or successor is empty?
+		      if ((m_Attribute == -1) || (returnedDist == null)) {
+
+		        // Is node empty?
+		        if (m_ClassDistribution == null) {
+		          if (getAllowUnclassifiedInstances()) {
+		            double[] result = new double[m_Info.numClasses()];
+		            if (m_Info.classAttribute().isNumeric()) {
+		              result[0] = Utils.missingValue();
+		            }
+		            return result;
+		          } else {
+		            return null;
+		          }
+		        }
+
+		        // Else return normalized distribution
+		        double[] normalizedDistribution = m_ClassDistribution.clone();
+		        if (m_Info.classAttribute().isNominal()) {
+		          Utils.normalize(normalizedDistribution);
+		        }
+		        return normalizedDistribution;
+		      } else {
+		        return returnedDist;
+		      }
+		    }
+		
 		protected void buildTree(Instances p_labeledData, Instances p_unlabeledData, double[] p_classProbs,
 		      int[] p_attIndicesWindow, double p_totalWeight, Random p_random, int p_depth,
 		      double minVariance) throws Exception {

@@ -68,7 +68,6 @@ public class TestEnvironment {
 			m_activeForest = new ActiveForest();
 			m_activeForest.setNumTrees(m_trees);
 			m_activeForest.setMaxDepth(m_depth);
-			m_activeForest.setDontCalculateOutOfBagError(true);
 			//NewTree tree = new NewTree();
 			//RandomTree rTree = new RandomTree();
 			m_supervisedForest = new SupervisedForest();

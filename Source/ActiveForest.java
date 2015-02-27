@@ -67,5 +67,10 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	      return temp.toString();
 	    }
 	  }
+	
+	public double[] distributionForInstance(Instance instance) throws Exception {
+
+	    return m_bagger.distributionForInstance(instance);
+	  }
 
 }

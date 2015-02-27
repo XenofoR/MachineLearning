@@ -587,14 +587,14 @@ public class Bilbo
             continue;
           
           if (numeric) {
-            double pred = m_Classifiers[j].classifyInstance(m_data.instance(i));
+            double pred = ((NewTree)m_Classifiers[j]).classifyInstance(m_data.instance(i));
             if (!Utils.isMissingValue(pred)) {
               votes[0] += pred;
               voteCount++;
             }
           } else {
             voteCount++;
-            double[] newProbs = m_Classifiers[j].distributionForInstance(m_data.instance(i));
+            double[] newProbs = ((NewTree)m_Classifiers[j]).distributionForInstance(m_data.instance(i));
             // average the probability estimates
             for (int k = 0; k < newProbs.length; k++) {
               votes[k] += newProbs[k];
@@ -660,13 +660,13 @@ public class Bilbo
     double numPreds = 0;
     for (int i = 0; i < m_NumIterations; i++) {
       if (instance.classAttribute().isNumeric() == true) {
-        double pred = m_Classifiers[i].classifyInstance(instance);
+        double pred = ((NewTree)m_Classifiers[i]).classifyInstance(instance);
         if (!Utils.isMissingValue(pred)) {
           sums[0] += pred;
           numPreds++;
         }
       } else {
-	newProbs = m_Classifiers[i].distributionForInstance(instance);
+	newProbs = ((NewTree)m_Classifiers[i]).distributionForInstance(instance);
 	for (int j = 0; j < newProbs.length; j++)
 	  sums[j] += newProbs[j];
       }
