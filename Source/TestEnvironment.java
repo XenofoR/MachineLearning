@@ -22,6 +22,7 @@ public class TestEnvironment {
 	private SupervisedForest m_supervisedForest;
 	private ActiveForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_testSize;
+	int[] m_labeledIndex;
 	float m_alSplitPercentage;
 	Evaluation m_evaluator;
 	String m_test;
@@ -118,6 +119,21 @@ public class TestEnvironment {
 			w.write("TestType: Active"  + "\n\n");
 			w.write("====Crossvalidation results==== "  +p_activeRes[0] + "\n");
 			w.write("====Training results====" + "\n"+ p_activeRes[1] + "\n");
+			
+			w.write("====Instances used as labeled====" +  "\n");
+			for(int i = 0; i < m_labeledIndex.length; i ++)
+			{
+				for(int j = 0 ; j < 10; j++)
+				{
+					i++;
+					if( i >= m_labeledIndex.length )
+					{
+						break;
+					}
+					w.write(m_labeledIndex[i]);
+				}
+				w.write("\n");
+			}
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{
@@ -219,7 +235,7 @@ public class TestEnvironment {
 		Instances tempStructure = new Instances(p_structure); //Need a temporary structure so that we can remove instances that have been selected
 		
 		int numLabled = (int)(m_alSplitPercentage * p_structure.numInstances());
-		
+		m_labeledIndex = new int[numLabled];
 		returnStructure[0] = new Instances(p_structure, numLabled);
 		returnStructure[1] = new Instances(p_structure, p_structure.numInstances() - numLabled);
 		
@@ -228,7 +244,7 @@ public class TestEnvironment {
 		{
 			int j = ran.nextInt(tempStructure.numInstances());
 			Instance selected = tempStructure.get(j);
-			
+			m_labeledIndex[i] = j;
 			returnStructure[0].add(selected);
 			tempStructure.remove(j);
 		}
