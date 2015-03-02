@@ -238,5 +238,10 @@ public class TestEnvironment {
 		
 		return returnStructure;
 	}
+	
+	private void RemoveAttribute(int p_index)
+	{
+		m_structure.deleteAttributeAt(p_index);
+	}
 
 }
