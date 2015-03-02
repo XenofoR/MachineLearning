@@ -66,6 +66,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_plotter.SetPlot(Debugger.g_plot);
 	}
 	
+	public double CalculateSilhouetteIndex()
+	{
+		double index = 0.0;
+		Vector<double[][]> covarianceMatrix = new Vector<double[][]>();
+		
+		m_Tree.FindCovarianceMatrices(covarianceMatrix);
+		
+		
+		return index;
+	}
+	
 	public double[] distributionForInstance(Instance instance) throws Exception {
 
 	    if (m_zeroR != null) {
@@ -219,6 +230,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        return size;
 		      }
 		    }
+		 
+		 public void FindCovarianceMatrices(Vector<double[][]> p_matricies)
+		 {
+			 if(m_covarianceMatrix != null)
+				 p_matricies.add(m_covarianceMatrix);
+			 else
+			 {
+				 m_Successors[0].FindCovarianceMatrices(p_matricies);
+				 m_Successors[1].FindCovarianceMatrices(p_matricies);
+			 }
+		 }
 		 
 		 public String PrintCovarianceMatrices()
 			{

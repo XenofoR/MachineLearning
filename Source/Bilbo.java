@@ -169,6 +169,17 @@ public class Bilbo
     m_Classifier = new NewTree();
   }
   
+  public double CalculateSilhouetteIndex()
+  {
+	  double index = 0.0;
+	  for(int i = 0; i < m_Classifiers.length; i++)
+		  index += ((NewTree)m_Classifiers[i]).CalculateSilhouetteIndex();
+	  
+	  index /= m_Classifiers.length;
+	  
+	  return index;
+  }
+  
   /**
    * Returns a string describing classifier
    * @return a description suitable for

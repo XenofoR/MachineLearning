@@ -5,10 +5,17 @@ import weka.core.Utils;
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomForest.java
 public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	Bilbo m_bagger;
+	double m_silhouetteIndex;
 	//Instances m_unlabledStructure;
 	public ActiveForest() {
 		super();
 		// TODO Auto-generated constructor stub
+	}
+	
+	public double CalculateSilhouetteIndex()
+	{
+		m_silhouetteIndex = m_bagger.CalculateSilhouetteIndex();
+		return m_silhouetteIndex;
 	}
 	
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception
