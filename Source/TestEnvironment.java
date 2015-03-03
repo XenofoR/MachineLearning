@@ -88,6 +88,8 @@ public class TestEnvironment {
 				m_supervisedForest.buildClassifier(m_structure);
 				supervisedResults[1] = m_supervisedForest.toString();*/
 				//rTree.buildClassifier(m_structure);
+				RemoveAttribute(2);
+				
 				m_activeForest.buildClassifier(test[0], test[1]);
 				//tree.buildClassifier(m_structure);
 				supervisedResults[0] = m_activeForest.toString();// + tree.PrintCovarianceMatrices();
@@ -120,26 +122,27 @@ public class TestEnvironment {
 			w.write("====Crossvalidation results==== "  +p_activeRes[0] + "\n");
 			w.write("====Training results====" + "\n"+ p_activeRes[1] + "\n");
 			
-			w.write("====Instances used as labeled====" +  "\n");
-			for(int i = 0; i < m_labeledIndex.length; i ++)
-			{
-				for(int j = 0 ; j < 10; j++)
-				{
-					i++;
-					if( i >= m_labeledIndex.length )
-					{
-						break;
-					}
-					w.write(m_labeledIndex[i]);
-				}
-				w.write("\n");
-			}
+			
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{
 			w.write("TestType: Supervised" + "\n\n" );
 			w.write("====Crossvalidation results==== " +p_supervisedRes[0] + "\n");
 			w.write("====Training results====" + "\n"+ p_supervisedRes[1] + "\n");
+		}
+		w.write("====Instances used as labeled====" +  "\n");
+		for(int i = 0; i < m_labeledIndex.length; i ++)
+		{
+			for(int j = 0 ; j < 10; j++)
+			{
+				i++;
+				if( i >= m_labeledIndex.length )
+				{
+					break;
+				}
+				w.write(" " + m_labeledIndex[i]);
+			}
+			w.write("\n");
 		}
 		w.close();
 	}
