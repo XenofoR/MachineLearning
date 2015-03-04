@@ -2,6 +2,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
@@ -9,6 +10,7 @@ import java.util.Vector;
 import java.lang.Math;
 
 import javax.swing.DebugGraphics;
+import javax.xml.crypto.KeySelector.Purpose;
 
 
 
@@ -66,6 +68,15 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_plotter.SetPlot(Debugger.g_plot);
 	}
 	
+	public Vector<Double> GetPurity()
+	{
+		Vector<Double> returnVector = new Vector<Double>();
+		
+		m_Tree.GetPurity(returnVector);
+		
+		return returnVector;
+	}
+	
 	public double CalculateSilhouetteIndex()
 	{
 		double index = 0.0;
@@ -73,6 +84,18 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		
 		m_Tree.FindCovarianceMatrices(covarianceMatrix);
 		
+		
+		for(Iterator<double[][]> i = covarianceMatrix.iterator(); i.hasNext();)
+		{
+			double internalDisimilarity;
+			double externalDisimilarity;
+			
+			
+			for(int j = 0; j < i.next().length; j++)
+			{
+				
+			}
+		}
 		
 		return index;
 	}
@@ -216,7 +239,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	{
 		double[][] m_covarianceMatrix = null;
 		protected InnerTree[] m_Successors;
-		
+		double m_purity;
 		double m_fish = 1.5;
 		 public int numNodes() {
 
@@ -239,6 +262,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			 {
 				 m_Successors[0].FindCovarianceMatrices(p_matricies);
 				 m_Successors[1].FindCovarianceMatrices(p_matricies);
+			 }
+		 }
+		 
+		 public void GetPurity(Vector<Double> p_returnVector)
+		 {
+			 if(m_Attribute == -1)
+				 p_returnVector.add(m_purity);
+			 else
+			 {
+				 m_Successors[0].GetPurity(p_returnVector);
+				 m_Successors[1].GetPurity(p_returnVector);
 			 }
 		 }
 		 
@@ -417,7 +451,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Instances instance = new Instances(p_labeledData);
 		        instance.addAll(p_unlabeledData);
 		        priorVar = NewTree.singleVariance(totalSum, totalSumSquared,
-		          totalSumOfWeights) + SingleCovariance(instance);
+		          totalSumOfWeights);
 		        priorCovar = SingleCovariance(instance);
 		      }
 
@@ -426,7 +460,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      if (p_totalWeight < 2 * m_MinNum ||
 
 		        // Numeric case
-		        (p_labeledData.classAttribute().isNumeric() && priorVar / p_totalWeight < minVariance)
+		        (p_labeledData.classAttribute().isNumeric() && (priorVar + priorCovar) / p_totalWeight < minVariance)
 
 		        
 		        ||
@@ -449,6 +483,30 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_covarianceMatrix = new double[instance.numAttributes()-1][instance.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instance, m_covarianceMatrix);
 
+		        
+		        //calculate Purity
+		        double labeledMean = 0.0;
+		        for(int i = 0; i < p_labeledData.numInstances(); i++)
+		        {
+		        	labeledMean += p_labeledData.instance(i).classValue();
+		        }
+		        labeledMean /= p_labeledData.numInstances();
+		        
+		        double variance = 0.0;
+		        for(int i = 0; i <  p_labeledData.numInstances(); i++)
+		        {
+		        	variance = Math.pow(p_labeledData.instance(i).classValue() - labeledMean, 2);
+		        }
+		        variance /= (p_labeledData.numInstances() - 1);
+		        
+		        p_unlabeledData.setClassIndex(p_unlabeledData.numAttributes() - 1);
+		        for(int i = 0; i < p_unlabeledData.numInstances(); i++)
+		        {
+		        	if((m_ClassDistribution[0] - variance) < p_unlabeledData.instance(i).classValue() && p_unlabeledData.instance(i).classValue() < (m_ClassDistribution[0] + variance))
+		        		m_purity ++;
+		        }
+		        m_purity /= p_unlabeledData.numInstances();
+		        p_unlabeledData.setClassIndex(-1);
 		        m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 
 		        m_Prop = null;
@@ -557,6 +615,30 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix);
 			      m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
+			      
+			      //calculate purity
+			      double labeledMean = 0.0;
+			        for(int i = 0; i < p_labeledData.numInstances(); i++)
+			        {
+			        	labeledMean += p_labeledData.instance(i).classValue();
+			        }
+			        labeledMean /= p_labeledData.numInstances();
+			        
+			        double variance = 0.0;
+			        for(int i = 0; i <  p_labeledData.numInstances(); i++)
+			        {
+			        	variance = Math.pow(p_labeledData.instance(i).classValue() - labeledMean, 2);
+			        }
+			        variance /= (p_labeledData.numInstances() - 1);
+			        
+			        p_unlabeledData.setClassIndex(p_unlabeledData.numAttributes() - 1);
+			        for(int i = 0; i < p_unlabeledData.numInstances(); i++)
+			        {
+			        	if((m_ClassDistribution[0] - variance) < p_unlabeledData.instance(i).classValue() && p_unlabeledData.instance(i).classValue() < (m_ClassDistribution[0] + variance))
+			        		m_purity ++;
+			        }
+			        m_purity /= p_unlabeledData.numInstances();
+			        p_unlabeledData.setClassIndex(-1);
 		      }
 		    }
 		

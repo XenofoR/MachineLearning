@@ -5,7 +5,7 @@ public class Boot
 		TestEnvironment environment = new TestEnvironment();
 		
 		environment.Init("J:/master_thesis_work/MachineLearning/test.file");
-
+		
 		environment.Run();
 	}
 }

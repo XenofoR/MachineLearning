@@ -1,6 +1,7 @@
 import weka.core.Instances;
 import weka.core.Instance;
 import weka.core.Utils;
+import java.util.Vector;
 
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomForest.java
 public class ActiveForest extends weka.classifiers.trees.RandomForest {
@@ -10,6 +11,11 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	public ActiveForest() {
 		super();
 		// TODO Auto-generated constructor stub
+	}
+	
+	public Vector<Vector<Double>> GetPurity()
+	{
+		return m_bagger.GetPurity();
 	}
 	
 	public double CalculateSilhouetteIndex()

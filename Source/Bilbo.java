@@ -169,6 +169,15 @@ public class Bilbo
     m_Classifier = new NewTree();
   }
   
+  public Vector<Vector<Double>> GetPurity()
+	{
+	  Vector<Vector<Double>> returnVector = new Vector<Vector<Double>>();
+	  for(int i = 0; i < m_Classifiers.length; i++)
+		  returnVector.add(((NewTree)m_Classifiers[i]).GetPurity());
+	  
+	  return returnVector;
+	}
+  
   public double CalculateSilhouetteIndex()
   {
 	  double index = 0.0;

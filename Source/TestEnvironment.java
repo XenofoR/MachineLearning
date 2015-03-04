@@ -89,7 +89,7 @@ public class TestEnvironment {
 				supervisedResults[1] = m_supervisedForest.toString();*/
 				//rTree.buildClassifier(m_structure);
 				m_activeForest.buildClassifier(test[0], test[1]);
-				m_activeForest.CalculateSilhouetteIndex();
+				m_activeForest.GetPurity();
 				//tree.buildClassifier(m_structure);
 				supervisedResults[0] = m_activeForest.toString();// + tree.PrintCovarianceMatrices();
 				//supervisedResults[1] = rTree.toString();
@@ -135,6 +135,7 @@ public class TestEnvironment {
 				}
 				w.write("\n");
 			}
+			
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{
