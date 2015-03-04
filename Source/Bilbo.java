@@ -178,11 +178,11 @@ public class Bilbo
 	  return returnVector;
 	}
   
-  public double CalculateSilhouetteIndex()
+  public double CalculateCorrelationPercentage()
   {
 	  double index = 0.0;
 	  for(int i = 0; i < m_Classifiers.length; i++)
-		  index += ((NewTree)m_Classifiers[i]).CalculateSilhouetteIndex();
+		  index += ((NewTree)m_Classifiers[i]).CalculateCorrelationPercentage();
 	  
 	  index /= m_Classifiers.length;
 	  

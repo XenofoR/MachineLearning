@@ -46,6 +46,16 @@ public class Utilities
 		return CalcDeterminantWithLU(p_matrix);
 	}
 	
+	static public void NormalizeMatrix(double[][] p_matrix)
+	{
+		for(int i = 0; i < p_matrix.length; i++)
+		{
+			for(int j = 0; j < p_matrix.length; j++)
+			{
+				p_matrix[i][j] /= Math.sqrt(p_matrix[i][i]*p_matrix[j][j]);
+			}
+		}
+	}
 	
 	private static void OuterProduct(double[] p_row, double[] p_column, double[][] p_destination)
 	{
@@ -179,5 +189,7 @@ public class Utilities
         }
         return true;
       }
+    
+
 	
 }

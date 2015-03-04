@@ -141,6 +141,9 @@ public class TestEnvironment {
 				w.write("\n");
 			}
 			
+			w.write("===Mean Correlation of Forest====" + "\n");
+			w.write("" + m_activeForest.CalculateCorrelationPercentage() + "\n");
+			
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{

@@ -77,25 +77,22 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		return returnVector;
 	}
 	
-	public double CalculateSilhouetteIndex()
+	public double CalculateCorrelationPercentage()
 	{
 		double index = 0.0;
 		Vector<double[][]> covarianceMatrix = new Vector<double[][]>();
-		
+		Vector<double[][]> correlationMatrix = new Vector<double[][]>();
 		m_Tree.FindCovarianceMatrices(covarianceMatrix);
 		
+		correlationMatrix.addAll(covarianceMatrix);
 		
-		for(Iterator<double[][]> i = covarianceMatrix.iterator(); i.hasNext();)
+		double totalCorrelation = 0.0;
+		for(int i = 0; i < correlationMatrix.size(); i++)
 		{
-			double internalDisimilarity;
-			double externalDisimilarity;
-			
-			
-			for(int j = 0; j < i.next().length; j++)
-			{
-				
-			}
+			Utilities.NormalizeMatrix(correlationMatrix.get(i));
+			totalCorrelation += Utilities.CalculateDeterminant(correlationMatrix.get(i));
 		}
+		totalCorrelation /= correlationMatrix.size();
 		
 		return index;
 	}
@@ -238,6 +235,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	protected class InnerTree extends Tree
 	{
 		double[][] m_covarianceMatrix = null;
+		double[][] m_correlationMatrix = null;
 		protected InnerTree[] m_Successors;
 		double m_purity;
 		double m_fish = 1.5;
