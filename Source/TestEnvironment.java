@@ -5,13 +5,16 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.Scanner;
+import java.util.Vector;
 import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Random;
+
 import weka.core.Instances;
 import weka.core.Instance;
 import weka.classifiers.Evaluation;
@@ -56,43 +59,33 @@ public class TestEnvironment {
 			m_activeForest.setMaxDepth(m_depth);
 			//m_activeForest.SetData(m_structure);
 			
+			//TODO: REMOVE THIS ONCE WE ARE INTERESTED IN MORE COMPLEX DATA
+			RemoveAttribute(3);
+			RemoveAttribute(2);
+			//END TODO
+			
+			Instances[] test = SplitDataStructure(m_structure);
 			for(int i = 0; i < m_testSize; i++)
 			{
-				m_evaluator.crossValidateModel(m_activeForest, m_structure, 10, new Random());
-				activeResults[0] = m_evaluator.toSummaryString();
-				m_activeForest.buildClassifier(m_structure);
+				//m_evaluator.crossValidateModel(m_activeForest, m_structure, 10, new Random());
+				//activeResults[0] = m_evaluator.toSummaryString();
+				m_activeForest.buildClassifier(test[0], test[1]);
 				activeResults[1] = m_activeForest.toString();
 			}
 		}
 		else if(m_testType == 2 || m_testType == 3)
 		{
-			m_activeForest = new ActiveForest();
-			m_activeForest.setNumTrees(m_trees);
-			m_activeForest.setMaxDepth(m_depth);
-			//NewTree tree = new NewTree();
-			//RandomTree rTree = new RandomTree();
+
 			m_supervisedForest = new SupervisedForest();
 			m_supervisedForest.setDebug(true);
 			m_supervisedForest.setPrintTrees(true);
-			//m_structure.setClassIndex(-1);
 			m_supervisedForest.setNumTrees(m_trees);
 			m_supervisedForest.setMaxDepth(m_depth);
-			//m_supervisedForest.SetData(m_structure);
 			
-			Instances[] test = SplitDataStructure(m_structure);
 			
 			for(int i = 0; i < m_testSize; i++)
 			{
-				/*m_evaluator.crossValidateModel(m_supervisedForest, m_structure, 10, new Random());
-				supervisedResults[0] = m_evaluator.toSummaryString();
-				m_supervisedForest.buildClassifier(m_structure);
-				supervisedResults[1] = m_supervisedForest.toString();*/
-				//rTree.buildClassifier(m_structure);
-				m_activeForest.buildClassifier(test[0], test[1]);
-				m_activeForest.GetPurity();
-				//tree.buildClassifier(m_structure);
-				supervisedResults[0] = m_activeForest.toString();// + tree.PrintCovarianceMatrices();
-				//supervisedResults[1] = rTree.toString();
+				
 			}
 		}
 		else
@@ -131,7 +124,19 @@ public class TestEnvironment {
 					{
 						break;
 					}
-					w.write(m_labeledIndex[i]);
+					w.write(" " + m_labeledIndex[i]);
+				}
+				w.write("\n");
+			}
+			
+			w.write("====Purity of leafs====" + "\n");
+			Vector<Vector<Double>> purity = m_activeForest.GetPurity();
+			for(int i = 0; i < purity.size(); i++)
+			{
+				w.write("Tree" + i + ": ");
+				for(int j = 0; j < purity.get(i).size(); j++)
+				{
+					w.write("" + purity.get(i).get(j) + "   ");
 				}
 				w.write("\n");
 			}
@@ -143,6 +148,7 @@ public class TestEnvironment {
 			w.write("====Crossvalidation results==== " +p_supervisedRes[0] + "\n");
 			w.write("====Training results====" + "\n"+ p_supervisedRes[1] + "\n");
 		}
+		
 		w.close();
 	}
 	private void ProcessFile(Path p_path) throws IOException
