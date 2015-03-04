@@ -181,6 +181,9 @@ public class TestEnvironment {
 			case("NumFeatures"):
 				m_features = scanner.nextInt();
 				break;
+			case("AlphaValue"):
+				Utilities.g_alphaValue = Double.parseDouble(scanner.next());
+				break;
 			case("Sets"):
 				m_testSize = scanner.nextInt();
 				break;
