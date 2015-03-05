@@ -79,7 +79,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	public double CalculateCorrelationPercentage()
 	{
-		double index = 0.0;
 		Vector<double[][]> covarianceMatrix = new Vector<double[][]>();
 		Vector<double[][]> correlationMatrix = new Vector<double[][]>();
 		m_Tree.FindCovarianceMatrices(covarianceMatrix);
@@ -94,7 +93,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		}
 		totalCorrelation /= correlationMatrix.size();
 		
-		return index;
+		return totalCorrelation;
 	}
 	
 	public double[] distributionForInstance(Instance instance) throws Exception {
