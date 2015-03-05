@@ -57,11 +57,12 @@ public class TestEnvironment {
 			m_activeForest = new ActiveForest();
 			m_activeForest.setNumTrees(m_trees);
 			m_activeForest.setMaxDepth(m_depth);
+			m_activeForest.setDontCalculateOutOfBagError(true); //TODO Fix error once relevant
 			//m_activeForest.SetData(m_structure);
 			
 			//TODO: REMOVE THIS ONCE WE ARE INTERESTED IN MORE COMPLEX DATA
-			//RemoveAttribute(3);
-			//RemoveAttribute(2);
+			RemoveAttribute(3);
+			RemoveAttribute(2);
 			//END TODO
 			
 			Instances[] test = SplitDataStructure(m_structure);
