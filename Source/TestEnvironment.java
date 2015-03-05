@@ -60,8 +60,8 @@ public class TestEnvironment {
 			//m_activeForest.SetData(m_structure);
 			
 			//TODO: REMOVE THIS ONCE WE ARE INTERESTED IN MORE COMPLEX DATA
-			RemoveAttribute(3);
-			RemoveAttribute(2);
+			//RemoveAttribute(3);
+			//RemoveAttribute(2);
 			//END TODO
 			
 			Instances[] test = SplitDataStructure(m_structure);
@@ -183,6 +183,9 @@ public class TestEnvironment {
 				break;
 			case("NumFeatures"):
 				m_features = scanner.nextInt();
+				break;
+			case("AlphaValue"):
+				Utilities.g_alphaValue = Double.parseDouble(scanner.next());
 				break;
 			case("Sets"):
 				m_testSize = scanner.nextInt();

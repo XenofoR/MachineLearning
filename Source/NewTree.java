@@ -9,6 +9,7 @@ import java.util.Random;
 import java.util.Vector;
 import java.lang.Math;
 
+import javax.rmi.CORBA.Util;
 import javax.swing.DebugGraphics;
 import javax.xml.crypto.KeySelector.Purpose;
 
@@ -237,7 +238,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		double[][] m_correlationMatrix = null;
 		protected InnerTree[] m_Successors;
 		double m_purity;
-		double m_fish = 1.5;
 		 public int numNodes() {
 
 		      if (m_Attribute == -1) {
@@ -713,7 +713,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
-			        	double c = (m_fish * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
+			        	double c = (Utilities.g_alphaValue * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
 			            currVal = k + c;
 			            k -= c;
 			            Debugger.DebugPrint("Diff between variance and covariane? = " + k, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
@@ -803,7 +803,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      double clusterPrior = SingleCovariance(clusterInstances);
 			      double clusterVar = Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
 			      //System.out.println("covariance prior: " + clusterPrior + " covariance current: " + clusterVar);
-			      double gain = (priorVar - var) + m_fish *(clusterPrior - clusterVar);
+			      double gain = (priorVar - var) + Utilities.g_alphaValue *(clusterPrior - clusterVar);
 
 			      // Return distribution and split point
 			      subsetWeights[att] = sumOfWeights;

@@ -9,7 +9,7 @@ import weka.filters.unsupervised.attribute.Copy;
 
 public class Utilities
 {
-	
+	static double g_alphaValue;
 	
 	//http://professorjava.weebly.com/matrix-determinant.html
 	
