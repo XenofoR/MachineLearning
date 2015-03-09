@@ -71,7 +71,7 @@ public class TestEnvironment {
 				//m_evaluator.crossValidateModel(m_activeForest, m_structure, 10, new Random());
 				//activeResults[0] = m_evaluator.toSummaryString();
 				m_activeForest.buildClassifier(test[0], test[1]);
-				activeResults[1] = m_activeForest.toString();
+				activeResults[1] += m_activeForest.toString();
 			}
 		}
 		else if(m_testType == 2 || m_testType == 3)
@@ -115,6 +115,31 @@ public class TestEnvironment {
 			w.write("====Crossvalidation results==== "  +p_activeRes[0] + "\n");
 			w.write("====Training results====" + "\n"+ p_activeRes[1] + "\n");
 			
+			w.write("====Purity and Variance difference of leafs====" + "\n");
+			Vector<Vector<double[]>> purityVardiff = m_activeForest.GetPurityAndVardiff();
+			double meanPurity = 0.0;
+			double meanVarDiff = 0.0;
+			for(int i = 0; i < purityVardiff.size(); i++)
+			{
+				w.write("Tree" + i + ": ");
+				for(int j = 0; j < purityVardiff.get(i).size(); j++)
+				{
+					w.write("Purity: " + purityVardiff.get(i).get(j)[0] + " VarianceDiff: " + purityVardiff.get(i).get(j)[1] + " || ");
+
+				}
+				w.write("\n");
+
+			}
+			
+			w.write("===Mean Purity of Forest====" + "\n");
+			w.write("" + purityVardiff.lastElement().lastElement()[0] + "\n");
+			
+			w.write("===Mean Variance Difference of Forest====" + "\n");
+			w.write("" + purityVardiff.lastElement().lastElement()[1] + "\n");
+			
+			w.write("===Mean Correlation of Forest====" + "\n");
+			w.write("" + m_activeForest.CalculateCorrelationPercentage() + "\n");
+			
 			w.write("====Instances used as labeled====" +  "\n");
 			for(int i = 0; i < m_labeledIndex.length; i ++)
 			{
@@ -129,21 +154,6 @@ public class TestEnvironment {
 				}
 				w.write("\n");
 			}
-			
-			w.write("====Purity of leafs====" + "\n");
-			Vector<Vector<Double>> purity = m_activeForest.GetPurity();
-			for(int i = 0; i < purity.size(); i++)
-			{
-				w.write("Tree" + i + ": ");
-				for(int j = 0; j < purity.get(i).size(); j++)
-				{
-					w.write("" + purity.get(i).get(j) + "   ");
-				}
-				w.write("\n");
-			}
-			
-			w.write("===Mean Correlation of Forest====" + "\n");
-			w.write("" + m_activeForest.CalculateCorrelationPercentage() + "\n");
 			
 		}
 		else if(m_testType == 2 || m_testType == 3)
@@ -253,6 +263,7 @@ public class TestEnvironment {
 		m_labeledIndex = new int[numLabled];
 		returnStructure[0] = new Instances(p_structure, numLabled);
 		returnStructure[1] = new Instances(p_structure, p_structure.numInstances() - numLabled);
+			
 		
 		Random ran = new Random();
 		for(int i = 0; i < numLabled; i++)
@@ -261,11 +272,12 @@ public class TestEnvironment {
 			Instance selected = tempStructure.get(j);
 			m_labeledIndex[i] = j;
 			returnStructure[0].add(selected);
-			tempStructure.remove(j);
+			tempStructure.delete(j);
 		}
 		tempStructure.setClassIndex(-1); //This makes weka treat the data as unlabeled
 		
 		returnStructure[1] = tempStructure;
+		
 		
 		return returnStructure;
 	}

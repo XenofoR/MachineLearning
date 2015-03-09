@@ -27,9 +27,10 @@ public class Utilities
 			double[][] tempMatrix = new double[p_instances.numAttributes() - 1][p_instances.numAttributes() - 1];
 			OuterProduct(tempVector, tempVector, tempMatrix);
 			Add(p_destination, tempMatrix, p_destination);
+
 		}
 		double scaleVar = 1.0/(p_instances.numInstances()-1);
-		if(scaleVar != 0)
+		if(!Double.isNaN(scaleVar))
 		{
 			Scale(p_destination, scaleVar );
 		}
@@ -37,7 +38,8 @@ public class Utilities
 		{
 			Debugger.DebugPrint("CalculateCovarianceMatrix only recieved 1 instance  results will be a zero matrix", Debugger.g_debug_HIGH, Debugger.DebugType.CONSOLE);
 			Scale(p_destination, 1 );
-		}	
+		}
+		
 	}
 	
 	static public double CalculateDeterminant(double[][] p_matrix)
@@ -52,7 +54,12 @@ public class Utilities
 		{
 			for(int j = 0; j < p_matrix.length; j++)
 			{
-				p_matrix[i][j] /= Math.sqrt(p_matrix[i][i]*p_matrix[j][j]);
+				if(p_matrix[i][i] != 0 && p_matrix[j][j] != 0)
+					p_matrix[i][j] /= Math.sqrt(p_matrix[i][i]*p_matrix[j][j]);
+				else
+				{
+					p_matrix[i][j] = 0;
+				}
 			}
 		}
 	}

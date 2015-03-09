@@ -13,9 +13,9 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public Vector<Vector<Double>> GetPurity()
+	public Vector<Vector<double[]>> GetPurityAndVardiff()
 	{
-		return m_bagger.GetPurity();
+		return m_bagger.GetPurityAndVardiff();
 	}
 	
 	public double CalculateCorrelationPercentage()

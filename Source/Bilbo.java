@@ -169,12 +169,22 @@ public class Bilbo
     m_Classifier = new NewTree();
   }
   
-  public Vector<Vector<Double>> GetPurity()
+  public Vector<Vector<double[]>> GetPurityAndVardiff()
 	{
-	  Vector<Vector<Double>> returnVector = new Vector<Vector<Double>>();
+	  Vector<Vector<double[]>> returnVector = new Vector<Vector<double[]>>();
+	  double[] mean = new double[2];
 	  for(int i = 0; i < m_Classifiers.length; i++)
-		  returnVector.add(((NewTree)m_Classifiers[i]).GetPurity());
+	  {
+		  returnVector.add(((NewTree)m_Classifiers[i]).GetPurityAndVardiff());
+		  mean[0] += returnVector.lastElement().lastElement()[0];
+		  mean[1] += returnVector.lastElement().lastElement()[1];
+	  }
+	  mean[0] /= returnVector.size();
+	  mean[1] /= returnVector.size();
 	  
+	  returnVector.add(new Vector<double[]>());
+	  
+	  returnVector.lastElement().add(mean);
 	  return returnVector;
 	}
   

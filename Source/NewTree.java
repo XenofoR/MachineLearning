@@ -8,6 +8,7 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Vector;
 import java.lang.Math;
+import java.lang.reflect.Array;
 
 import javax.rmi.CORBA.Util;
 import javax.swing.DebugGraphics;
@@ -69,11 +70,20 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_plotter.SetPlot(Debugger.g_plot);
 	}
 	
-	public Vector<Double> GetPurity()
+	public Vector<double[]> GetPurityAndVardiff()
 	{
-		Vector<Double> returnVector = new Vector<Double>();
+		Vector<double[]> returnVector = new Vector<double[]>();
 		
-		m_Tree.GetPurity(returnVector);
+		m_Tree.GetPurityAndVardiff(returnVector);
+		
+		double[] mean = new double[2];
+		for(int i = 0; i < returnVector.size(); i++)
+		{
+			mean[0] += returnVector.get(i)[0];
+			mean[1] += returnVector.get(i)[1];
+		}
+		mean[0] /= returnVector.size();
+		mean[1] /= returnVector.size();
 		
 		return returnVector;
 	}
@@ -90,7 +100,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		for(int i = 0; i < correlationMatrix.size(); i++)
 		{
 			Utilities.NormalizeMatrix(correlationMatrix.get(i));
-			totalCorrelation += Utilities.CalculateDeterminant(correlationMatrix.get(i));
+			double det = Utilities.CalculateDeterminant(correlationMatrix.get(i));
+
+			totalCorrelation += det;
 		}
 		totalCorrelation /= correlationMatrix.size();
 		
@@ -202,6 +214,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	      m_Tree.backfitData(labeledBackfit); //TODO change to handle two instances
 	    }
 	    m_plotter.Display2dPlot();
+	    System.out.println("One Tree Finished!\n");
 	  }
 	
 	
@@ -238,6 +251,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		double[][] m_correlationMatrix = null;
 		protected InnerTree[] m_Successors;
 		double m_purity;
+		double m_varianceDiff;
 		 public int numNodes() {
 
 		      if (m_Attribute == -1) {
@@ -253,7 +267,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		 
 		 public void FindCovarianceMatrices(Vector<double[][]> p_matricies)
 		 {
-			 if(m_covarianceMatrix != null)
+			 if(m_Attribute == -1)
 				 p_matricies.add(m_covarianceMatrix);
 			 else
 			 {
@@ -262,14 +276,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			 }
 		 }
 		 
-		 public void GetPurity(Vector<Double> p_returnVector)
+		 public void GetPurityAndVardiff(Vector<double[]> p_returnVector)
 		 {
 			 if(m_Attribute == -1)
-				 p_returnVector.add(m_purity);
+			 {
+				 double[] values = {m_purity, m_varianceDiff};
+				 p_returnVector.add(values);
+			 }
 			 else
 			 {
-				 m_Successors[0].GetPurity(p_returnVector);
-				 m_Successors[1].GetPurity(p_returnVector);
+				 m_Successors[0].GetPurityAndVardiff(p_returnVector);
+				 m_Successors[1].GetPurityAndVardiff(p_returnVector);
 			 }
 		 }
 		 
@@ -457,7 +474,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      if (p_totalWeight < 2 * m_MinNum ||
 
 		        // Numeric case
-		        (p_labeledData.classAttribute().isNumeric() && (priorVar + priorCovar) / p_totalWeight < minVariance)
+		        (p_labeledData.numInstances() != 0 && (priorVar) / p_totalWeight < minVariance)
 
 		        
 		        ||
@@ -481,29 +498,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Utilities.CalculateCovarianceMatrix(instance, m_covarianceMatrix);
 
 		        
-		        //calculate Purity
-		        double labeledMean = 0.0;
-		        for(int i = 0; i < p_labeledData.numInstances(); i++)
-		        {
-		        	labeledMean += p_labeledData.instance(i).classValue();
-		        }
-		        labeledMean /= p_labeledData.numInstances();
-		        
-		        double variance = 0.0;
-		        for(int i = 0; i <  p_labeledData.numInstances(); i++)
-		        {
-		        	variance = Math.pow(p_labeledData.instance(i).classValue() - labeledMean, 2);
-		        }
-		        variance /= (p_labeledData.numInstances() - 1);
-		        
-		        p_unlabeledData.setClassIndex(p_unlabeledData.numAttributes() - 1);
-		        for(int i = 0; i < p_unlabeledData.numInstances(); i++)
-		        {
-		        	if((m_ClassDistribution[0] - variance) < p_unlabeledData.instance(i).classValue() && p_unlabeledData.instance(i).classValue() < (m_ClassDistribution[0] + variance))
-		        		m_purity ++;
-		        }
-		        m_purity /= p_unlabeledData.numInstances();
-		        p_unlabeledData.setClassIndex(-1);
+		        CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
 		        m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 
 		        m_Prop = null;
@@ -613,31 +608,61 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix);
 			      m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 			      
-			      //calculate purity
-			      double labeledMean = 0.0;
-			        for(int i = 0; i < p_labeledData.numInstances(); i++)
-			        {
-			        	labeledMean += p_labeledData.instance(i).classValue();
-			        }
-			        labeledMean /= p_labeledData.numInstances();
-			        
-			        double variance = 0.0;
-			        for(int i = 0; i <  p_labeledData.numInstances(); i++)
-			        {
-			        	variance = Math.pow(p_labeledData.instance(i).classValue() - labeledMean, 2);
-			        }
-			        variance /= (p_labeledData.numInstances() - 1);
-			        
-			        p_unlabeledData.setClassIndex(p_unlabeledData.numAttributes() - 1);
-			        for(int i = 0; i < p_unlabeledData.numInstances(); i++)
-			        {
-			        	if((m_ClassDistribution[0] - variance) < p_unlabeledData.instance(i).classValue() && p_unlabeledData.instance(i).classValue() < (m_ClassDistribution[0] + variance))
-			        		m_purity ++;
-			        }
-			        m_purity /= p_unlabeledData.numInstances();
-			        p_unlabeledData.setClassIndex(-1);
+			      CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
 		      }
 		    }
+
+		//calculate Purity and VarianceDiff
+		private void CalculatePurityAndVardiff(Instances p_labeledData,
+				Instances p_unlabeledData) {
+			
+			double labeledMean = 0.0;
+			double unlabeledMean = 0.0;
+			p_unlabeledData.setClassIndex(p_unlabeledData.numAttributes() - 1);
+			
+			if(p_labeledData.numInstances() != 0 && p_unlabeledData.numInstances() != 0)
+			{
+			    for(int i = 0; i < p_labeledData.numInstances(); i++)
+			    {
+			    	labeledMean += p_labeledData.instance(i).classValue();
+			    }
+			    labeledMean /= p_labeledData.numInstances();
+			    
+			    for(int i = 0; i < p_unlabeledData.numInstances(); i++)
+			    {
+			    	unlabeledMean += p_unlabeledData.instance(i).classValue();
+			    }
+			    unlabeledMean /= p_unlabeledData.numInstances();
+			    
+			    double variance = 0.0;
+			    for(int i = 0; i <  p_labeledData.numInstances(); i++)
+			    {
+			    	variance += Math.pow(p_labeledData.instance(i).classValue() - labeledMean, 2);
+			    }
+			    //Divide by n if only one instance, otherwise divide by n-1
+			    variance /= p_labeledData.numInstances() == 1 ? 1 : (p_labeledData.numInstances() - 1);
+			    
+			    double unlabaledVariance = 0.0;
+			    
+			    for(int i = 0; i < p_unlabeledData.numInstances(); i++)
+			    {
+			    	if((m_ClassDistribution[0] - variance) < p_unlabeledData.instance(i).classValue() && p_unlabeledData.instance(i).classValue() < (m_ClassDistribution[0] + variance))
+			    		m_purity ++;
+			    	unlabaledVariance += Math.pow(p_unlabeledData.instance(i).classValue() - unlabeledMean, 2);
+			    	
+			    }
+			    //Divide by n if only one instance, otherwise divide by n-1
+			    unlabaledVariance /= p_unlabeledData.numInstances() == 1 ? 1 : (p_unlabeledData.numInstances() - 1);
+			    
+			    m_varianceDiff = Math.abs(variance - unlabaledVariance); 
+			    m_purity /= p_unlabeledData.numInstances();
+			    p_unlabeledData.setClassIndex(-1);
+			}
+			else
+			{
+				m_purity = -1;
+			}
+		}
 		
 		protected double numericDistribution(double[][] props, double[][][] dists,
 			      int att, double[][] subsetWeights, Instances p_labeledData, Instances p_unlabeledData, double[] vals)
