@@ -24,7 +24,7 @@ public class TestEnvironment {
 	private Instances m_structure;
 	private SupervisedForest m_supervisedForest;
 	private ActiveForest m_activeForest;
-	int m_depth, m_trees, m_features, m_testType, m_testSize;
+	int m_depth, m_trees, m_features, m_testType, m_numTests;
 	int[] m_labeledIndex;
 	float m_alSplitPercentage;
 	Evaluation m_evaluator;
@@ -47,8 +47,8 @@ public class TestEnvironment {
 	
 	public void Run() throws Exception
 	{
-		String[] activeResults = new String[2];
-		String[] supervisedResults = new String[2];
+		String[][] activeResults = new String[m_numTests][2];
+		String[][] supervisedResults = new String[m_numTests][2];
 		CreateDataStructure(m_inputPath + m_test);
 		try
 		{
@@ -74,7 +74,7 @@ public class TestEnvironment {
 			//END TODO
 			
 			Instances[] test = SplitDataStructure(m_structure);
-			for(int i = 0; i < m_testSize; i++)
+			for(int i = 0; i < m_numTests; i++)
 			{
 				//m_evaluator.crossValidateModel(m_activeForest, m_structure, 10, new Random());
 				//activeResults[0] = m_evaluator.toSummaryString();
@@ -87,7 +87,7 @@ public class TestEnvironment {
 				{
 					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				}
-				activeResults[1] = m_activeForest.toString();
+				activeResults[i][1] = m_activeForest.toString() + ForestInfoToString();
 
 			}
 		}
@@ -101,7 +101,7 @@ public class TestEnvironment {
 			m_supervisedForest.setMaxDepth(m_depth);
 			
 			
-			for(int i = 0; i < m_testSize; i++)
+			for(int i = 0; i < m_numTests; i++)
 			{
 				
 			}
@@ -118,76 +118,93 @@ public class TestEnvironment {
 		
 	}
 	
-	private void WriteResultFile(String[] p_activeRes, String[] p_supervisedRes) throws Exception
+	private String ForestInfoToString()
+	{
+		String retString = "\n";
+		
+		retString += " \t" + ("====Purity and Variance difference of leafs====" + "\n");
+		Vector<Vector<double[]>> purityVardiff = m_activeForest.GetPurityAndVardiff();
+		double meanPurity = 0.0;
+		double meanVarDiff = 0.0;
+		for(int i = 0; i < purityVardiff.size(); i++)
+		{
+			retString += " \t" + ("Tree" + i + ": ");
+			for(int j = 0; j < purityVardiff.get(i).size(); j++)
+			{
+				retString += " \t" + ("Purity: " + purityVardiff.get(i).get(j)[0] + " VarianceDiff: " + purityVardiff.get(i).get(j)[1] + " || ");
+
+			}
+			retString += " \t" + ("\n");
+
+		}
+		
+		retString += " \t" + ("===Mean Purity of Forest====" + "\n");
+		retString += " \t" + ("" + purityVardiff.lastElement().lastElement()[0] + "\n");
+		
+		retString += " \t" + ("===Mean Variance Difference of Forest====" + "\n");
+		retString += " \t" + ("" + purityVardiff.lastElement().lastElement()[1] + "\n");
+		
+		retString += " \t" + ("===Mean Correlation of Forest====" + "\n");
+		retString += " \t" + ("" + m_activeForest.CalculateCorrelationPercentage() + "\n");
+		
+		
+		
+		return retString;
+	}
+	
+	private void WriteResultFile(String[][] p_activeRes, String[][] p_supervisedRes) throws Exception
 	{
 		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
 		Calendar cal = Calendar.getInstance();
 		String target = m_outputPath +timeAndDate.format(cal.getTime())+ " "+ m_currentTest;
-		try
-		{
+		
+			try
+			{
 			Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
-			
-			w.write("Dataset: " + m_test + "\n");
-			if(m_testType == 1 || m_testType == 3)
+			for(int test = 0; test < m_numTests; test++)
 			{
-				w.write("TestType: Active"  + "\n\n");
-				w.write("====Crossvalidation results==== "  +p_activeRes[0] + "\n");
-				w.write("====Training results====" + "\n"+ p_activeRes[1] + "\n");
-				
-				w.write("====Purity and Variance difference of leafs====" + "\n");
-				Vector<Vector<double[]>> purityVardiff = m_activeForest.GetPurityAndVardiff();
-				double meanPurity = 0.0;
-				double meanVarDiff = 0.0;
-				for(int i = 0; i < purityVardiff.size(); i++)
+				w.write("Dataset: " + m_test + "\n");
+				if(m_testType == 1 || m_testType == 3)
 				{
-					w.write("Tree" + i + ": ");
-					for(int j = 0; j < purityVardiff.get(i).size(); j++)
-					{
-						w.write("Purity: " + purityVardiff.get(i).get(j)[0] + " VarianceDiff: " + purityVardiff.get(i).get(j)[1] + " || ");
-	
-					}
+					w.write("TestType: Active Test: " + test  + "\n\n");
+					w.write("\t" +"====Crossvalidation results==== " + "\n\t" +p_activeRes[test][0] + "\n");
+					w.write("\t" +"====Training results====" + "\n\t"+ p_activeRes[test][1] + "\n");
+					
+					
+					
 					w.write("\n");
-	
-				}
-				
-				w.write("===Mean Purity of Forest====" + "\n");
-				w.write("" + purityVardiff.lastElement().lastElement()[0] + "\n");
-				
-				w.write("===Mean Variance Difference of Forest====" + "\n");
-				w.write("" + purityVardiff.lastElement().lastElement()[1] + "\n");
-				
-				w.write("===Mean Correlation of Forest====" + "\n");
-				w.write("" + m_activeForest.CalculateCorrelationPercentage() + "\n");
-				
-				w.write("====Instances used as labeled====" +  "\n");
-				for(int i = 0; i < m_labeledIndex.length; i ++)
-				{
-					for(int j = 0 ; j < 10; j++)
+					if(test == m_numTests-1)
 					{
-						i++;
-						if( i >= m_labeledIndex.length )
+						w.write("\t" +"====Instances used as labeled====" +  "\n");
+						for(int i = 0; i < m_labeledIndex.length; i ++)
 						{
-							break;
+							for(int j = 0 ; j < 10; j++)
+							{
+								i++;
+								if( i >= m_labeledIndex.length )
+								{
+									break;
+								}
+								w.write(" " + m_labeledIndex[i]);
+							}
+							w.write("\n");
 						}
-						w.write(" " + m_labeledIndex[i]);
 					}
-					w.write("\n");
 				}
-				w.write("\n");
+				else if(m_testType == 2 || m_testType == 3)
+				{
+					w.write("TestType: Supervised" + "\n\n" );
+					w.write("\t" +"====Crossvalidation results==== " +p_supervisedRes[test][0] + "\n");
+					w.write("\t" +"====Training results====" + "\n"+ p_supervisedRes[test][1] + "\n");
+				}
 			}
-			else if(m_testType == 2 || m_testType == 3)
-			{
-				w.write("TestType: Supervised" + "\n\n" );
-				w.write("====Crossvalidation results==== " +p_supervisedRes[0] + "\n");
-				w.write("====Training results====" + "\n"+ p_supervisedRes[1] + "\n");
-			}
-			
 			w.close();
-		}
-		catch(Exception E)
-		{
-			Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-		}
+			}
+			catch(Exception E)
+			{
+				Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			}
+		
 		
 	}
 	private void ProcessFile(Path p_path) throws IOException
@@ -227,8 +244,8 @@ public class TestEnvironment {
 			case("AlphaValue"):
 				Utilities.g_alphaValue = Double.parseDouble(scanner.next());
 				break;
-			case("Sets"):
-				m_testSize = scanner.nextInt();
+			case("NumTests"):
+				m_numTests = scanner.nextInt();
 				break;
 			case("InputPath"):
 				m_inputPath = scanner.next();

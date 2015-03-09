@@ -841,7 +841,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		private double Covariance(int p_sumParentInstances, Instances[] p_instances) throws Exception
 		{
 			double hejhoppiklingonskogen = 0.0, parentByChild, singleResult;
-			Debugger.DebugPrint("Entering Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			Debugger.DebugPrint("Entering Covariance", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			Debugger.DebugPrint("SumParents = " + p_sumParentInstances + "\n" + "Sum child1 = " + p_instances[0].numInstances() + "\n" + "Sum child2 = " + p_instances[1].numInstances(),
 								Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			for(int i = 0; i < 2; i++)
@@ -851,7 +851,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				hejhoppiklingonskogen += (parentByChild * singleResult) ;
 				Debugger.DebugPrint("Covariance value= " + hejhoppiklingonskogen, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			}
-			Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			return hejhoppiklingonskogen;
 		}
 		
