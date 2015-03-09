@@ -1,3 +1,3 @@
 MaxDepth=3NumTrees=1NumFeatures=0AlphaValue=1.5Sets=1InputPath=J:/master_thesis_work/MachineLearning/Datasets/OutputPath=J:/master_thesis_work/MachineLearning/Results/Files=CCPP.csvTestType=1SplitLevel=0.7
 Plot=true
-DebugLevel=NONE
+DebugLevel=LOW

@@ -56,11 +56,15 @@ public  class Debugger implements Serializable
 		
 		if((p_debugType == DebugType.FILE && m_debugFilePath == null) ||  m_globalDebugLevel == g_debug_NONE)
 			return false;
+		
+		StackTraceElement temp = Thread.currentThread().getStackTrace()[2];
+		String stacktrace = "\t" +temp.getFileName()+":"+temp.getMethodName()+":"+temp.getLineNumber();
+		
 		if(p_debugType == DebugType.CONSOLE || p_debugType == DebugType.BOTH)
 		{
 			if(p_minDebugLevel <= m_globalDebugLevel)
 			{
-				System.out.println(p_debugData);
+				System.out.println(p_debugData + stacktrace);
 				return true;
 			}
 		}
@@ -70,7 +74,7 @@ public  class Debugger implements Serializable
 			{
 				try{
 				Writer w = new BufferedWriter(new FileWriter(m_debugFilePath, true));
-				w.write(p_debugData);
+				w.write(p_debugData + stacktrace);
 				w.close();
 				}
 				catch(Exception E)
