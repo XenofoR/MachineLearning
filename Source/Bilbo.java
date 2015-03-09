@@ -188,13 +188,18 @@ public class Bilbo
 	  return returnVector;
 	}
   
-  public double CalculateCorrelationPercentage()
+  public double[] CalculateCorrelationPercentage()
   {
-	  double index = 0.0;
+	  double index[] = {0.0, 0.0};
 	  for(int i = 0; i < m_Classifiers.length; i++)
-		  index += ((NewTree)m_Classifiers[i]).CalculateCorrelationPercentage();
+	  {
+		  double[] temp = ((NewTree)m_Classifiers[i]).CalculateCorrelationPercentage();
+		  index[0] += temp[0];
+		  index[1] += temp[1];
+	  }
 	  
-	  index /= m_Classifiers.length;
+	  index[0] /= m_Classifiers.length;
+	  index[1] /= m_Classifiers.length;
 	  
 	  return index;
   }

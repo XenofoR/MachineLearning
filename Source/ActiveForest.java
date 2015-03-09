@@ -6,7 +6,7 @@ import java.util.Vector;
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomForest.java
 public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	Bilbo m_bagger;
-	double m_correlationMean;
+
 	//Instances m_unlabledStructure;
 	public ActiveForest() {
 		super();
@@ -18,10 +18,9 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 		return m_bagger.GetPurityAndVardiff();
 	}
 	
-	public double CalculateCorrelationPercentage()
+	public double[] CalculateCorrelationPercentage()
 	{
-		m_correlationMean = m_bagger.CalculateCorrelationPercentage();
-		return m_correlationMean;
+		return m_bagger.CalculateCorrelationPercentage();
 	}
 	
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception
