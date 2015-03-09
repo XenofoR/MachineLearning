@@ -50,8 +50,16 @@ public class TestEnvironment {
 		String[] activeResults = new String[2];
 		String[] supervisedResults = new String[2];
 		CreateDataStructure(m_inputPath + m_test);
-		m_evaluator = new Evaluation(m_structure);
-	
+		try
+		{
+			m_evaluator = new Evaluation(m_structure);
+		}
+		catch(Exception E)
+		{
+			Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			return;
+		}
+		
 		if(m_testType == 1 || m_testType == 3)
 		{
 			m_activeForest = new ActiveForest();
@@ -70,7 +78,14 @@ public class TestEnvironment {
 			{
 				//m_evaluator.crossValidateModel(m_activeForest, m_structure, 10, new Random());
 				//activeResults[0] = m_evaluator.toSummaryString();
-				m_activeForest.buildClassifier(test[0], test[1]);
+				try
+				{
+					m_activeForest.buildClassifier(test[0], test[1]);
+				}
+				catch(Exception E)
+				{
+					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+				}
 				activeResults[1] = m_activeForest.toString();
 			}
 		}
@@ -106,54 +121,62 @@ public class TestEnvironment {
 		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
 		Calendar cal = Calendar.getInstance();
 		String target = m_outputPath +timeAndDate.format(cal.getTime())+ " "+ m_currentTest;
-		Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
-		
-		w.write("Dataset: " + m_test + "\n");
-		if(m_testType == 1 || m_testType == 3)
+		try
 		{
-			w.write("TestType: Active"  + "\n\n");
-			w.write("====Crossvalidation results==== "  +p_activeRes[0] + "\n");
-			w.write("====Training results====" + "\n"+ p_activeRes[1] + "\n");
+			Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
 			
-			w.write("====Instances used as labeled====" +  "\n");
-			for(int i = 0; i < m_labeledIndex.length; i ++)
+			w.write("Dataset: " + m_test + "\n");
+			if(m_testType == 1 || m_testType == 3)
 			{
-				for(int j = 0 ; j < 10; j++)
+				w.write("TestType: Active"  + "\n\n");
+				w.write("====Crossvalidation results==== "  +p_activeRes[0] + "\n");
+				w.write("====Training results====" + "\n"+ p_activeRes[1] + "\n");
+				
+				w.write("====Instances used as labeled====" +  "\n");
+				for(int i = 0; i < m_labeledIndex.length; i ++)
 				{
-					i++;
-					if( i >= m_labeledIndex.length )
+					for(int j = 0 ; j < 10; j++)
 					{
-						break;
+						i++;
+						if( i >= m_labeledIndex.length )
+						{
+							break;
+						}
+						w.write(" " + m_labeledIndex[i]);
 					}
-					w.write(" " + m_labeledIndex[i]);
+					w.write("\n");
 				}
-				w.write("\n");
-			}
-			
-			w.write("====Purity of leafs====" + "\n");
-			Vector<Vector<Double>> purity = m_activeForest.GetPurity();
-			for(int i = 0; i < purity.size(); i++)
-			{
-				w.write("Tree" + i + ": ");
-				for(int j = 0; j < purity.get(i).size(); j++)
+				
+				w.write("====Purity of leafs====" + "\n");
+				Vector<Vector<Double>> purity = m_activeForest.GetPurity();
+				for(int i = 0; i < purity.size(); i++)
 				{
-					w.write("" + purity.get(i).get(j) + "   ");
+					w.write("Tree" + i + ": ");
+					for(int j = 0; j < purity.get(i).size(); j++)
+					{
+						w.write("" + purity.get(i).get(j) + "   ");
+					}
+					w.write("\n");
 				}
-				w.write("\n");
+				
+				w.write("===Mean Correlation of Forest====" + "\n");
+				w.write("" + m_activeForest.CalculateCorrelationPercentage() + "\n");
+				
+			}
+			else if(m_testType == 2 || m_testType == 3)
+			{
+				w.write("TestType: Supervised" + "\n\n" );
+				w.write("====Crossvalidation results==== " +p_supervisedRes[0] + "\n");
+				w.write("====Training results====" + "\n"+ p_supervisedRes[1] + "\n");
 			}
 			
-			w.write("===Mean Correlation of Forest====" + "\n");
-			w.write("" + m_activeForest.CalculateCorrelationPercentage() + "\n");
-			
+			w.close();
 		}
-		else if(m_testType == 2 || m_testType == 3)
+		catch(Exception E)
 		{
-			w.write("TestType: Supervised" + "\n\n" );
-			w.write("====Crossvalidation results==== " +p_supervisedRes[0] + "\n");
-			w.write("====Training results====" + "\n"+ p_supervisedRes[1] + "\n");
+			Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		}
 		
-		w.close();
 	}
 	private void ProcessFile(Path p_path) throws IOException
 	{
@@ -163,6 +186,10 @@ public class TestEnvironment {
 			while(scanner.hasNextLine())
 				ProcessLine(scanner.nextLine());
 			scanner.close();
+		}
+		catch(Exception E)
+		{
+			Debugger.DebugPrint("Exception caught: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		}
 	}
 	private void ProcessLine(String p_line)
@@ -232,13 +259,20 @@ public class TestEnvironment {
 	
 	private void CreateDataStructure(String p_file) throws Exception
 	{
+		try
+		{
 		File file = new File(p_file);
-				
 		m_loader.setFile(file);
-				
+		
 		m_structure = m_loader.getStructure();
 				
 		m_structure.setClassIndex(m_structure.numAttributes() - 1);
+		}
+		catch(Exception E)
+		{
+			Debugger.DebugPrint("Exception caught: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+		}
+		
 
 	}
 	
