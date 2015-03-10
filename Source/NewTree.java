@@ -79,7 +79,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		double[] mean = new double[2];
 		for(int i = 0; i < returnVector.size(); i++)
 		{
-			mean[0] += returnVector.get(i)[0];
+			mean[0] += returnVector.get(i)[0] == -1 ? 0 : returnVector.get(i)[0];
 			mean[1] += returnVector.get(i)[1];
 		}
 		mean[0] /= returnVector.size();
@@ -88,7 +88,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		return returnVector;
 	}
 	
-	public double CalculateCorrelationPercentage()
+	public double[] CalculateCorrelationPercentage()
 	{
 		Vector<double[][]> covarianceMatrix = new Vector<double[][]>();
 		Vector<double[][]> correlationMatrix = new Vector<double[][]>();
@@ -96,15 +96,18 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		
 		correlationMatrix.addAll(covarianceMatrix);
 		
-		double totalCorrelation = 0.0;
+		double totalCorrelation[] = {0.0, 0.0};
 		for(int i = 0; i < correlationMatrix.size(); i++)
 		{
 			Utilities.NormalizeMatrix(correlationMatrix.get(i));
 			double det = Utilities.CalculateDeterminant(correlationMatrix.get(i));
+			double det2 = Utilities.CalculateDeterminant(covarianceMatrix.get(i));
 
-			totalCorrelation += det;
+			totalCorrelation[0] += det;
+			totalCorrelation[1] += det2;
 		}
-		totalCorrelation /= correlationMatrix.size();
+		totalCorrelation[0] /= correlationMatrix.size();
+		totalCorrelation[1] /= correlationMatrix.size();
 		
 		return totalCorrelation;
 	}

@@ -146,8 +146,9 @@ public class TestEnvironment {
 		retString += " \t" + ("===Mean Variance Difference of Forest====" + "\n");
 		retString += " \t" + ("" + purityVardiff.lastElement().lastElement()[1] + "\n");
 		
-		retString += " \t" + ("===Mean Correlation of Forest====" + "\n");
-		retString += " \t" + ("" + m_activeForest.CalculateCorrelationPercentage() + "\n");
+		double[] meanCorrCov = m_activeForest.CalculateCorrelationPercentage();
+		retString += " \t" + ("===Mean Correlation and Covariance of Forest====" + "\n");
+		retString += " \t" + ("Correlation: " + meanCorrCov[0] + " Covariance: " + meanCorrCov[1] + "\n");
 		
 		
 		
