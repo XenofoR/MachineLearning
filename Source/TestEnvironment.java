@@ -81,6 +81,8 @@ public class TestEnvironment {
 
 				try
 				{
+					Random ran = new Random();
+					m_activeForest.setSeed(ran.nextInt());
 					m_activeForest.buildClassifier(test[0], test[1]);
 				}
 				catch(Exception E)
