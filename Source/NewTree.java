@@ -77,12 +77,18 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_Tree.GetPurityAndVardiff(returnVector);
 		
 		double[] mean = new double[2];
+		int leafWithPurity = 1;
 		for(int i = 0; i < returnVector.size(); i++)
 		{
-			mean[0] += returnVector.get(i)[0] == -1 ? 0 : returnVector.get(i)[0];
+			//Only use leafs with labeled and unlabeled data
+			if(returnVector.get(i)[0] != -1)
+			{
+				mean[0] += returnVector.get(i)[0];
+				leafWithPurity ++;
+			}
 			mean[1] += returnVector.get(i)[1];
 		}
-		mean[0] /= returnVector.size();
+		mean[0] /= leafWithPurity;
 		mean[1] /= returnVector.size();
 		
 		return returnVector;
@@ -658,13 +664,13 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			    unlabaledVariance /= p_unlabeledData.numInstances() == 1 ? 1 : (p_unlabeledData.numInstances() - 1);
 			    
 			    m_varianceDiff = Math.abs(variance - unlabaledVariance); 
-			    m_purity /= p_unlabeledData.numInstances();
-			    p_unlabeledData.setClassIndex(-1);
+			    m_purity /= p_unlabeledData.numInstances(); 
 			}
 			else
 			{
 				m_purity = -1;
 			}
+			p_unlabeledData.setClassIndex(-1);
 		}
 		
 		protected double numericDistribution(double[][] props, double[][][] dists,

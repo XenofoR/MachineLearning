@@ -69,11 +69,11 @@ public class TestEnvironment {
 			//m_activeForest.SetData(m_structure);
 			
 			//TODO: REMOVE THIS ONCE WE ARE INTERESTED IN MORE COMPLEX DATA
-			RemoveAttribute(3);
-			RemoveAttribute(2);
+			//RemoveAttribute(3);
+			//RemoveAttribute(2);
 			//END TODO
-			
-			Instances[] test = SplitDataStructure(m_structure);
+			Instances[] smallerSet = SplitDataStructure(m_structure, 0.1f);
+			Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
 			for(int i = 0; i < m_numTests; i++)
 			{
 				//m_evaluator.crossValidateModel(m_activeForest, m_structure, 10, new Random());
@@ -164,9 +164,11 @@ public class TestEnvironment {
 			try
 			{
 			Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
+			w.write("Dataset: " + m_test + "\n");
+			w.write("Splitlevel for active learning: " + m_alSplitPercentage + "\n");
+			w.write("Alpha value for unlabeled data: " + Utilities.g_alphaValue + "\n");
 			for(int test = 0; test < m_numTests; test++)
 			{
-				w.write("Dataset: " + m_test + "\n");
 				if(m_testType == 1 || m_testType == 3)
 				{
 					w.write("TestType: Active Test: " + test  + "\n\n");
@@ -309,13 +311,13 @@ public class TestEnvironment {
 	}
 	
 	/**Splits the datastructure into one labled part and one unlabled part */
-	private Instances[] SplitDataStructure(Instances p_structure) 
+	private Instances[] SplitDataStructure(Instances p_structure, float p_splitLevel) 
 	{
 		Instances[] returnStructure = new Instances[2];
 		
 		Instances tempStructure = new Instances(p_structure); //Need a temporary structure so that we can remove instances that have been selected
 		
-		int numLabled = (int)(m_alSplitPercentage * p_structure.numInstances());
+		int numLabled = (int)(p_splitLevel * p_structure.numInstances());
 		m_labeledIndex = new int[numLabled];
 		returnStructure[0] = new Instances(p_structure, numLabled);
 		returnStructure[1] = new Instances(p_structure, p_structure.numInstances() - numLabled);
