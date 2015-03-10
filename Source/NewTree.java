@@ -77,7 +77,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_Tree.GetPurityAndVardiff(returnVector);
 		
 		double[] mean = new double[2];
-		int leafWithPurity = 1;
+		int leafWithPurity = 0;
 		for(int i = 0; i < returnVector.size(); i++)
 		{
 			//Only use leafs with labeled and unlabeled data
@@ -90,6 +90,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		}
 		mean[0] /= leafWithPurity;
 		mean[1] /= returnVector.size();
+		returnVector.addElement(mean);
 		
 		return returnVector;
 	}
