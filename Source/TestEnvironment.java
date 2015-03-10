@@ -129,7 +129,7 @@ public class TestEnvironment {
 		for(int i = 0; i < purityVardiff.size(); i++)
 		{
 			retString += " \t" + ("Tree" + i + ": ");
-			for(int j = 0; j < purityVardiff.get(i).size(); j++)
+			for(int j = 0; j < purityVardiff.get(i).size() - 1; j++)
 			{
 				retString += " \t" + ("Purity: " + purityVardiff.get(i).get(j)[0] + " VarianceDiff: " + purityVardiff.get(i).get(j)[1] + " || ");
 
