@@ -52,6 +52,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 {
 	
 	private Plotter m_plotter;
+	private double[][] m_meanMatrix;
 	
 	InnerTree m_Tree;
 	
@@ -97,8 +98,31 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		return returnVector;
 	}
 	
+	public double[][] CalculateMeanMatrix()
+	{
+		Vector<double[]> clusterCenter = new Vector<double[]>();
+		
+		m_Tree.FindLeafCenters(clusterCenter);
+		
+		m_meanMatrix = new double[clusterCenter.size()][clusterCenter.size()];
+		
+		for(int i = 0; i < m_meanMatrix.length; i++)
+			for(int j = 0; j < m_meanMatrix.length; j++)
+			{
+				double length = 0.0;
+				for(int k = 0; k < clusterCenter.get(i).length; k++)
+					length += Math.pow(clusterCenter.get(i)[k] - clusterCenter.get(j)[k], 2);
+					
+				Math.sqrt(length);
+				m_meanMatrix[i][j] = length;
+			}
+		
+		return m_meanMatrix;
+	}
+	
 	public double[] CalculateCorrelationPercentage()
 	{
+		CalculateMeanMatrix();
 		Vector<double[][]> covarianceMatrix = new Vector<double[][]>();
 		double[][] correlation;
 		m_Tree.FindCovarianceMatrices(covarianceMatrix);
@@ -266,6 +290,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	{
 		double[][] m_covarianceMatrix = null;
 		double[][] m_correlationMatrix = null;
+		double[] m_center = null;
 		protected InnerTree[] m_Successors;
 		double m_purity;
 		double m_varianceDiff;
@@ -281,6 +306,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        return size;
 		      }
 		    }
+		 
+		 public void FindLeafCenters(Vector<double[]> p_center)
+		 {
+			 if(m_Attribute == -1)
+				 p_center.add(m_center);
+			 else
+			 {
+				 m_Successors[0].FindLeafCenters(p_center);
+				 m_Successors[1].FindLeafCenters(p_center);
+			 }
+		 }
 		 
 		 public void FindCovarianceMatrices(Vector<double[][]> p_matricies)
 		 {
@@ -454,6 +490,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      int[] p_attIndicesWindow, double p_totalWeight, Random p_random, int p_depth,
 		      double minVariance) throws Exception {
 			
+			m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
 		      if (p_labeledData.numInstances() == 0 && p_unlabeledData.numInstances() == 0) {
 		        m_Attribute = -1;
@@ -512,7 +549,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Instances instance = new Instances(p_labeledData);
 		        instance.addAll(p_unlabeledData);
 		        m_covarianceMatrix = new double[instance.numAttributes()-1][instance.numAttributes()-1];
-		        Utilities.CalculateCovarianceMatrix(instance, m_covarianceMatrix);
+		        Utilities.CalculateCovarianceMatrix(instance, m_covarianceMatrix, m_center);
 
 		        
 		        CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
@@ -622,7 +659,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		    	  Instances instances = new Instances(p_labeledData);
 			      instances.addAll(p_unlabeledData);
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
-			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix);
+			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix, m_center);
 			      m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 			      
 			      CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
@@ -751,7 +788,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	else
 			        		inst = p_unlabeledData.instance(i - indexOfFirstMissingValue);
 			        	
-			          //TODO: CHANGE THE FISK to a non static value and update variance calculation to seperate stuff
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
@@ -838,13 +874,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      double var = variance(sums, sumSquared, sumOfWeights);
 			      
 			      //Add cluster gain over the parent to the final gain calculations.
-			      //TODO: change the FISK to a non static value
 			      Instances clusterInstances = new Instances(p_labeledData);
 			      clusterInstances.addAll(p_unlabeledData);
 			      clusterInstances.setClassIndex(-1);
 			      double clusterPrior = SingleCovariance(clusterInstances);
 			      double clusterVar = Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
-			      //System.out.println("covariance prior: " + clusterPrior + " covariance current: " + clusterVar);
 			      double gain = (priorVar - var) + Utilities.g_alphaValue *(clusterPrior - clusterVar);
 
 			      // Return distribution and split point
@@ -878,7 +912,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				//return 0;
 
 			double[][] covarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
-			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix);
+			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix, m_center);
 			
 			double det = Utilities.CalculateDeterminant(covarianceMatrix);
 			Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
