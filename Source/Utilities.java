@@ -10,6 +10,7 @@ import weka.filters.unsupervised.attribute.Copy;
 public class Utilities
 {
 	static double g_alphaValue;
+	static boolean g_debug;
 	
 	//http://professorjava.weebly.com/matrix-determinant.html
 	
@@ -48,20 +49,22 @@ public class Utilities
 		return CalcDeterminantWithLU(p_matrix);
 	}
 	
-	static public void NormalizeMatrix(double[][] p_matrix)
+	static public double[][] NormalizeMatrix(double[][] p_matrix)
 	{
+		double[][] temp = p_matrix.clone();			
 		for(int i = 0; i < p_matrix.length; i++)
 		{
 			for(int j = 0; j < p_matrix.length; j++)
 			{
 				if(p_matrix[i][i] != 0 && p_matrix[j][j] != 0)
-					p_matrix[i][j] /= Math.sqrt(p_matrix[i][i]*p_matrix[j][j]);
+					temp[i][j] /= Math.sqrt(p_matrix[i][i]*p_matrix[j][j]);
 				else
 				{
-					p_matrix[i][j] = 0;
+					temp[i][j] = 0;
 				}
 			}
 		}
+		return temp;
 	}
 	
 	private static void OuterProduct(double[] p_row, double[] p_column, double[][] p_destination)

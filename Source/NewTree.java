@@ -14,6 +14,8 @@ import javax.rmi.CORBA.Util;
 import javax.swing.DebugGraphics;
 import javax.xml.crypto.KeySelector.Purpose;
 
+import org.math.io.parser.ArrayString;
+
 
 
 
@@ -98,23 +100,28 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	public double[] CalculateCorrelationPercentage()
 	{
 		Vector<double[][]> covarianceMatrix = new Vector<double[][]>();
-		Vector<double[][]> correlationMatrix = new Vector<double[][]>();
+		double[][] correlation;
 		m_Tree.FindCovarianceMatrices(covarianceMatrix);
 		
-		correlationMatrix.addAll(covarianceMatrix);
-		
 		double totalCorrelation[] = {0.0, 0.0};
-		for(int i = 0; i < correlationMatrix.size(); i++)
+		for(int i = 0; i < covarianceMatrix.size(); i++)
 		{
-			Utilities.NormalizeMatrix(correlationMatrix.get(i));
-			double det = Utilities.CalculateDeterminant(correlationMatrix.get(i));
+			correlation = Utilities.NormalizeMatrix(covarianceMatrix.get(i)).clone();
+			double det = Utilities.CalculateDeterminant(correlation);
 			double det2 = Utilities.CalculateDeterminant(covarianceMatrix.get(i));
-
+			if(det < -1 || det > 1)
+			{
+				System.out.println("" + Arrays.toString(correlation[0]) + "\n");
+				System.out.println("" + Arrays.toString(correlation[1]) + "\n");
+				System.out.println("" + Arrays.toString(correlation[2]) + "\n");
+				System.out.println("" + Arrays.toString(correlation[3]) + "\n");
+				System.out.println("\n");
+			}
 			totalCorrelation[0] += det;
 			totalCorrelation[1] += det2;
 		}
-		totalCorrelation[0] /= correlationMatrix.size();
-		totalCorrelation[1] /= correlationMatrix.size();
+		totalCorrelation[0] /= covarianceMatrix.size();
+		totalCorrelation[1] /= covarianceMatrix.size();
 		
 		return totalCorrelation;
 	}
