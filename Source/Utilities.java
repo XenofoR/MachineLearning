@@ -71,7 +71,7 @@ public class Utilities
 				p_destination[i][j] = p_row[i] * p_column[j];
 	}
 	//Subtract p_value from each attribute in p_instance and save results in p_destination
-	private static void Subtract(double[] p_source, double[] p_value, double[] p_destination)
+	public static void Subtract(double[] p_source, double[] p_value, double[] p_destination)
 	{
 		for(int i = 0; i < p_source.length - 1; i++)
 			p_destination[i] = p_source[i] - p_value[i];
