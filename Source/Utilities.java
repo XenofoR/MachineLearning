@@ -10,6 +10,7 @@ import weka.filters.unsupervised.attribute.Copy;
 public class Utilities
 {
 	static double g_alphaValue;
+	static boolean g_debug;
 	
 	//http://professorjava.weebly.com/matrix-determinant.html
 	
@@ -48,21 +49,27 @@ public class Utilities
 		return CalcDeterminantWithLU(p_matrix);
 	}
 	
-	static public void NormalizeMatrix(double[][] p_matrix)
+	static public double[][] NormalizeMatrix(double[][] p_matrix)
 	{
+		
+		
+		double[][] temp = new double[p_matrix.length][];			
 		for(int i = 0; i < p_matrix.length; i++)
 		{
+			temp[i] = Arrays.copyOf(p_matrix[i], p_matrix[i].length );
 			for(int j = 0; j < p_matrix.length; j++)
 			{
 				if(p_matrix[i][i] != 0 && p_matrix[j][j] != 0)
-					p_matrix[i][j] /= Math.sqrt(p_matrix[i][i]*p_matrix[j][j]);
+					temp[i][j] /= Math.sqrt(p_matrix[i][i]*p_matrix[j][j]);
 				else
 				{
-					p_matrix[i][j] = 0;
+					temp[i][j] = 0;
 				}
 			}
 		}
+		return temp;
 	}
+	
 	
 	private static void OuterProduct(double[] p_row, double[] p_column, double[][] p_destination)
 	{
@@ -116,7 +123,7 @@ public class Utilities
     private static double CalcDeterminantWithLU(double[][] p_matrix)
     {
     	double det = 0.0;
-    	double[][] matrix = p_matrix.clone();
+    	double[][] matrix = new double[p_matrix.length][];
     	int pivSign = 1;
     	int[] piv = new int[matrix.length];
     	
@@ -125,10 +132,13 @@ public class Utilities
     	
     	double[] LUrowi;
     	double[] LUcolj = new double[matrix.length];
-    	
+    	//Deepcopy matrix
+    	for(int i = 0; i < p_matrix.length; i++)
+    		matrix[i] = Arrays.copyOf(p_matrix[i], p_matrix[i].length);
     	// Outer loop
     	for(int j = 0; j < matrix.length; j++)
     	{
+    		
     		for(int i = 0; i < matrix.length; i++)
     		{
     		LUcolj[i] = matrix[i][j];
