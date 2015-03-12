@@ -22,38 +22,84 @@ public class Graph
 		m_labeledIndices = new Vector<Integer>();
 		m_covarianeMatrices = new Vector<double[][]>();
 	}
-	//TODO
+	public void GetInstances(Instances p_retInstances)
+	{
+		for(int i = 0; i < m_Points.size(); i++)
+			p_retInstances.add(m_Points.elementAt(i).m_instance);
+		
+	}
+	
 	public void AddCluster(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance)
 	{
 		
 		int index = m_covarianeMatrices.size();
 		m_covarianeMatrices.add(p_covariance);
-		for(int i = 0; i < p_labeled.size(); i++)
+		Instances tempL = new Instances(p_labeled);
+		Instances tempU = new Instances(p_unlabeled);
+		tempL.addAll(p_labeled);
+		tempU.addAll(p_unlabeled);
+		for(int i = 0; i < tempL.size(); i++)
 		{
 			//Remember that this is a labeled instance
 			m_labeledIndices.add(m_Points.size());
-			Point point = new Point(p_labeled.instance(i), true, index);
+			Point point = new Point(tempL.instance(i), true, index);
 			//Build edges
 			ConstructEdges(point);
 			m_Points.add(point);	
 		}
-		for(int i = 0; i < p_labeled.size(); i++)
+		for(int i = 0; i < tempU.size(); i++)
 		{
-			Point point = new Point(p_unlabeled.instance(i), false, index);
+			Point point = new Point(tempU.instance(i), false, index);
 			//Build edges
 			ConstructEdges(point);
 			m_Points.add(point);	
 		}
 	}
 	
-	//TODO
-	public double CalculateHighestUncertainty(Instance p_outInstance)
+	public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance)
 	{
-		return 0.0;
+		double retVal = 0;
+		double localShortest = 0, totalDist = 0, label = 0;
+		//TODO This is the place to insert threading in this algorithm if we intend to do so
+		for(int i = 0; i < m_Points.size(); i++)
+		{
+			localShortest = Double.MAX_VALUE;
+			totalDist = 0;
+			label = 0;
+			double [] distances = new double[m_labeledIndices.size()];
+			if(m_Points.elementAt(i).m_labeled)
+				continue;
+			//Calculate distance to each label
+			for(int j = 0; j < m_labeledIndices.size(); j++)
+			{
+				double temp = Djikstra(i, m_labeledIndices.elementAt(j));
+				totalDist += temp;
+				 if(temp < localShortest)
+				 {
+					 localShortest = temp;
+				 }
+				 distances[j] = temp;
+			}
+			//Save the longest shortest path
+			if(localShortest > retVal)
+			{
+				retVal = localShortest;
+				p_outInstance = m_Points.elementAt(i).m_instance;
+			}
+			//Calculate propagated label for instance
+			for(int j = 0; j < distances.length; j++)
+			{
+				label += (distances[j] / totalDist) * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
+			}
+			m_Points.elementAt(i).m_instance.setClassValue(label);
+		}
+		
+		return retVal;
 	}
 	//TODO
 	private double Djikstra(int p_unlabeled, int p_labeledIndex)
 	{
+		
 		return 0.0;
 	}
 	
@@ -95,7 +141,7 @@ public class Graph
 			m_Points.elementAt(i).m_edges.add(edge);
 		}
 	}
-	//TODO
+	//TODO FIX INVERSE MATRIX CALC
 	private double CalculateMahalanobisDistance(double[] p_first, double[] p_second, int p_covMatIndex)
 	{
 		double retVal = 0;
@@ -114,11 +160,14 @@ public class Graph
 		{
 			for(int j = 0; j < matrix[i].length; j++)
 			{
-				tempVec[i] += distanceVec[j] * matrix[j][i];
+				tempVec[i] += distanceVec[j] * matrix[j][i]; // TODO THIS SHOULD BE INVERSE MATRIX
 			}
 		}
-		
-		
+		//(D^T * M^-1) * D
+		for(int i= 0; i < tempVec.length; i++)
+		{
+			retVal += tempVec[i] * distanceVec[i]; 
+		}
 		return retVal;
 	}
 	
