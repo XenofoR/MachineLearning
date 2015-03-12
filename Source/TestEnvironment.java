@@ -69,8 +69,8 @@ public class TestEnvironment {
 			//m_activeForest.SetData(m_structure);
 			
 			//TODO: REMOVE THIS ONCE WE ARE INTERESTED IN MORE COMPLEX DATA
-			//RemoveAttribute(3);
-			//RemoveAttribute(2);
+			RemoveAttribute(3);
+			RemoveAttribute(2);
 			//END TODO
 			Instances[] smallerSet = SplitDataStructure(m_structure, 0.1f);
 			Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
@@ -273,8 +273,12 @@ public class TestEnvironment {
 				break;
 			case("DebugLevel"):
 				String temp = scanner.next();
+				Utilities.g_debug = true;
 				if(temp.equals("NONE") == true)
+				{
 					Debugger.Init(Debugger.g_debug_NONE, null);
+					Utilities.g_debug = false;
+				}
 				else if(temp.equals("LOW") == true)
 					Debugger.Init(Debugger.g_debug_LOW, null);
 				else if(temp.equals("MEDIUM") == true)

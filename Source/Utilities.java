@@ -16,11 +16,12 @@ public class Utilities
 	
 	
 	//http://www.cs.otago.ac.nz/cosc453/student_tutorials/principal_components.pdf
-	static public void CalculateCovarianceMatrix(Instances p_instances, double[][] p_destination)
+	static public void CalculateCovarianceMatrix(Instances p_instances, double[][] p_destination, double[] p_meanDestination)
 	{
 		
-		
 		double[] mean = Mean(p_instances);
+		for(int  i = 0; i < mean.length; i++)
+			p_meanDestination[i] = mean[i];
 		for(int i = 0; i < p_instances.numInstances() ;i++)
 		{			
 			double[] tempVector = new double[p_instances.instance(i).numAttributes() -1];

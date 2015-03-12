@@ -20,7 +20,7 @@ import javax.xml.crypto.KeySelector.Purpose;
 
 
 
-import weka.attributeSelection.PrincipalComponents;
+import weka.core.InstanceComparator;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
@@ -52,7 +52,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 {
 	
 	private Plotter m_plotter;
-	
+	private double[][] m_leafDistanceMatrix;
+	private double[][] m_randMatrix;
+	private InstanceComparator m_instanceComp;
 	InnerTree m_Tree;
 	
 	public String PrintCovarianceMatrices()
@@ -70,6 +72,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_plotter = new Plotter();
 		m_plotter.Init("IAM A TREE");
 		m_plotter.SetPlot(Debugger.g_plot);
+		m_instanceComp = new InstanceComparator();
 	}
 	
 	public Vector<double[]> GetPurityAndVardiff()
@@ -97,8 +100,50 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		return returnVector;
 	}
 	
+	public double[][][] CalculateDistanceMatrixAndRandMatrix()
+	{
+		Vector<double[]> clusterCenter = new Vector<double[]>();
+		Vector<Instances> clusterIntances = new Vector<Instances>();
+		double randIndex = 0.0;
+		m_Tree.FindLeafCenters(clusterCenter);
+		m_Tree.GetLeafInstances(clusterIntances);
+		
+		m_leafDistanceMatrix = new double[clusterCenter.size()][clusterCenter.size()];
+		m_randMatrix = new double[clusterIntances.size()][clusterIntances.size()];
+		
+		double[][][] returnValue = new double[2][m_leafDistanceMatrix.length][m_leafDistanceMatrix.length];
+		
+		Instances tempInstances = new Instances(clusterIntances.get(0));
+		for(int i = 0; i < m_leafDistanceMatrix.length; i++)
+		{
+			int TP,TN,FP,FN;
+			TP = TN = FP = FN = 0;
+			tempInstances.delete();
+			tempInstances.addAll(clusterIntances.get(i));
+			
+			while(tempInstances.numInstances() > 0)
+			{
+				
+			}
+			
+			for(int j = 0; j < m_leafDistanceMatrix.length; j++)
+			{
+				double length = 0.0;
+				for(int k = 0; k < clusterCenter.get(i).length; k++)
+					length += Math.pow(clusterCenter.get(i)[k] - clusterCenter.get(j)[k], 2);
+					
+				Math.sqrt(length);
+				m_leafDistanceMatrix[i][j] = length;
+			}
+		}
+		returnValue[0] = m_leafDistanceMatrix;
+		returnValue[1] = m_randMatrix;
+		return returnValue;
+	}
+	
 	public double[] CalculateCorrelationPercentage()
 	{
+		//CalculateDistanceMatrixAndRandMatrix();
 		Vector<double[][]> covarianceMatrix = new Vector<double[][]>();
 		double[][] correlation;
 		m_Tree.FindCovarianceMatrices(covarianceMatrix);
@@ -264,11 +309,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	protected class InnerTree extends Tree
 	{
+		//Variables used for cluster analysis
 		double[][] m_covarianceMatrix = null;
 		double[][] m_correlationMatrix = null;
-		protected InnerTree[] m_Successors;
+		Instances m_leafInstances = null; 
+		double[] m_center = null;
 		double m_purity;
 		double m_varianceDiff;
+		
+		//Weka implemented variables
+		protected InnerTree[] m_Successors;
+		
 		 public int numNodes() {
 
 		      if (m_Attribute == -1) {
@@ -281,6 +332,28 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        return size;
 		      }
 		    }
+		 
+		 public void GetLeafInstances(Vector<Instances> p_instanceVector)
+		 {
+			 if(m_Attribute == -1)
+				 p_instanceVector.add(m_leafInstances);
+			 else
+			 {
+				 m_Successors[0].GetLeafInstances(p_instanceVector);
+				 m_Successors[1].GetLeafInstances(p_instanceVector);
+			 }
+		 }
+		 
+		 public void FindLeafCenters(Vector<double[]> p_center)
+		 {
+			 if(m_Attribute == -1)
+				 p_center.add(m_center);
+			 else
+			 {
+				 m_Successors[0].FindLeafCenters(p_center);
+				 m_Successors[1].FindLeafCenters(p_center);
+			 }
+		 }
 		 
 		 public void FindCovarianceMatrices(Vector<double[][]> p_matricies)
 		 {
@@ -454,6 +527,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      int[] p_attIndicesWindow, double p_totalWeight, Random p_random, int p_depth,
 		      double minVariance) throws Exception {
 			
+			m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
 		      if (p_labeledData.numInstances() == 0 && p_unlabeledData.numInstances() == 0) {
 		        m_Attribute = -1;
@@ -509,14 +583,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        }
 		        
 		        //Construct covarianceMatrix for the cluster contained in this leaf
-		        Instances instance = new Instances(p_labeledData);
-		        instance.addAll(p_unlabeledData);
-		        m_covarianceMatrix = new double[instance.numAttributes()-1][instance.numAttributes()-1];
-		        Utilities.CalculateCovarianceMatrix(instance, m_covarianceMatrix);
+		        Instances instances = new Instances(p_labeledData);
+		        instances.addAll(p_unlabeledData);
+		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
+		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
 
-		        
-		        CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
-		        m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
+		        if(Utilities.g_debug)
+		        {
+			        CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
+			        m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
+			        m_leafInstances = instances;
+		        }
 
 		        m_Prop = null;
 		        return;
@@ -622,10 +699,15 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		    	  Instances instances = new Instances(p_labeledData);
 			      instances.addAll(p_unlabeledData);
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
-			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix);
-			      m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
+			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix, m_center);
 			      
-			      CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
+			      if(Utilities.g_debug)
+			        {
+				        CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
+				        m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
+				        m_leafInstances = instances;
+			        }
+
 		      }
 		    }
 
@@ -751,7 +833,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	else
 			        		inst = p_unlabeledData.instance(i - indexOfFirstMissingValue);
 			        	
-			          //TODO: CHANGE THE FISK to a non static value and update variance calculation to seperate stuff
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
@@ -838,13 +919,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      double var = variance(sums, sumSquared, sumOfWeights);
 			      
 			      //Add cluster gain over the parent to the final gain calculations.
-			      //TODO: change the FISK to a non static value
 			      Instances clusterInstances = new Instances(p_labeledData);
 			      clusterInstances.addAll(p_unlabeledData);
 			      clusterInstances.setClassIndex(-1);
 			      double clusterPrior = SingleCovariance(clusterInstances);
 			      double clusterVar = Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
-			      //System.out.println("covariance prior: " + clusterPrior + " covariance current: " + clusterVar);
 			      double gain = (priorVar - var) + Utilities.g_alphaValue *(clusterPrior - clusterVar);
 
 			      // Return distribution and split point
@@ -878,7 +957,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				//return 0;
 
 			double[][] covarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
-			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix);
+			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix, m_center);
 			
 			double det = Utilities.CalculateDeterminant(covarianceMatrix);
 			Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
