@@ -8,6 +8,7 @@ import weka.core.Instances;
 
 public class Graph
 {
+	
 	Vector<Point> m_Points;
 	Vector<Integer> m_labeledIndices;
 	Vector<double[][]> m_covarianeMatrices;
@@ -56,7 +57,7 @@ public class Graph
 		return 0.0;
 	}
 	
-	public void ConstructEdges(Point p_currPoint)
+	private void ConstructEdges(Point p_currPoint)
 	{
 		double[] currPointArray, pointArray;
 		//Index that the current point will have after it's added
@@ -102,11 +103,19 @@ public class Graph
 		//retval = D^T * M^-1 * D
 		double[] distanceVec = new double[p_first.length];
 		Utilities.Subtract(p_first, p_second, distanceVec);
-		double[][] matrix = Arrays.copyOf(m_covarianeMatrices.elementAt(p_covMatIndex));
+		double[][] matrix = new double[m_covarianeMatrices.elementAt(p_covMatIndex).length][];
+		//Deep copy matrix
+    	for(int i = 0; i < m_covarianeMatrices.elementAt(p_covMatIndex).length; i++)
+    		matrix[i] = Arrays.copyOf(m_covarianeMatrices.elementAt(p_covMatIndex)[i], m_covarianeMatrices.elementAt(p_covMatIndex)[i].length);
+		 
+    	double[] tempVec = new double[distanceVec.length];
 		//D^T * M^-1
-		for(int i = 0; i < 20; i++)
+		for(int i = 0; i < matrix.length; i++)
 		{
-			
+			for(int j = 0; j < matrix[i].length; j++)
+			{
+				tempVec[i] += distanceVec[j] * matrix[j][i];
+			}
 		}
 		
 		
