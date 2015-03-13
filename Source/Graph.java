@@ -1,4 +1,7 @@
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import weka.core.Instance;
@@ -96,12 +99,43 @@ public class Graph
 		
 		return retVal;
 	}
-	//TODO
-	private double Djikstra(int p_unlabeled, int p_labeledIndex)
+	//TODO http://rosettacode.org/wiki/Dijkstra%27s_algorithm#C.2B.2B
+	private double Djikstra(int p_start, int p_target)
 	{
+		//Shortest distance to each point from origin
+		double[] minDist = new double[m_Points.size()];
+		Arrays.fill(minDist, Double.MAX_VALUE);
+		minDist[p_start] = 0; //Origin dist
+		Set<Pair<Point, Double>> queue = new LinkedHashSet<Pair<Point, Double>>();
+		queue.add(new Pair<Point, Double>(m_Points.elementAt(p_start),0.0));
 		
-		return 0.0;
+		while(!queue.isEmpty())
+		{
+			// Java.... why are you not c++
+			Pair<Point, Double> itr = queue.iterator().next();
+			Point currPoint =  itr.GetFirst();
+			double currDist =  itr.GetSecond();
+			queue.remove(itr);
+			//Visit currPoints edges
+			for(Iterator<Edge> it = currPoint.m_edges.iterator(); it.hasNext();)
+			{
+				Edge temp = (Edge) it.next();
+				Point target = m_Points.elementAt(temp.m_pointIndex2);
+				double localDist = temp.m_weight;
+				double totalDist = currDist + localDist;
+				if(totalDist < minDist[temp.m_pointIndex2])
+				{
+					queue.remove(new Pair<Point, Double>(target, minDist[temp.m_pointIndex2]));
+					
+					minDist[temp.m_pointIndex2] = totalDist;
+					queue.add(new Pair<Point, Double>(target, totalDist));
+				}
+			}
+		}
+		return minDist[p_target];
 	}
+	
+
 	
 	private void ConstructEdges(Point p_currPoint)
 	{
@@ -116,6 +150,7 @@ public class Graph
 		for(int i = 0; i < currPointArray.length; i++)
 			currPointArray[i] = p_currPoint.m_instance.toDoubleArray()[i];
 		
+		//since it is a complete graph we will need edges to all other points
 		for(int i = 0; i < m_Points.size(); i++)
 		{
 			//If labeled ignore last attribute since it is a label
@@ -136,8 +171,12 @@ public class Graph
 			mahalanobis +=  CalculateMahalanobisDistance(currPointArray, pointArray, m_Points.elementAt(i).m_covarianceIndex);
 			mahalanobis /= 2;
 			
+			
 			edge.m_weight = mahalanobis;
 			p_currPoint.m_edges.add(edge);
+			//TODO check so that this doesn't change the edge added to currpoint
+			edge.m_pointIndex1 = i;
+			edge.m_pointIndex2 = myIndex;
 			m_Points.elementAt(i).m_edges.add(edge);
 		}
 	}
@@ -203,5 +242,25 @@ public class Graph
 		public int m_pointIndex1, m_pointIndex2;
 		//The weight will be the mahalanobis distance between points
 		public double m_weight;
+	}
+	private class Pair<F,S>
+	{
+		private F first;
+		private S second;
+		
+		public Pair(F p_first, S p_second)
+		{
+			first = p_first;
+			second = p_second;
+		}
+		public F GetFirst()
+		{
+			return first;
+		}
+		public S GetSecond()
+		{
+			return second;
+		}
+		
 	}
 }
