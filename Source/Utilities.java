@@ -1,5 +1,5 @@
 import java.util.Arrays;
-
+import java.math.BigInteger;
 
 
 import weka.core.Instance;
@@ -14,7 +14,32 @@ public class Utilities
 	
 	//http://professorjava.weebly.com/matrix-determinant.html
 	
-	
+	static public int CalculateCombination(int p_numenator, int p_denomenator)
+	{
+		BigInteger interNum = new BigInteger(p_numenator+"");
+		BigInteger interDen = new BigInteger(p_denomenator+"");
+		
+		
+		for(int i = p_numenator - 1; i > 0; i--)
+		{
+			BigInteger temp = new BigInteger(i+"");
+			interNum.multiply(temp);
+		}
+		
+		for(int i = p_denomenator - 1; i > 0; i--)
+		{
+			BigInteger temp = new BigInteger(i+"");
+			interDen.multiply(temp);
+		}
+		
+		for(int i = p_numenator - p_denomenator - 1; i > 0; i--)
+		{
+			BigInteger temp = new BigInteger(i+"");
+			interDen.multiply(temp);
+		}
+		
+ 		return interNum.divide(interDen).intValue();
+	}
 	//http://www.cs.otago.ac.nz/cosc453/student_tutorials/principal_components.pdf
 	static public void CalculateCovarianceMatrix(Instances p_instances, double[][] p_destination, double[] p_meanDestination)
 	{

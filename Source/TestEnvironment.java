@@ -150,7 +150,9 @@ public class TestEnvironment {
 		retString += " \t" + ("===Mean Correlation and Covariance of Forest====" + "\n");
 		retString += " \t" + ("Correlation: " + meanCorrCov[0] + " Covariance: " + meanCorrCov[1] + "\n");
 		
-		
+		double meanRandIndex = m_activeForest.CalculateRandIndex();
+		retString += " \t" + ("===Mean Rand Index for Forest====" + "\n");
+		retString += " \t" + ("" + meanRandIndex + "\n");
 		
 		return retString;
 	}
@@ -207,7 +209,7 @@ public class TestEnvironment {
 			}
 			catch(Exception E)
 			{
-				Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+				Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString()+ "Stacktrace: " + E.getStackTrace().toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			}
 		
 		
@@ -223,7 +225,7 @@ public class TestEnvironment {
 		}
 		catch(Exception E)
 		{
-			Debugger.DebugPrint("Exception caught: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			Debugger.DebugPrint("Exception caught: " + E.toString() + " Stacktrace: " + E.getStackTrace().toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		}
 	}
 	private void ProcessLine(String p_line)
