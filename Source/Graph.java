@@ -75,7 +75,8 @@ public class Graph
 			//Calculate distance to each label
 			for(int j = 0; j < m_labeledIndices.size(); j++)
 			{
-				double temp = Djikstra(i, m_labeledIndices.elementAt(j));
+				//TODO No need to iterate over each label, just return the äntire arräy yå
+				double temp = Dijkstra(i, m_labeledIndices.elementAt(j));
 				totalDist += temp;
 				 if(temp < localShortest)
 				 {
@@ -99,8 +100,8 @@ public class Graph
 		
 		return retVal;
 	}
-	//TODO http://rosettacode.org/wiki/Dijkstra%27s_algorithm#C.2B.2B
-	private double Djikstra(int p_start, int p_target)
+	//http://rosettacode.org/wiki/Dijkstra%27s_algorithm#C.2B.2B
+	private double Dijkstra(int p_start, int p_target)
 	{
 		//Shortest distance to each point from origin
 		double[] minDist = new double[m_Points.size()];
@@ -135,8 +136,12 @@ public class Graph
 		return minDist[p_target];
 	}
 	
+	private void InvertMatrix(int p_matrixIndex, double[][] p_output)
+	{
+		//http://en.wikipedia.org/wiki/Gaussian_elimination#Finding_the_inverse_of_a_matrix
+		//Note to self, only use ? operator...yeeessss.yeeesssssssssssssssssss
+	}
 
-	
 	private void ConstructEdges(Point p_currPoint)
 	{
 		double[] currPointArray, pointArray;
