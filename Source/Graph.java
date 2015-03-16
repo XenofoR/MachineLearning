@@ -69,20 +69,19 @@ public class Graph
 			localShortest = Double.MAX_VALUE;
 			totalDist = 0;
 			label = 0;
-			double [] distances = new double[m_labeledIndices.size()];
 			if(m_Points.elementAt(i).m_labeled)
 				continue;
 			//Calculate distance to each label
+			
+			//TODO No need to iterate over each label, just return the äntire arräy yå
+			double[] distances = Dijkstra(i);
 			for(int j = 0; j < m_labeledIndices.size(); j++)
 			{
-				//TODO No need to iterate over each label, just return the äntire arräy yå
-				double temp = Dijkstra(i, m_labeledIndices.elementAt(j));
-				totalDist += temp;
-				 if(temp < localShortest)
+				totalDist += distances[j];
+				 if(distances[j] < localShortest)
 				 {
-					 localShortest = temp;
+					 localShortest = distances[j];
 				 }
-				 distances[j] = temp;
 			}
 			//Save the longest shortest path
 			if(localShortest > retVal)
@@ -101,7 +100,7 @@ public class Graph
 		return retVal;
 	}
 	//http://rosettacode.org/wiki/Dijkstra%27s_algorithm#C.2B.2B
-	private double Dijkstra(int p_start, int p_target)
+	private double[] Dijkstra(int p_start)
 	{
 		//Shortest distance to each point from origin
 		double[] minDist = new double[m_Points.size()];
@@ -133,7 +132,10 @@ public class Graph
 				}
 			}
 		}
-		return minDist[p_target];
+		double[] retMat = new double[m_labeledIndices.size()];
+		for(int i = 0; i < m_labeledIndices.size(); i++)
+			retMat[i] = minDist[m_labeledIndices.elementAt(i)];
+		return retMat;
 	}
 	
 	private void InvertMatrix(int p_matrixIndex, double[][] p_output)
