@@ -111,39 +111,42 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		double randIndex = 0.0;
 		double precision = 0.0;
 		double recall = 0.0;
-		int beta = 5;
-		int betaSquare = 25;
+		double betaSquare = 1;
 		
 		m_Tree.GetLeafInstances(FPInstances, TPFPvalues);
 		m_Tree.GetLeafClassAndVariance(leafClassAndVariance);
-		int FN;
+		int FN, TP, FP;
 		int impurity;
-		FN = 0;
 		
-		impurity = 0;
+		impurity = FN = TP = FP = 0;
 		for(int i = 0; i < FPInstances.size(); i++)
 		{
-			impurity = 0;
-			FN = 0;
 			precision = recall = 0;
-			for(int j = 0; j < FPInstances.get(i).numInstances(); j++)
-				if(leafClassAndVariance.get(i)[0] - leafClassAndVariance.get(i)[1] < FPInstances.get(i).get(j).classValue() && FPInstances.get(i).get(j).classValue() < leafClassAndVariance.get(i)[0] + leafClassAndVariance.get(i)[1])
-				{
-					impurity ++;
-				}
-			FN = Utilities.CalculateCombination(impurity, 2);
-			
-			//Prevent NaN error by checking if TP TN are both zero
-			if(TPFPvalues.get(i)[0] != 0)
+			for(int j = 0; j < FPInstances.size(); j++)
 			{
-				precision = (double)TPFPvalues.get(i)[0] / (TPFPvalues.get(i)[0] + TPFPvalues.get(i)[1]);
-				recall = (double)TPFPvalues.get(i)[0] / (TPFPvalues.get(i)[0] + FN);
-				randIndex += 2*(precision*recall/(precision+recall));
+				impurity = 0;
+				if(i != j)	
+					for(int k = 0; k < FPInstances.get(j).numInstances(); k++)
+						
+						if(leafClassAndVariance.get(i)[0] - leafClassAndVariance.get(i)[1] < FPInstances.get(j).get(k).classValue() && 
+								FPInstances.get(j).get(k).classValue() < leafClassAndVariance.get(i)[0] + leafClassAndVariance.get(i)[1])
+						{
+							impurity ++;
+						}
+				FN += Utilities.CalculateCombination(impurity, 2);
 			}
+			
+			TP += TPFPvalues.get(i)[0];
+			FP += TPFPvalues.get(i)[1];
+			
 		}
 
+		precision = (double)TP / (TP + FP);
+		recall = (double)TP / (TP + FN);
+		randIndex = (1+betaSquare)*(precision*recall/((betaSquare*precision)+recall));
+
 		
-		return randIndex / FPInstances.size();
+		return randIndex; // FPInstances.size();
 	}
 	
 	public double[][] CalculateDistanceMatrix()
