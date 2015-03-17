@@ -641,11 +641,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
 
-		        if(Utilities.g_debug)
-		        {
+		        if(Utilities.g_clusterAnalysis)
 		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
-			        m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
-		        }
+		        
+			    m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 
 		        m_Prop = null;
 		        return;
@@ -753,11 +752,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix, m_center);
 			      
-			      if(Utilities.g_debug)
-			        {
+			      if(Utilities.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
-				      m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
-			        }
+			      
+				  m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
+
 
 		      }
 		    }

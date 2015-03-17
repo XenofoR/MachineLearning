@@ -11,6 +11,7 @@ public class Utilities
 {
 	static double g_alphaValue;
 	static boolean g_debug;
+	static boolean g_clusterAnalysis;
 	
 	//http://professorjava.weebly.com/matrix-determinant.html
 	
