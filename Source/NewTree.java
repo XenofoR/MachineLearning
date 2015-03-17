@@ -55,6 +55,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 {
 	
 	private Plotter m_plotter;
+	private Graph m_graph;
 	private double[][] m_leafDistanceMatrix;
 	private InstanceComparator m_instanceComp;
 	InnerTree m_Tree;
@@ -75,6 +76,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_plotter.Init("IAM A TREE");
 		m_plotter.SetPlot(Debugger.g_plot);
 		m_instanceComp = new InstanceComparator();
+		m_graph = new Graph();
 	}
 	
 	
@@ -215,6 +217,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
+		m_graph.Init();
 	    // Make sure K value is in range
 	    if (m_KValue > p_labeledData.numAttributes() - 1) {
 	      m_KValue = p_labeledData.numAttributes() - 1;
@@ -641,6 +644,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
 
+		        m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
+		        
 		        if(Utilities.g_clusterAnalysis)
 		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 		        
@@ -754,6 +759,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      
 			      if(Utilities.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
+			      
+			      m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
 			      
 				  m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 

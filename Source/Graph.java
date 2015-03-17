@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -9,7 +10,7 @@ import weka.core.Instances;
 
 
 
-public class Graph
+public class Graph implements Serializable
 {
 	
 	Vector<Point> m_Points;
@@ -57,6 +58,8 @@ public class Graph
 			ConstructEdges(point);
 			m_Points.add(point);	
 		}
+		int k = 0;
+		k++;
 	}
 	
 	public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance)
@@ -178,9 +181,10 @@ public class Graph
 			edge.m_weight = mahalanobis;
 			p_currPoint.m_edges.add(edge);
 			//TODO check so that this doesn't change the edge added to currpoint
-			edge.m_pointIndex1 = i;
-			edge.m_pointIndex2 = myIndex;
-			m_Points.elementAt(i).m_edges.add(edge);
+			Edge edge2 = new Edge();
+			edge2.m_pointIndex1 = i;
+			edge2.m_pointIndex2 = myIndex;
+			m_Points.elementAt(i).m_edges.add(edge2);
 		}
 	}
 	//TODO FIX INVERSE MATRIX CALC
@@ -213,9 +217,11 @@ public class Graph
 		}
 		return retVal;
 	}
-	public static void main(String[] p_args)
+/*	public static void main(String[] p_args)
 	{
 		Graph test = new Graph();
+		test.Init();
+		
 		double[][] mai = new double[3][3];
 		mai[0][0] = 4;
 		mai[0][1] = 5;
@@ -230,7 +236,7 @@ public class Graph
 		mai[2][2] = 4;
 		double[][] mat = test.GaussJordan(mai);
 		System.out.println(Arrays.deepToString(mat));
-	}
+	}*/
 	private double[][] GaussJordan(double[][] p_matrix)
 	{
 		double[][] retMat = new double[p_matrix.length][];
