@@ -282,6 +282,7 @@ public class TestEnvironment {
 				break;
 			case("ClusterAnalysis"):
 				Utilities.g_clusterAnalysis = scanner.nextBoolean();
+				break;
 			case("DebugLevel"):
 				String temp = scanner.next();
 				Utilities.g_debug = true;

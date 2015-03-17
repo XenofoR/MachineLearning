@@ -7,6 +7,8 @@ import java.util.Vector;
 
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.matrix.Matrix;
+
 
 
 
@@ -151,8 +153,7 @@ public class Graph implements Serializable
 		
 		
 		//If labeled ignore last attribute since it is a label
-		currPointArray  = p_currPoint.m_labeled ? new double [p_currPoint.m_instance.numAttributes() -1] : new double [p_currPoint.m_instance.numAttributes()];
-		//Change from instance to array
+		currPointArray  = new double [p_currPoint.m_instance.numAttributes() -1];
 		for(int i = 0; i < currPointArray.length; i++)
 			currPointArray[i] = p_currPoint.m_instance.toDoubleArray()[i];
 		
@@ -160,7 +161,7 @@ public class Graph implements Serializable
 		for(int i = 0; i < m_Points.size(); i++)
 		{
 			//If labeled ignore last attribute since it is a label
-			pointArray = m_Points.elementAt(i).m_labeled ? new double [m_Points.elementAt(i).m_instance.numAttributes() -1] : new double [m_Points.elementAt(i).m_instance.numAttributes()];
+			pointArray =  new double [m_Points.elementAt(i).m_instance.numAttributes() -1];
 			//Change from instance to array
 			for(int j = 0; j < pointArray.length; j++)
 				pointArray[j] = m_Points.elementAt(i).m_instance.toDoubleArray()[j];
@@ -184,6 +185,7 @@ public class Graph implements Serializable
 			Edge edge2 = new Edge();
 			edge2.m_pointIndex1 = i;
 			edge2.m_pointIndex2 = myIndex;
+			edge2.m_weight = mahalanobis;
 			m_Points.elementAt(i).m_edges.add(edge2);
 		}
 	}
@@ -195,19 +197,22 @@ public class Graph implements Serializable
 		//retval = D^T * M^-1 * D
 		double[] distanceVec = new double[p_first.length];
 		Utilities.Subtract(p_first, p_second, distanceVec);
-		double[][] matrix = new double[m_covarianeMatrices.elementAt(p_covMatIndex).length][];
+		//double[][] matrix = new double[m_covarianeMatrices.elementAt(p_covMatIndex).length][];
 		//Deep copy matrix
-    	for(int i = 0; i < m_covarianeMatrices.elementAt(p_covMatIndex).length; i++)
-    		matrix[i] = Arrays.copyOf(m_covarianeMatrices.elementAt(p_covMatIndex)[i], m_covarianeMatrices.elementAt(p_covMatIndex)[i].length);
+		Matrix inverse = Matrix.constructWithCopy(m_covarianeMatrices.elementAt(p_covMatIndex)).inverse();
+		
+    //	for(int i = 0; i < m_covarianeMatrices.elementAt(p_covMatIndex).length; i++)
+    //		matrix[i] = Arrays.copyOf(m_covarianeMatrices.elementAt(p_covMatIndex)[i], m_covarianeMatrices.elementAt(p_covMatIndex)[i].length);
 		 
     	double[] tempVec = new double[distanceVec.length];
+    	double[][] inverseMat = inverse.getArray();
 		//D^T * M^-1
-    	double[][] inverse = GaussJordan(matrix);
-		for(int i = 0; i < matrix.length; i++)
+    	//double[][] inverse = GaussJordan(matrix);
+		for(int i = 0; i < inverseMat.length; i++)
 		{
-			for(int j = 0; j < matrix[i].length; j++)
+			for(int j = 0; j < inverseMat[i].length; j++)
 			{
-				tempVec[i] += distanceVec[j] * inverse[j][i]; 
+				tempVec[i] += distanceVec[j] * inverseMat[j][i]; 
 			}
 		}
 		//(D^T * M^-1) * D
