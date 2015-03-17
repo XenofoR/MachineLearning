@@ -138,11 +138,7 @@ public class Graph
 		return retMat;
 	}
 	
-	private void InvertMatrix(int p_matrixIndex, double[][] p_output)
-	{
-		//http://en.wikipedia.org/wiki/Gaussian_elimination#Finding_the_inverse_of_a_matrix
-		//Note to self, only use ? operator...yeeessss.yeeesssssssssssssssssss
-	}
+
 
 	private void ConstructEdges(Point p_currPoint)
 	{
@@ -202,11 +198,12 @@ public class Graph
 		 
     	double[] tempVec = new double[distanceVec.length];
 		//D^T * M^-1
+    	double[][] inverse = GaussJordan(matrix);
 		for(int i = 0; i < matrix.length; i++)
 		{
 			for(int j = 0; j < matrix[i].length; j++)
 			{
-				tempVec[i] += distanceVec[j] * matrix[j][i]; // TODO THIS SHOULD BE INVERSE MATRIX
+				tempVec[i] += distanceVec[j] * inverse[j][i]; 
 			}
 		}
 		//(D^T * M^-1) * D
@@ -215,6 +212,82 @@ public class Graph
 			retVal += tempVec[i] * distanceVec[i]; 
 		}
 		return retVal;
+	}
+	public static void main(String[] p_args)
+	{
+		Graph test = new Graph();
+		double[][] mai = new double[3][3];
+		mai[0][0] = 4;
+		mai[0][1] = 5;
+		mai[0][2] = 3;
+		
+		mai[1][0] = 5;
+		mai[1][1] = -4;
+		mai[1][2] = 1;
+		
+		mai[2][0] = 2;
+		mai[2][1] = 1;
+		mai[2][2] = 4;
+		double[][] mat = test.GaussJordan(mai);
+		System.out.println(Arrays.deepToString(mat));
+	}
+	private double[][] GaussJordan(double[][] p_matrix)
+	{
+		double[][] retMat = new double[p_matrix.length][];
+		for (int i = 0; i < p_matrix.length; i++)
+			retMat[i] = Arrays.copyOf(p_matrix[i], p_matrix[i].length);
+		double[][] identity = BuildIdentityMatrix(retMat.length);
+		
+		
+		for(int i = 0; i < retMat.length-1; i++)
+		{
+			int k = i;
+			//Find target row
+			for(int j = i + 1; j < retMat.length; j++)
+				k = (Math.abs(retMat[j][i]) > Math.abs(retMat[k][i])) ? j : k;
+			if(k != i)
+			{
+				SwapRows(retMat, i ,k);
+				SwapRows(identity, i ,k);
+			}
+			for(int j = i + 1; j < retMat.length; j++)
+			{
+				double scale = retMat[j][i]/retMat[i][i];
+				for(int l = i +1; l < retMat.length; l++)
+					retMat[j][l] -= scale * retMat[i][l];		
+				for(int l = 0; l < identity.length; l++) // why are we starting at 0 here?
+					identity[j][l] -= scale * identity[i][l];			
+			}
+			
+		}
+		for(int i = retMat.length -1; i > -1; i--)
+		{
+			for(int j = i + 1; j < retMat.length; j++)
+			{
+				double scale = retMat[i][j];
+				for(int k = 0; k < identity.length; k++)
+					identity[i][k] -= scale * identity[j][k];
+			}
+			double scale = 1 / retMat[i][i];
+			for(int j = 0; j < identity.length; j++)
+				identity[i][j] *= scale;
+		}
+		
+		return identity;
+	}
+	private double[][] BuildIdentityMatrix(int p_size)
+	{
+		double[][] retMat = new double[p_size][p_size];
+		for(int i = 0; i < p_size; i++)
+			for(int j = 0; j < p_size; j++)
+				retMat[i][j] = (i==j) ? 1 : 0;
+		return retMat;
+	}
+	public void SwapRows(double p_matrix[][], int p_rowA, int p_rowB) 
+	{
+		   double tmpRow[] = p_matrix[p_rowA];
+		   p_matrix[p_rowA] = p_matrix[p_rowB];
+		   p_matrix[p_rowB] = tmpRow;
 	}
 	
 	
