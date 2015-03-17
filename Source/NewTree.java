@@ -8,6 +8,7 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Vector;
 import java.lang.Math;
+import java.math.BigInteger;
 import java.lang.reflect.Array;
 
 import javax.rmi.CORBA.Util;
@@ -26,6 +27,7 @@ import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Capabilities;
 import weka.core.Capabilities.Capability;
+import weka.core.neighboursearch.PerformanceStats;
 import weka.core.ContingencyTables;
 import weka.core.Drawable;
 import weka.core.Instance;
@@ -48,12 +50,12 @@ import weka.core.WeightedInstancesHandler;
  - BuildTree in InnerTree now constructs a member covarianceMatrix if the tree represents a leaf.
  - numericDistrubution() added cluster gain calculation to the final gain calculation
  */
+
 public class NewTree extends weka.classifiers.trees.RandomTree
 {
 	
 	private Plotter m_plotter;
 	private double[][] m_leafDistanceMatrix;
-	private double[][] m_randMatrix;
 	private InstanceComparator m_instanceComp;
 	InnerTree m_Tree;
 	
@@ -74,6 +76,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_plotter.SetPlot(Debugger.g_plot);
 		m_instanceComp = new InstanceComparator();
 	}
+	
 	
 	public Vector<double[]> GetPurityAndVardiff()
 	{
@@ -100,32 +103,64 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		return returnVector;
 	}
 	
-	public double[][][] CalculateDistanceMatrixAndRandMatrix()
+	public double CalculateRandIndex()
 	{
-		Vector<double[]> clusterCenter = new Vector<double[]>();
-		Vector<Instances> clusterIntances = new Vector<Instances>();
+		Vector<Instances> FPInstances = new Vector<Instances>();
+		Vector<int[]> TPFPvalues = new Vector<int[]>();
+		Vector<double[]> leafClassAndVariance = new Vector<double[]>();
 		double randIndex = 0.0;
-		m_Tree.FindLeafCenters(clusterCenter);
-		m_Tree.GetLeafInstances(clusterIntances);
+		double precision = 0.0;
+		double recall = 0.0;
+		double betaSquare = 1;
 		
-		m_leafDistanceMatrix = new double[clusterCenter.size()][clusterCenter.size()];
-		m_randMatrix = new double[clusterIntances.size()][clusterIntances.size()];
+		m_Tree.GetLeafInstances(FPInstances, TPFPvalues);
+		m_Tree.GetLeafClassAndVariance(leafClassAndVariance);
+		int FN, TP, FP;
+		int impurity;
 		
-		double[][][] returnValue = new double[2][m_leafDistanceMatrix.length][m_leafDistanceMatrix.length];
-		
-		Instances tempInstances = new Instances(clusterIntances.get(0));
-		for(int i = 0; i < m_leafDistanceMatrix.length; i++)
+		impurity = FN = TP = FP = 0;
+		for(int i = 0; i < FPInstances.size(); i++)
 		{
-			int TP,TN,FP,FN;
-			TP = TN = FP = FN = 0;
-			tempInstances.delete();
-			tempInstances.addAll(clusterIntances.get(i));
-			
-			while(tempInstances.numInstances() > 0)
+			precision = recall = 0;
+			for(int j = 0; j < FPInstances.size(); j++)
 			{
-				
+				impurity = 0;
+				if(i != j)	
+					for(int k = 0; k < FPInstances.get(j).numInstances(); k++)
+						
+						if(leafClassAndVariance.get(i)[0] - leafClassAndVariance.get(i)[1] < FPInstances.get(j).get(k).classValue() && 
+								FPInstances.get(j).get(k).classValue() < leafClassAndVariance.get(i)[0] + leafClassAndVariance.get(i)[1])
+						{
+							impurity ++;
+						}
+				FN += Utilities.CalculateCombination(impurity, 2);
 			}
 			
+			TP += TPFPvalues.get(i)[0];
+			FP += TPFPvalues.get(i)[1];
+			
+		}
+
+		precision = (double)TP / (TP + FP);
+		recall = (double)TP / (TP + FN);
+		randIndex = (1+betaSquare)*(precision*recall/((betaSquare*precision)+recall));
+
+		
+		return randIndex; // FPInstances.size();
+	}
+	
+	public double[][] CalculateDistanceMatrix()
+	{
+		Vector<double[]> clusterCenter = new Vector<double[]>();
+		
+		m_Tree.FindLeafCenters(clusterCenter);
+		
+		
+		m_leafDistanceMatrix = new double[clusterCenter.size()][clusterCenter.size()];
+
+		for(int i = 0; i < m_leafDistanceMatrix.length; i++)
+		{
+		
 			for(int j = 0; j < m_leafDistanceMatrix.length; j++)
 			{
 				double length = 0.0;
@@ -136,9 +171,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				m_leafDistanceMatrix[i][j] = length;
 			}
 		}
-		returnValue[0] = m_leafDistanceMatrix;
-		returnValue[1] = m_randMatrix;
-		return returnValue;
+		return m_leafDistanceMatrix;
 	}
 	
 	public double[] CalculateCorrelationPercentage()
@@ -312,10 +345,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		//Variables used for cluster analysis
 		double[][] m_covarianceMatrix = null;
 		double[][] m_correlationMatrix = null;
-		Instances m_leafInstances = null; 
+		Instances m_FPInstances = null; 
 		double[] m_center = null;
 		double m_purity;
 		double m_varianceDiff;
+		double m_classVariance;
+		int m_TP, m_FP;
 		
 		//Weka implemented variables
 		protected InnerTree[] m_Successors;
@@ -333,14 +368,32 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      }
 		    }
 		 
-		 public void GetLeafInstances(Vector<Instances> p_instanceVector)
+		 public void GetLeafInstances(Vector<Instances> p_instanceVector, Vector<int[]> p_TPFP)
 		 {
 			 if(m_Attribute == -1)
-				 p_instanceVector.add(m_leafInstances);
+			 {
+				 p_instanceVector.add(m_FPInstances);
+				 int[] temp = new int[]{m_TP, m_FP};
+				 p_TPFP.add(temp);
+			 }
 			 else
 			 {
-				 m_Successors[0].GetLeafInstances(p_instanceVector);
-				 m_Successors[1].GetLeafInstances(p_instanceVector);
+				 m_Successors[0].GetLeafInstances(p_instanceVector, p_TPFP);
+				 m_Successors[1].GetLeafInstances(p_instanceVector, p_TPFP);
+			 }
+		 }
+		 
+		 public void GetLeafClassAndVariance(Vector<double[]> p_returnVector)
+		 {
+			 if(m_Attribute == -1)
+			 {
+				 double[] values = {m_ClassDistribution[0], m_classVariance};
+				 p_returnVector.add(values);
+			 }
+			 else
+			 {
+				 m_Successors[0].GetPurityAndVardiff(p_returnVector);
+				 m_Successors[1].GetPurityAndVardiff(p_returnVector);
 			 }
 		 }
 		 
@@ -590,9 +643,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 		        if(Utilities.g_debug)
 		        {
-			        CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
+		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 			        m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
-			        m_leafInstances = instances;
 		        }
 
 		        m_Prop = null;
@@ -703,18 +755,18 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      
 			      if(Utilities.g_debug)
 			        {
-				        CalculatePurityAndVardiff(p_labeledData, p_unlabeledData);
-				        m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
-				        m_leafInstances = instances;
+			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
+				      m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 			        }
 
 		      }
 		    }
 
 		//calculate Purity and VarianceDiff
-		private void CalculatePurityAndVardiff(Instances p_labeledData,
+		private void PerformLeafAnalysis(Instances p_labeledData,
 				Instances p_unlabeledData) {
 			
+			m_FPInstances = new Instances(p_labeledData);
 			double labeledMean = 0.0;
 			double unlabeledMean = 0.0;
 			p_unlabeledData.setClassIndex(p_unlabeledData.numAttributes() - 1);
@@ -733,27 +785,31 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			    }
 			    unlabeledMean /= p_unlabeledData.numInstances();
 			    
-			    double variance = 0.0;
+			    m_classVariance = 0.0;
 			    for(int i = 0; i <  p_labeledData.numInstances(); i++)
 			    {
-			    	variance += Math.pow(p_labeledData.instance(i).classValue() - labeledMean, 2);
+			    	m_classVariance += Math.pow(p_labeledData.instance(i).classValue() - labeledMean, 2);
 			    }
 			    //Divide by n if only one instance, otherwise divide by n-1
-			    variance /= p_labeledData.numInstances() == 1 ? 1 : (p_labeledData.numInstances() - 1);
+			    m_classVariance /= p_labeledData.numInstances() == 1 ? 1 : (p_labeledData.numInstances() - 1);
 			    
 			    double unlabaledVariance = 0.0;
 			    
 			    for(int i = 0; i < p_unlabeledData.numInstances(); i++)
 			    {
-			    	if((m_ClassDistribution[0] - variance) < p_unlabeledData.instance(i).classValue() && p_unlabeledData.instance(i).classValue() < (m_ClassDistribution[0] + variance))
+			    	if((m_ClassDistribution[0] - m_classVariance) < p_unlabeledData.instance(i).classValue() && p_unlabeledData.instance(i).classValue() < (m_ClassDistribution[0] + m_classVariance))
 			    		m_purity ++;
+			    	else
+			    		m_FPInstances.add(p_unlabeledData.instance(i));
 			    	unlabaledVariance += Math.pow(p_unlabeledData.instance(i).classValue() - unlabeledMean, 2);
 			    	
 			    }
 			    //Divide by n if only one instance, otherwise divide by n-1
 			    unlabaledVariance /= p_unlabeledData.numInstances() == 1 ? 1 : (p_unlabeledData.numInstances() - 1);
 			    
-			    m_varianceDiff = Math.abs(variance - unlabaledVariance); 
+			    m_varianceDiff = Math.abs(m_classVariance - unlabaledVariance);
+			    m_TP = Utilities.CalculateCombination((int)m_purity, 2);
+			    m_FP = Utilities.CalculateCombination(p_unlabeledData.numInstances(), 2) - m_TP;
 			    m_purity /= p_unlabeledData.numInstances(); 
 			}
 			else
@@ -1014,4 +1070,4 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	 
 }
-	//Override standard stuff here
+	

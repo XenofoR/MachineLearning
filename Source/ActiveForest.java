@@ -18,6 +18,11 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 		return m_bagger.GetPurityAndVardiff();
 	}
 	
+	public double CalculateRandIndex()
+	{
+		return m_bagger.CalculateRandIndex();
+	}
+	
 	public double[] CalculateCorrelationPercentage()
 	{
 		return m_bagger.CalculateCorrelationPercentage();

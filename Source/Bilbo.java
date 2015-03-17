@@ -188,6 +188,16 @@ public class Bilbo
 	  return returnVector;
 	}
   
+  public double CalculateRandIndex()
+  {
+	  double RandIndex = 0.0;
+	  
+	  for(int i = 0; i < m_Classifiers.length; i++)
+		  RandIndex += ((NewTree)m_Classifiers[i]).CalculateRandIndex();
+	  
+	  return RandIndex / m_Classifiers.length;
+  }
+  
   public double[] CalculateCorrelationPercentage()
   {
 	  double index[] = {0.0, 0.0};
