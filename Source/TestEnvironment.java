@@ -68,10 +68,7 @@ public class TestEnvironment {
 			m_activeForest.setDontCalculateOutOfBagError(true); //TODO Fix error once relevant
 			//m_activeForest.SetData(m_structure);
 			
-			//TODO: REMOVE THIS ONCE WE ARE INTERESTED IN MORE COMPLEX DATA
-			RemoveAttribute(3);
-			RemoveAttribute(2);
-			//END TODO
+
 			Instances[] smallerSet = SplitDataStructure(m_structure, 0.1f);
 			Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
 			for(int i = 0; i < m_numTests; i++)
@@ -89,7 +86,9 @@ public class TestEnvironment {
 				{
 					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				}
-				activeResults[i][1] = m_activeForest.toString() + ForestInfoToString();
+				activeResults[i][1] = m_activeForest.toString();
+				if(Utilities.g_clusterAnalysis)
+					activeResults[i][1] += ClusterAnalysisToString();
 
 			}
 		}
@@ -120,7 +119,7 @@ public class TestEnvironment {
 		
 	}
 	
-	private String ForestInfoToString()
+	private String ClusterAnalysisToString()
 	{
 		String retString = "\n";
 		
@@ -153,6 +152,13 @@ public class TestEnvironment {
 		double meanRandIndex = m_activeForest.CalculateRandIndex();
 		retString += " \t" + ("===Mean Rand Index for Forest====" + "\n");
 		retString += " \t" + ("" + meanRandIndex + "\n");
+		
+		return retString;
+	}
+	
+	private String ForestInfoToString()
+	{
+		String retString = "\n";
 		
 		return retString;
 	}
@@ -273,6 +279,8 @@ public class TestEnvironment {
 			case("Plot"):
 				Debugger.g_plot = scanner.nextBoolean();
 				break;
+			case("ClusterAnalysis"):
+				Utilities.g_clusterAnalysis = scanner.nextBoolean();
 			case("DebugLevel"):
 				String temp = scanner.next();
 				Utilities.g_debug = true;
