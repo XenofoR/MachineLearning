@@ -8,6 +8,7 @@ import java.util.Vector;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.matrix.Matrix;
+import weka.core.matrix.SingularValueDecomposition;
 
 
 
@@ -42,8 +43,6 @@ public class Graph implements Serializable
 		m_covarianeMatrices.add(p_covariance);
 		Instances tempL = new Instances(p_labeled);
 		Instances tempU = new Instances(p_unlabeled);
-		tempL.addAll(p_labeled);
-		tempU.addAll(p_unlabeled);
 		for(int i = 0; i < tempL.size(); i++)
 		{
 			//Remember that this is a labeled instance
@@ -60,8 +59,7 @@ public class Graph implements Serializable
 			ConstructEdges(point);
 			m_Points.add(point);	
 		}
-		int k = 0;
-		k++;
+		
 	}
 	
 	public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance)
@@ -199,13 +197,23 @@ public class Graph implements Serializable
 		Utilities.Subtract(p_first, p_second, distanceVec);
 		//double[][] matrix = new double[m_covarianeMatrices.elementAt(p_covMatIndex).length][];
 		//Deep copy matrix
-		Matrix inverse = Matrix.constructWithCopy(m_covarianeMatrices.elementAt(p_covMatIndex)).inverse();
-		
-    //	for(int i = 0; i < m_covarianeMatrices.elementAt(p_covMatIndex).length; i++)
-    //		matrix[i] = Arrays.copyOf(m_covarianeMatrices.elementAt(p_covMatIndex)[i], m_covarianeMatrices.elementAt(p_covMatIndex)[i].length);
-		 
+		Matrix matrix = Matrix.constructWithCopy(m_covarianeMatrices.elementAt(p_covMatIndex));
+		SingularValueDecomposition SVD = new SingularValueDecomposition(matrix);
+		Matrix S,V,U;
+		S = SVD.getS();
+		V = SVD.getV();
+		U = SVD.getU();
+		//Pseudo invert S
+		for(int i = 0; i < S.getColumnDimension(); i++)
+			if(S.get(i, i) != 0)
+				S.set(i, i, 1/S.get(i, i));
+		S = S.transpose();
+		//m^+ = V * S^+ * U'
+		matrix = V.times(S);
+		matrix = matrix.times(U.transpose());
+				
     	double[] tempVec = new double[distanceVec.length];
-    	double[][] inverseMat = inverse.getArray();
+    	double[][] inverseMat = matrix.getArray();
 		//D^T * M^-1
     	//double[][] inverse = GaussJordan(matrix);
 		for(int i = 0; i < inverseMat.length; i++)
