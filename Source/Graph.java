@@ -28,6 +28,8 @@ public class Graph implements Serializable
 		m_Points = new Vector<Point>();
 		m_labeledIndices = new Vector<Integer>();
 		m_covarianeMatrices = new Vector<double[][]>();
+		
+		
 	}
 	public void GetInstances(Instances p_retInstances)
 	{
@@ -203,6 +205,9 @@ public class Graph implements Serializable
 		S = SVD.getS();
 		V = SVD.getV();
 		U = SVD.getU();
+		//calculate tolerance
+		double tolerance = Utilities.g_machineEpsilion * Math.max(S.getColumnDimension(), S.getRowDimension()) * S.norm2();
+		
 		//Pseudo invert S
 		for(int i = 0; i < S.getColumnDimension(); i++)
 			if(S.get(i, i) != 0)
@@ -228,6 +233,8 @@ public class Graph implements Serializable
 		{
 			retVal += tempVec[i] * distanceVec[i]; 
 		}
+		if(retVal < 0)
+			System.out.println("HOUSTON WE HAVE A PROBLEM");
 		return retVal;
 	}
 /*	public static void main(String[] p_args)
