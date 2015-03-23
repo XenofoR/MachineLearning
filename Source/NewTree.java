@@ -59,7 +59,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	private double[][] m_leafDistanceMatrix;
 	private InstanceComparator m_instanceComp;
 	InnerTree m_Tree;
-	
+	int m_counter = 0;
 	public String PrintCovarianceMatrices()
 	{
 		String output = "";
@@ -305,7 +305,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_Tree = new InnerTree();
 	    m_Info = new Instances(p_labeledData, 0);
 	    m_Tree.buildTree(labeledTrain, unlabeledTrain,  classProbs, attIndicesWindow, totalWeight, rand, 0,
-	      m_MinVarianceProp * trainVariance);
+	      m_MinVarianceProp * trainVariance, -1, 0);
 
 	    // Backfit if required
 	    if (labeledBackfit != null) {
@@ -314,7 +314,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_plotter.Display2dPlot();
 	    System.out.println("One Tree Finished!\n");
 	    Instance ins = null;
-	    m_graph.CalculateHighestUncertaintyAndPropagateLabels(ins);
+	   //TODO READD THIS WHEN GRAPH REBUILD IS DONE m_graph.CalculateHighestUncertaintyAndPropagateLabels(ins);
 	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
 	    
 	  }
@@ -358,7 +358,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		double m_varianceDiff;
 		double m_classVariance;
 		int m_TP, m_FP;
-		
+		int m_id = 0;
 		//Weka implemented variables
 		protected InnerTree[] m_Successors;
 		
@@ -585,8 +585,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		
 		protected void buildTree(Instances p_labeledData, Instances p_unlabeledData, double[] p_classProbs,
 		      int[] p_attIndicesWindow, double p_totalWeight, Random p_random, int p_depth,
-		      double minVariance) throws Exception {
-			
+		      double minVariance, int p_parentId, int p_myId) throws Exception {
+			m_id = p_myId;
 			m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
 		      if (p_labeledData.numInstances() == 0 && p_unlabeledData.numInstances() == 0) {
@@ -648,7 +648,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
 
-		        m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
+		        m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
 		        
 		        if(Utilities.g_clusterAnalysis)
 		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
@@ -723,12 +723,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Instances[] unlabeledSubset = splitData(p_unlabeledData);
 		        m_Successors = new InnerTree[bestDists.length];
 		        double[] attTotalSubsetWeights = totalSubsetWeights[bestIndex];
-
+		        //TODO TELL THE GRAPH THAT IT NEEDS TO MAKE A "PARENT"
 		        for (int i = 0; i < bestDists.length; i++) {
 		          m_Successors[i] = new InnerTree();
 		          m_Successors[i].buildTree(subsets[i], unlabeledSubset[i], bestDists[i], p_attIndicesWindow,
 		            p_labeledData.classAttribute().isNominal() ? 0 : attTotalSubsetWeights[i],
-		            p_random, p_depth + 1, minVariance);
+		            p_random, p_depth + 1, minVariance, m_id, m_counter++);
 		        }
 
 		        // If all successors are non-empty, we don't need to store the class
@@ -764,7 +764,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      if(Utilities.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 			      
-			      m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
+			      m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
 			      
 				  m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 

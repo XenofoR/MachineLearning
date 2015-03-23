@@ -85,7 +85,10 @@ public class TestEnvironment {
 				catch(Exception E)
 				{
 					StackTraceElement[] dawdadwadsada = E.getStackTrace();
-					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + dawdadwadsada.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+					String superman ="";
+					for(int il = 0; il < dawdadwadsada.length; il++)
+						superman += dawdadwadsada[il] + "\n";
+					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + superman, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				}
 				activeResults[i][1] = m_activeForest.toString();
 				if(Utilities.g_clusterAnalysis)
