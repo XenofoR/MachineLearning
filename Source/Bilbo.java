@@ -553,7 +553,7 @@ public class Bilbo
 
     // create the in-bag dataset
     //TODO Fix out of bag error calculation for both labeled and unlabeled
-    if (m_CalcOutOfBag) {
+    if (m_CalcOutOfBag && p_data.classIndex() != -1) {
       m_inBag[iteration] = new boolean[p_data.numInstances()];
       bagData = p_data.resampleWithWeights(r, m_inBag[iteration], getRepresentCopiesUsingWeights());
     } else {

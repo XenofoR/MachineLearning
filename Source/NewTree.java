@@ -597,7 +597,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      }
 
 		      double priorVar = 0;
-		      double priorCovar = 0;
 		      if (p_labeledData.classAttribute().isNumeric()) {
 
 		        // Compute prior variance
@@ -613,7 +612,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        instance.addAll(p_unlabeledData);
 		        priorVar = NewTree.singleVariance(totalSum, totalSumSquared,
 		          totalSumOfWeights);
-		        priorCovar = SingleCovariance(instance);
 		      }
 
 		      // System.err.println("Total weight " + totalWeight);
@@ -644,7 +642,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
 
-		        m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
+		       // m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
 		        
 		        if(Utilities.g_clusterAnalysis)
 		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
@@ -654,7 +652,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_Prop = null;
 		        return;
 		      }
-
 		      // Compute class distributions and value of splitting
 		      // criterion for each attribute
 		      double val = -Double.MAX_VALUE;
@@ -760,7 +757,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      if(Utilities.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 			      
-			      m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
+			     // m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
 			      
 				  m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 
