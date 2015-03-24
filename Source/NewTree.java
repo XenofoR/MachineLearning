@@ -648,7 +648,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
 
-		        m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
+		        m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
 		        
 		        if(Utilities.g_clusterAnalysis)
 		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
@@ -724,6 +724,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_Successors = new InnerTree[bestDists.length];
 		        double[] attTotalSubsetWeights = totalSubsetWeights[bestIndex];
 		        //TODO TELL THE GRAPH THAT IT NEEDS TO MAKE A "PARENT"
+		        int child1 = m_counter +1, child2 = m_counter +2;
 		        for (int i = 0; i < bestDists.length; i++) {
 		          m_Successors[i] = new InnerTree();
 		          m_Successors[i].buildTree(subsets[i], unlabeledSubset[i], bestDists[i], p_attIndicesWindow,
@@ -741,8 +742,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		          }
 		        }
 		        if (emptySuccessor) {
+	        	  m_counter -= 2;
 		          m_ClassDistribution = p_classProbs.clone();
 		        }
+		        else
+		        	m_graph.AddParent(m_id, p_parentId, child1, child2 );
 		      } else {
 
 		        // Make leaf
@@ -764,7 +768,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      if(Utilities.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 			      
-			      m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
+			      m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
 			      
 				  m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 

@@ -17,8 +17,9 @@ import weka.core.matrix.SingularValueDecomposition;
 public class Graph implements Serializable
 {
 	
-	Vector<InnerGraph> m_innerGraphs;
+	Vector<InnerGraph> m_graphs;
 	Vector<double[][]> m_covarianeMatrices;
+	boolean m_forceRootMerge = false;
 	Graph()
 	{
 		
@@ -26,7 +27,7 @@ public class Graph implements Serializable
 	void Init()
 	{
 		m_covarianeMatrices = new Vector<double[][]>();		
-		m_innerGraphs = new Vector<InnerGraph>();
+		m_graphs = new Vector<InnerGraph>();
 	}
 	
 	/*public void GetInstances(Instances p_retInstances)
@@ -37,35 +38,114 @@ public class Graph implements Serializable
 	}
 	*/
 	
-	public void AddCluster(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parent, int p_id)
+	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
 	{
-		InnerGraph temp = new InnerGraph(p_parent, p_id);
+		InnerGraph temp = new InnerGraph(p_parentId, p_id, -1 , -1);
 		temp.AddCluster(p_labeled, p_unlabeled, p_covariance);
-		m_innerGraphs.add(temp);
+		m_graphs.add(temp);
+	}
+	public void AddParent(int p_id, int p_parentId, int p_childId1, int p_childId2)
+	{
+		InnerGraph temp = new InnerGraph(p_parentId, p_id, p_childId1 , p_childId2);
+		m_graphs.add(temp);
+		
+	}
+	public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance) throws Exception
+	{
+		if(m_forceRootMerge)
+			return UncertaintyCompleteGraph(p_outInstance);
+		Instance retInst = null;
+		double retVal = 0;
+		for(int i = 0; i < m_graphs.size(); i++)
+		{
+			if(m_graphs.elementAt(i).GetChildren()[0] != -1)
+				continue;
+			Instance temp = null;
+			double val = 0;
+			if(m_graphs.elementAt(i).HasLabeled())
+				val = m_graphs.elementAt(i).CalculateHighestUncertaintyAndPropagateLabels(temp);
+			else
+			{
+				int parent = m_graphs.elementAt(i).GetParentId();
+				parent = MergeChildren(parent);
+				val = m_graphs.elementAt(parent).CalculateHighestUncertaintyAndPropagateLabels(temp);
+			}
+			if(val > retVal)
+			{
+				retInst = temp;
+				retVal = val;
+			}
+		}
+		p_outInstance = retInst;
+		return retVal;
+	}
+	
+	public void ForceRootMerge(boolean p_force)
+	{
+		m_forceRootMerge = p_force;
+	}
+	private int MergeChildren(int p_parent) throws Exception
+	{
+		if(p_parent == -1)
+			throw new Exception("MergeException:NoLabeledData");
+		int retVal = p_parent;
+		int[] children = m_graphs.elementAt(p_parent).GetChildren();
+		if(!m_graphs.elementAt(0).m_Points.isEmpty())
+			return p_parent; //Is leaf or is already merged
+		for(int i = 0; i < children.length; i++)
+			MergeChildren(children[i]);
+		m_graphs.elementAt(p_parent).MergeClusters(m_graphs.elementAt(children[0]).m_Points, m_graphs.elementAt(children[1]).m_Points);
+		if(!m_graphs.elementAt(p_parent).HasLabeled())
+			retVal = MergeChildren(m_graphs.elementAt(p_parent).GetParentId());
+		return retVal;
+	}
+	private double UncertaintyCompleteGraph(Instance p_outInstance) throws Exception
+	{
+		double retVal = 0;
+		if(m_graphs.elementAt(0).m_Points.isEmpty())
+			MergeChildren(0);
+		retVal = m_graphs.elementAt(0).CalculateHighestUncertaintyAndPropagateLabels(p_outInstance);
+		return retVal;
 	}
 	
 	
-	//http://rosettacode.org/wiki/Dijkstra%27s_algorithm#C.2B.2B
+
+	//TODO merge code to innerGraph. Make a function that forces Root node level merge.
 	
 	
 
 
 	
-	//TODO FIX INVERSE MATRIX CALC
-	
-
-
-	//==================INTERNAL STRUCTS=======================================
 	private class InnerGraph
 	{
 		Vector<Point> m_Points;
-		int m_id;
-		int m_parentId;
+		private int m_id;
+		private int m_parentId;
+		private int[] m_child;
 		Vector<Integer> m_labeledIndices;
-		InnerGraph(int p_parentId, int p_id)
+		InnerGraph(int p_parentId, int p_id, int p_child1, int p_child2)
 		{
 			m_id = p_id;
 			m_parentId = p_parentId;
+			m_child = new int[2];
+			m_child[0] = p_child1;
+			m_child[1] = p_child2;
+		}
+		int GetId()
+		{
+			return m_id;
+		}
+		int GetParentId()
+		{
+			return m_parentId;
+		}
+		int[] GetChildren()
+		{
+			return m_child;
+		}
+		boolean HasLabeled()
+		{
+			return m_labeledIndices.size() == 0 ? false : true;
 		}
 		public void Init()
 		{
@@ -94,6 +174,18 @@ public class Graph implements Serializable
 				ConstructEdges(point);
 				m_Points.add(point);	
 			}
+			
+		}
+		
+		public void MergeClusters(Vector<Point> p_cluster1, Vector<Point> p_cluster2)
+		{
+			
+			Vector<Point> temp1 = (Vector<Point>) p_cluster1.clone();
+			Vector<Point> temp2 = (Vector<Point>) p_cluster2.clone();
+			m_Points.addAll(temp1);
+			m_Points.addAll(temp2);
+			for(int i = 0; i < temp1.size(); i++)
+				ConstructEdges(m_Points.elementAt(i));
 			
 		}
 		private void ConstructEdges(Point p_currPoint)
@@ -129,6 +221,11 @@ public class Graph implements Serializable
 				mahalanobis +=  CalculateMahalanobisDistance(currPointArray, pointArray, m_Points.elementAt(i).m_covarianceIndex);
 				mahalanobis /= 2;
 				
+				if(p_currPoint.m_edges.contains(edge))
+				{
+					System.out.println("Detected duplicate edge and skipped it, tell wingly that is works");
+					continue;
+				}
 				
 				edge.m_weight = mahalanobis;
 				p_currPoint.m_edges.add(edge);
@@ -142,9 +239,10 @@ public class Graph implements Serializable
 		}
 		public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance)
 		{
+			if(m_labeledIndices.size() == 0)
+				return -1;
 			double retVal = 0;
 			double localShortest = 0, totalDist = 0, label = 0;
-			//TODO This is the place to insert threading in this algorithm if we intend to do so
 			for(int i = 0; i < m_Points.size(); i++)
 			{
 				localShortest = Double.MAX_VALUE;
@@ -271,6 +369,7 @@ public class Graph implements Serializable
 				System.out.println("HOUSTON WE HAVE A PROBLEM");
 			return retVal;
 		}
+		//==================INTERNAL STRUCTS=======================================
 		private class Point
 		{
 			Point()
