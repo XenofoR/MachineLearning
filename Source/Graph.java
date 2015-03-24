@@ -19,6 +19,7 @@ public class Graph implements Serializable
 	
 	Vector<InnerGraph> m_graphs;
 	Vector<double[][]> m_covarianeMatrices;
+	Vector<Utilities.Pair<Integer, Integer>> m_parentIndices;
 	boolean m_forceRootMerge = false;
 	Graph()
 	{
@@ -28,6 +29,7 @@ public class Graph implements Serializable
 	{
 		m_covarianeMatrices = new Vector<double[][]>();		
 		m_graphs = new Vector<InnerGraph>();
+		m_parentIndices = new Vector<Utilities.Pair<Integer, Integer>>();
 	}
 	
 	/*public void GetInstances(Instances p_retInstances)
@@ -40,15 +42,20 @@ public class Graph implements Serializable
 	
 	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
 	{
+		System.out.println("Added leaf node: " + p_id);
 		InnerGraph temp = new InnerGraph(p_parentId, p_id, -1 , -1);
+		temp.Init();
 		temp.AddCluster(p_labeled, p_unlabeled, p_covariance);
 		m_graphs.add(temp);
 	}
 	public void AddParent(int p_id, int p_parentId, int p_childId1, int p_childId2)
 	{
-		InnerGraph temp = new InnerGraph(p_parentId, p_id, p_childId1 , p_childId2);
-		m_graphs.add(temp);
-		
+		System.out.println("Added split node: " + p_id);
+		InnerGraph graph = new InnerGraph(p_parentId, p_id, p_childId1 , p_childId2);
+		graph.Init();
+		Utilities.Pair<Integer, Integer> temp = new Utilities.Pair<Integer, Integer>(m_graphs.size(), p_id);
+		m_parentIndices.add(temp);
+		m_graphs.add(graph);
 	}
 	public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance) throws Exception
 	{
@@ -67,14 +74,16 @@ public class Graph implements Serializable
 			else
 			{
 				int parent = m_graphs.elementAt(i).GetParentId();
-				parent = MergeChildren(parent);
-				val = m_graphs.elementAt(parent).CalculateHighestUncertaintyAndPropagateLabels(temp);
+				int index = FindParentIndex(parent);
+				parent = MergeChildren(index);
+				val = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(temp);
 			}
 			if(val > retVal)
 			{
 				retInst = temp;
 				retVal = val;
 			}
+			System.out.println("Checked graph: " + i + "of: " + m_graphs.size());
 		}
 		p_outInstance = retInst;
 		return retVal;
@@ -89,14 +98,16 @@ public class Graph implements Serializable
 		if(p_parent == -1)
 			throw new Exception("MergeException:NoLabeledData");
 		int retVal = p_parent;
-		int[] children = m_graphs.elementAt(p_parent).GetChildren();
-		if(!m_graphs.elementAt(0).m_Points.isEmpty())
+		int index = FindParentIndex(p_parent);
+		
+		int[] children = m_graphs.elementAt(index).GetChildren();
+		if(!m_graphs.elementAt(index).m_Points.isEmpty())
 			return p_parent; //Is leaf or is already merged
 		for(int i = 0; i < children.length; i++)
 			MergeChildren(children[i]);
-		m_graphs.elementAt(p_parent).MergeClusters(m_graphs.elementAt(children[0]).m_Points, m_graphs.elementAt(children[1]).m_Points);
-		if(!m_graphs.elementAt(p_parent).HasLabeled())
-			retVal = MergeChildren(m_graphs.elementAt(p_parent).GetParentId());
+		m_graphs.elementAt(index).MergeClusters(m_graphs.elementAt(children[0]).m_Points, m_graphs.elementAt(children[1]).m_Points);
+		if(!m_graphs.elementAt(index).HasLabeled())
+			retVal = MergeChildren(m_graphs.elementAt(index).GetParentId());
 		return retVal;
 	}
 	private double UncertaintyCompleteGraph(Instance p_outInstance) throws Exception
@@ -107,7 +118,21 @@ public class Graph implements Serializable
 		retVal = m_graphs.elementAt(0).CalculateHighestUncertaintyAndPropagateLabels(p_outInstance);
 		return retVal;
 	}
-	
+	private int FindParentIndex(int p_parentId) throws Exception
+	{
+		
+		int retVal = -1;
+		for(int j = 0; j < m_parentIndices.size(); j++)
+			if(p_parentId == m_parentIndices.elementAt(j).GetFirst())
+			{
+				//TODO FIND WHY WE CAN'T FIND PARENT SOMETIMES
+				retVal = m_parentIndices.elementAt(j).GetSecond();
+				break;
+			}
+		if(retVal == -1)
+			throw new Exception("GraphException:ParentNotFound");
+		return retVal;
+	}
 	
 
 	//TODO merge code to innerGraph. Make a function that forces Root node level merge.
@@ -179,13 +204,14 @@ public class Graph implements Serializable
 		
 		public void MergeClusters(Vector<Point> p_cluster1, Vector<Point> p_cluster2)
 		{
-			
+			System.out.println("Merging clusters");
 			Vector<Point> temp1 = (Vector<Point>) p_cluster1.clone();
 			Vector<Point> temp2 = (Vector<Point>) p_cluster2.clone();
 			m_Points.addAll(temp1);
 			m_Points.addAll(temp2);
 			for(int i = 0; i < temp1.size(); i++)
 				ConstructEdges(m_Points.elementAt(i));
+			System.out.println("Merge Complete");
 			
 		}
 		private void ConstructEdges(Point p_currPoint)
@@ -276,7 +302,7 @@ public class Graph implements Serializable
 				//WHY CAN'T YOU SET A BLOODY CLASS VALUE TO AN INSTANCE GRRRRRR
 				//m_Points.elementAt(i).m_instance.setClassValue(label);
 				//I guess this would work the same though, TODO ask kim if it's true.
-				System.out.println("Checked point: " + i + "of: " + m_Points.size());
+				
 				m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
 			}
 			
@@ -288,13 +314,13 @@ public class Graph implements Serializable
 			double[] minDist = new double[m_Points.size()];
 			Arrays.fill(minDist, Double.MAX_VALUE);
 			minDist[p_start] = 0; //Origin dist
-			Set<Pair<Point, Double>> queue = new LinkedHashSet<Pair<Point, Double>>();
-			queue.add(new Pair<Point, Double>(m_Points.elementAt(p_start),0.0));
+			Set<Utilities.Pair<Point, Double>> queue = new LinkedHashSet<Utilities.Pair<Point, Double>>();
+			queue.add(new Utilities.Pair<Point, Double>(m_Points.elementAt(p_start),0.0));
 			
 			while(!queue.isEmpty())
 			{
 				// Java.... why are you not c++
-				Pair<Point, Double> itr = queue.iterator().next();
+				Utilities.Pair<Point, Double> itr = queue.iterator().next();
 				Point currPoint =  itr.GetFirst();
 				double currDist =  itr.GetSecond();
 				queue.remove(itr);
@@ -307,10 +333,10 @@ public class Graph implements Serializable
 					double totalDist = currDist + localDist;
 					if(totalDist < minDist[temp.m_pointIndex2])
 					{
-						queue.remove(new Pair<Point, Double>(target, minDist[temp.m_pointIndex2]));
+						queue.remove(new Utilities.Pair<Point, Double>(target, minDist[temp.m_pointIndex2]));
 						
 						minDist[temp.m_pointIndex2] = totalDist;
-						queue.add(new Pair<Point, Double>(target, totalDist));
+						queue.add(new Utilities.Pair<Point, Double>(target, totalDist));
 					}
 				}
 			}
@@ -399,25 +425,6 @@ public class Graph implements Serializable
 			//The weight will be the mahalanobis distance between points
 			public double m_weight;
 		}
-		private class Pair<F,S>
-		{
-			private F first;
-			private S second;
-			
-			public Pair(F p_first, S p_second)
-			{
-				first = p_first;
-				second = p_second;
-			}
-			public F GetFirst()
-			{
-				return first;
-			}
-			public S GetSecond()
-			{
-				return second;
-			}
-			
-		}
+		
 	}
 }

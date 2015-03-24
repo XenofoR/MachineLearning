@@ -314,7 +314,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_plotter.Display2dPlot();
 	    System.out.println("One Tree Finished!\n");
 	    Instance ins = null;
-	   //TODO READD THIS WHEN GRAPH REBUILD IS DONE m_graph.CalculateHighestUncertaintyAndPropagateLabels(ins);
+	    double worstDist = m_graph.CalculateHighestUncertaintyAndPropagateLabels(ins);
 	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
 	    
 	  }

@@ -234,6 +234,25 @@ public class Utilities
         return true;
       }
     
-
+   static public class Pair<F,S>
+	{
+		private F first;
+		private S second;
+		
+		public Pair(F p_first, S p_second)
+		{
+			first = p_first;
+			second = p_second;
+		}
+		public F GetFirst()
+		{
+			return first;
+		}
+		public S GetSecond()
+		{
+			return second;
+		}
+		
+	}
 	
 }

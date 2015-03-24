@@ -69,7 +69,7 @@ public class TestEnvironment {
 			//m_activeForest.SetData(m_structure);
 			
 
-			Instances[] smallerSet = SplitDataStructure(m_structure, 0.1f);
+			Instances[] smallerSet = SplitDataStructure(m_structure, 0.01f);
 			Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
 			for(int i = 0; i < m_numTests; i++)
 			{
