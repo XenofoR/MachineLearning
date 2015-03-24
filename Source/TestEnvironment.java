@@ -69,8 +69,8 @@ public class TestEnvironment {
 			//m_activeForest.SetData(m_structure);
 			
 
-			//Instances[] smallerSet = SplitDataStructure(m_structure, 0.1f);
-			Instances[] test = SplitDataStructure(m_structure, m_alSplitPercentage);
+			Instances[] smallerSet = SplitDataStructure(m_structure, 0.1f);
+			Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
 			for(int i = 0; i < m_numTests; i++)
 			{
 				//m_evaluator.crossValidateModel(m_activeForest, m_structure, 10, new Random());
