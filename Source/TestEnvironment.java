@@ -65,8 +65,7 @@ public class TestEnvironment {
 			m_activeForest = new ActiveForest();
 			m_activeForest.setNumTrees(m_trees);
 			m_activeForest.setMaxDepth(m_depth);
-			//m_activeForest.setDontCalculateOutOfBagError(true); //TODO Fix error once relevant
-			//m_activeForest.SetData(m_structure);
+			//m_activeForest.setDontCalculateOutOfBagError(true);
 			
 
 			Instances[] smallerSet = SplitDataStructure(m_structure, 0.1f);
@@ -175,7 +174,6 @@ public class TestEnvironment {
 			Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
 			w.write("Dataset: " + m_test + "\n");
 			w.write("Splitlevel for active learning: " + m_alSplitPercentage + "\n");
-			w.write("Alpha value for unlabeled data: " + Utilities.g_alphaValue + "\n");
 			for(int test = 0; test < m_numTests; test++)
 			{
 				if(m_testType == 1 || m_testType == 3)
@@ -254,9 +252,6 @@ public class TestEnvironment {
 				break;
 			case("NumFeatures"):
 				m_features = scanner.nextInt();
-				break;
-			case("AlphaValue"):
-				Utilities.g_alphaValue = Double.parseDouble(scanner.next());
 				break;
 			case("NumTests"):
 				m_numTests = scanner.nextInt();

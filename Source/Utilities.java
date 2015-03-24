@@ -9,10 +9,9 @@ import weka.filters.unsupervised.attribute.Copy;
 
 public class Utilities
 {
-	static double g_alphaValue;
 	static boolean g_debug;
 	static boolean g_clusterAnalysis;
-	
+	static double g_machineEpsilion;
 	//http://professorjava.weebly.com/matrix-determinant.html
 	
 	static public int CalculateCombination(int p_numenator, int p_denomenator)
@@ -107,7 +106,7 @@ public class Utilities
 	//Subtract p_value from each attribute in p_instance and save results in p_destination
 	public static void Subtract(double[] p_source, double[] p_value, double[] p_destination)
 	{
-		for(int i = 0; i < p_source.length - 1; i++)
+		for(int i = 0; i < p_destination.length; i++)
 			p_destination[i] = p_source[i] - p_value[i];
 	}
 	//Adds p_first[][] and p_second[][] and stores it in p_destination
