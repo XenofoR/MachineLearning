@@ -1,3 +1,4 @@
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -5,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Vector;
 
-import weka.core.Attribute;
+
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.matrix.Matrix;
@@ -19,7 +20,7 @@ public class Graph implements Serializable
 	
 	Vector<InnerGraph> m_graphs;
 	Vector<double[][]> m_covarianeMatrices;
-	Vector<Utilities.Pair<Integer, Integer>> m_parentIndices;
+	Vector<Utilities.Pair<Integer, Integer>> m_idToIndexMap;
 	boolean m_forceRootMerge = false;
 	Graph()
 	{
@@ -29,7 +30,7 @@ public class Graph implements Serializable
 	{
 		m_covarianeMatrices = new Vector<double[][]>();		
 		m_graphs = new Vector<InnerGraph>();
-		m_parentIndices = new Vector<Utilities.Pair<Integer, Integer>>();
+		m_idToIndexMap = new Vector<Utilities.Pair<Integer, Integer>>();
 	}
 	
 	/*public void GetInstances(Instances p_retInstances)
@@ -42,19 +43,21 @@ public class Graph implements Serializable
 	
 	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
 	{
-		System.out.println("Added leaf node: " + p_id);
-		InnerGraph temp = new InnerGraph(p_parentId, p_id, -1 , -1);
-		temp.Init();
-		temp.AddCluster(p_labeled, p_unlabeled, p_covariance);
-		m_graphs.add(temp);
+		System.out.println("Added leaf node: " + p_id + " With parent: " + p_parentId);
+		InnerGraph graph = new InnerGraph(p_parentId, p_id, -1 , -1);
+		graph.Init();
+		graph.AddCluster(p_labeled, p_unlabeled, p_covariance);
+		Utilities.Pair<Integer, Integer> temp = new Utilities.Pair<Integer, Integer>(p_id, m_graphs.size());
+		m_idToIndexMap.add(temp);
+		m_graphs.add(graph);
 	}
 	public void AddParent(int p_id, int p_parentId, int p_childId1, int p_childId2)
 	{
-		System.out.println("Added split node: " + p_id);
+		System.out.println("Added split node: " + p_id + " With Parent: " + p_parentId + " And children: " + p_childId1 + " " + p_childId2);
 		InnerGraph graph = new InnerGraph(p_parentId, p_id, p_childId1 , p_childId2);
 		graph.Init();
 		Utilities.Pair<Integer, Integer> temp = new Utilities.Pair<Integer, Integer>(p_id, m_graphs.size());
-		m_parentIndices.add(temp);
+		m_idToIndexMap.add(temp);
 		m_graphs.add(graph);
 	}
 	public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance) throws Exception
@@ -94,19 +97,22 @@ public class Graph implements Serializable
 	{
 		m_forceRootMerge = p_force;
 	}
-	private int MergeChildren(int p_parent) throws Exception
+	private int MergeChildren(int p_id) throws Exception
 	{
-		if(p_parent == -1)
+		if(p_id == -1)
 			throw new Exception("MergeException:NoLabeledData");
-		int retVal = p_parent;
-		int index = FindParentIndex(p_parent);
-		
-		int[] children = m_graphs.elementAt(index).GetChildren();
+		int retVal = p_id;
+		int index = FindIndexFromId(p_id);
 		if(!m_graphs.elementAt(index).m_Points.isEmpty())
-			return p_parent; //Is leaf or is already merged
+			return p_id; //Is leaf or is already merged
+		int[] children = m_graphs.elementAt(index).GetChildren();
+		
 		for(int i = 0; i < children.length; i++)
 			MergeChildren(children[i]);
-		m_graphs.elementAt(index).MergeClusters(m_graphs.elementAt(children[0]).m_Points, m_graphs.elementAt(children[1]).m_Points);
+		int childIndex1 = FindIndexFromId(children[0]);
+		int childIndex2 = FindIndexFromId(children[1]);
+		m_graphs.elementAt(index).MergeClusters(m_graphs.elementAt(childIndex1), m_graphs.elementAt(childIndex2));
+
 		if(!m_graphs.elementAt(index).HasLabeled())
 			retVal = MergeChildren(m_graphs.elementAt(index).GetParentId());
 		return retVal;
@@ -114,25 +120,27 @@ public class Graph implements Serializable
 	private double UncertaintyCompleteGraph(Instance p_outInstance) throws Exception
 	{
 		double retVal = 0;
-		int index = FindParentIndex(0);
+		int index = FindIndexFromId(0);
 		if(m_graphs.elementAt(index).m_Points.isEmpty())
 			MergeChildren(0);
+		System.out.println("Started Dikjstras on root graph, this is going to take a while" );
 		retVal = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outInstance);
+		System.out.println("Dijkstra finished" );
 		return retVal;
 	}
-	private int FindParentIndex(int p_parentId) throws Exception
+	private int FindIndexFromId(int p_id) throws Exception
 	{
 		
 		int retVal = -1;
-		for(int i = 0; i < m_parentIndices.size(); i++)
-			if(p_parentId == m_parentIndices.elementAt(i).GetFirst())
+		for(int i = 0; i < m_idToIndexMap.size(); i++)
+			if(p_id == m_idToIndexMap.elementAt(i).GetFirst())
 			{
 				//TODO FIND WHY WE CAN'T FIND PARENT SOMETIMES
-				retVal = m_parentIndices.elementAt(i).GetSecond();
+				retVal = m_idToIndexMap.elementAt(i).GetSecond();
 				break;
 			}
 		if(retVal == -1)
-			throw new Exception("GraphException:ParentNotFound " + p_parentId);
+			throw new Exception("GraphException:ParentNotFound " + p_id);
 		return retVal;
 	}
 	
@@ -204,18 +212,36 @@ public class Graph implements Serializable
 			
 		}
 		
-		public void MergeClusters(Vector<Point> p_cluster1, Vector<Point> p_cluster2)
-		{
+		public void MergeClusters(InnerGraph p_graph1, InnerGraph p_graph2) throws Exception
+		{					
 			System.out.println("Merging clusters");
-			Vector<Point> temp1 = (Vector<Point>) p_cluster1.clone();
-			Vector<Point> temp2 = (Vector<Point>) p_cluster2.clone();
-			m_Points.addAll(temp1);
-			m_Points.addAll(temp2);
-			for(int i = 0; i < temp1.size(); i++)
-				ConstructEdges(m_Points.elementAt(i));
+			
+			for(int i = 0; i < p_graph1.m_Points.size(); i++)
+			{
+				Point temp = p_graph1.m_Points.elementAt(i).Clone();
+				temp.m_edges.clear();
+				if(temp.m_labeled)
+					m_labeledIndices.add(m_Points.size());
+				m_Points.add(temp);
+				ConstructEdges(temp);
+			}
+			for(int i = 0; i < p_graph2.m_Points.size(); i++)
+			{
+				Point temp = p_graph2.m_Points.elementAt(i).Clone();
+				temp.m_edges.clear();
+				if(temp.m_labeled)
+					m_labeledIndices.add(m_Points.size());
+				m_Points.add(temp);
+				ConstructEdges(temp);
+			}
+			m_labeledIndices.addAll(p_graph1.m_labeledIndices);
+			for(int i = 0; i < m_Points.size(); i++)
+				m_Points.elementAt(i).m_edges.clear();
+			int offset = p_graph1.m_labeledIndices.size();
 			System.out.println("Merge Complete");
 			
 		}
+		
 		private void ConstructEdges(Point p_currPoint)
 		{
 			double[] currPointArray, pointArray;
@@ -249,13 +275,10 @@ public class Graph implements Serializable
 				mahalanobis +=  CalculateMahalanobisDistance(currPointArray, pointArray, m_Points.elementAt(i).m_covarianceIndex);
 				mahalanobis /= 2;
 				
-				if(p_currPoint.m_edges.contains(edge))
-				{
-					System.out.println("Detected duplicate edge and skipped it, tell wingly that is works");
-					continue;
-				}
+				
 				
 				edge.m_weight = mahalanobis;
+				
 				p_currPoint.m_edges.add(edge);
 				//TODO check so that this doesn't change the edge added to currpoint
 				Edge edge2 = new Edge();
@@ -398,7 +421,7 @@ public class Graph implements Serializable
 			return retVal;
 		}
 		//==================INTERNAL STRUCTS=======================================
-		private class Point
+		private class Point implements Cloneable, Serializable
 		{
 			Point()
 			{
@@ -411,17 +434,34 @@ public class Graph implements Serializable
 				m_covarianceIndex = p_covarianceIndex;
 				m_edges = new Vector<Edge>();
 			}
-			
+			Point Clone()
+			{
+				Point retPoint = new Point();
+				retPoint.m_instance = (Instance) m_instance.copy();
+				retPoint.m_labeled = m_labeled;
+				retPoint.m_covarianceIndex = m_covarianceIndex;
+				for(int i = 0; i < m_edges.size(); i++)
+					retPoint.m_edges.add(m_edges.elementAt(i).Clone());
+				return retPoint;
+			}
 			public boolean m_labeled;
 			public int m_covarianceIndex;
 			public Instance m_instance;
 			public Vector<Edge> m_edges;
 		}
-		private class Edge
+		private class Edge implements Cloneable, Serializable
 		{
 			Edge()
 			{
 				
+			}
+			Edge Clone()
+			{
+				Edge retEdge = new Edge();
+				retEdge.m_pointIndex1 = m_pointIndex1;
+				retEdge.m_pointIndex2 = m_pointIndex2;
+				retEdge.m_weight = m_weight;
+				return retEdge;
 			}
 			public int m_pointIndex1, m_pointIndex2;
 			//The weight will be the mahalanobis distance between points

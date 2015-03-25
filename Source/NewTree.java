@@ -733,30 +733,35 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_Successors = new InnerTree[bestDists.length];
 		        double[] attTotalSubsetWeights = totalSubsetWeights[bestIndex];
 		        //TODO TELL THE GRAPH THAT IT NEEDS TO MAKE A "PARENT"
-		        int child1 = m_counter +1, child2 = m_counter +2;
-		        for (int i = 0; i < bestDists.length; i++) {
+		        int[] child = new int[2];
+		        child[0] = -1;
+		        child[1] = -1;
+		        System.out.println("=====ID: " + m_id + " ======");
+		        for (int i = 0; i < bestDists.length; i++) 
+		        {
+		        	child[i] = ++m_counter;
 		          m_Successors[i] = new InnerTree();
 		          m_Successors[i].buildTree(subsets[i], unlabeledSubset[i], bestDists[i], p_attIndicesWindow,
 		            p_labeledData.classAttribute().isNominal() ? 0 : attTotalSubsetWeights[i],
-		            p_random, p_depth + 1, minVariance, m_id, m_counter++);
+		            p_random, p_depth + 1, minVariance, m_id, child[i]);
+		          	 
 		        }
-
+		        System.out.println("=====END: " + m_id + " ======");
+		        m_graph.AddParent(m_id, p_parentId, child[0], child[1]);
 		        // If all successors are non-empty, we don't need to store the class
 		        // distribution
 		        boolean emptySuccessor = false;
+		        int empty = 0;
 		        for (int i = 0; i < subsets.length; i++) {
 		          if (m_Successors[i].m_ClassDistribution == null) {
-		            emptySuccessor = true;
-		            break;
+		            emptySuccessor = true;		    
 		          }
 		        }
 		        if (emptySuccessor) {
-		          m_Attribute = -1;
+		      
 		          m_ClassDistribution = p_classProbs.clone();
-		          m_Attribute = -1;
-		        }
-		        else
-		        	m_graph.AddParent(m_id, p_parentId, child1, child2 );
+		          
+		        }		      		        	
 		      } else {
 
 		        // Make leaf
