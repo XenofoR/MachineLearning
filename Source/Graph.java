@@ -40,7 +40,18 @@ public class Graph implements Serializable
 		
 	}
 	*/
-	
+	public double GetAverageErrorRate()
+	{
+		double retVal = 0;
+		int total = 0;
+		for(int i = 0; i < m_graphs.size(); i++)
+			for(int j = 0; j < m_graphs.elementAt(i).m_Points.size(); j++)
+			{
+				retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
+				total++;
+			}
+		return retVal/total;
+	}
 	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
 	{
 		System.out.println("Added leaf node: " + p_id + " With parent: " + p_parentId);
@@ -327,7 +338,9 @@ public class Graph implements Serializable
 				//WHY CAN'T YOU SET A BLOODY CLASS VALUE TO AN INSTANCE GRRRRRR
 				//m_Points.elementAt(i).m_instance.setClassValue(label);
 				//I guess this would work the same though, TODO ask kim if it's true.
-				
+				int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
+				double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
+				m_Points.elementAt(i).m_errorPercentage = error;
 				m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
 			}
 			
@@ -416,7 +429,7 @@ public class Graph implements Serializable
 			{
 				retVal += tempVec[i] * distanceVec[i]; 
 			}
-			if(retVal < 0)
+			if(retVal < 0 || Double.isInfinite(retVal))
 				System.out.println("HOUSTON WE HAVE A PROBLEM");
 			return retVal;
 		}
@@ -432,6 +445,7 @@ public class Graph implements Serializable
 				m_instance = p_instance;
 				m_labeled = p_labeled;
 				m_covarianceIndex = p_covarianceIndex;
+				m_errorPercentage = 0.0;
 				m_edges = new Vector<Edge>();
 			}
 			Point Clone()
@@ -440,6 +454,7 @@ public class Graph implements Serializable
 				retPoint.m_instance = (Instance) m_instance.copy();
 				retPoint.m_labeled = m_labeled;
 				retPoint.m_covarianceIndex = m_covarianceIndex;
+				retPoint.m_errorPercentage = 0.0; //This should be calculated by each graph and should therefore not be copiede
 				for(int i = 0; i < m_edges.size(); i++)
 					retPoint.m_edges.add(m_edges.elementAt(i).Clone());
 				return retPoint;
@@ -447,6 +462,7 @@ public class Graph implements Serializable
 			public boolean m_labeled;
 			public int m_covarianceIndex;
 			public Instance m_instance;
+			public double m_errorPercentage;
 			public Vector<Edge> m_edges;
 		}
 		private class Edge implements Cloneable, Serializable
