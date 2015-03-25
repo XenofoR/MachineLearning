@@ -741,6 +741,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        }
 		        if (emptySuccessor) {
 		          m_ClassDistribution = p_classProbs.clone();
+		          m_Attribute = -1;
 		        }
 		      } else {
 
@@ -901,6 +902,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
+			        	Instances[] splitInstances = splitData(clusterData, inst.value(att), att);
 			        	double c = (m_alpha * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
 			            currVal = k + c;
 			            k -= c;

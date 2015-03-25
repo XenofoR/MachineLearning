@@ -18,15 +18,15 @@ import java.util.Random;
 import weka.core.Instances;
 import weka.core.Instance;
 import weka.classifiers.Evaluation;
+import weka.classifiers.trees.RandomForest;
 import weka.classifiers.trees.RandomTree;
 public class TestEnvironment {
 	private Loader m_loader;
 	private Instances m_structure;
-	private SupervisedForest m_supervisedForest;
+	private RandomForest m_supervisedForest;
 	private ActiveForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_numTests;
-	int[] m_labeledIndex;
-	float m_alSplitPercentage;
+	float m_alSplitPercentage, m_DataSeizeOffset;
 	Evaluation m_evaluator;
 	String m_test;
 	String m_inputPath, m_outputPath, m_currentTest;
@@ -60,6 +60,8 @@ public class TestEnvironment {
 			return;
 		}
 		
+		Instances[] smallerSet = SplitDataStructure(m_structure, m_DataSeizeOffset);
+		
 		if(m_testType == 1 || m_testType == 3)
 		{
 			m_activeForest = new ActiveForest();
@@ -68,12 +70,10 @@ public class TestEnvironment {
 			//m_activeForest.setDontCalculateOutOfBagError(true);
 			
 
-			Instances[] smallerSet = SplitDataStructure(m_structure, 0.1f);
+			
 			Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
 			for(int i = 0; i < m_numTests; i++)
 			{
-				//m_evaluator.crossValidateModel(m_activeForest, m_structure, 10, new Random());
-				//activeResults[0] = m_evaluator.toSummaryString();
 
 				try
 				{
@@ -92,7 +92,7 @@ public class TestEnvironment {
 
 			}
 		}
-		else if(m_testType == 2 || m_testType == 3)
+		if(m_testType == 2 || m_testType == 3)
 		{
 
 			m_supervisedForest = new SupervisedForest();
@@ -104,7 +104,18 @@ public class TestEnvironment {
 			
 			for(int i = 0; i < m_numTests; i++)
 			{
-				
+				try
+				{
+					Random ran = new Random();
+					m_supervisedForest.setSeed(ran.nextInt());
+					m_supervisedForest.buildClassifier(smallerSet[0]);
+				}
+				catch(Exception E)
+				{
+					StackTraceElement[] dawdadwadsada = E.getStackTrace();
+					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + dawdadwadsada.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+				}
+				supervisedResults[i][1] = m_supervisedForest.toString();
 			}
 		}
 		else
@@ -185,25 +196,8 @@ public class TestEnvironment {
 					
 					
 					w.write("\n");
-					if(test == m_numTests-1)
-					{
-						w.write("\t" +"====Instances used as labeled====" +  "\n");
-						for(int i = 0; i < m_labeledIndex.length; i ++)
-						{
-							for(int j = 0 ; j < 10; j++)
-							{
-								i++;
-								if( i >= m_labeledIndex.length )
-								{
-									break;
-								}
-								w.write(" " + m_labeledIndex[i]);
-							}
-							w.write("\n");
-						}
-					}
 				}
-				else if(m_testType == 2 || m_testType == 3)
+				if(m_testType == 2 || m_testType == 3)
 				{
 					w.write("TestType: Supervised" + "\n\n" );
 					w.write("\t" +"====Crossvalidation results==== " +p_supervisedRes[test][0] + "\n");
@@ -269,6 +263,9 @@ public class TestEnvironment {
 			case("TestType"):
 				m_testType = scanner.nextInt();
 				break;
+			case("DataSize"):
+				m_DataSeizeOffset = Float.parseFloat(scanner.next());
+				break;
 			case("SplitLevel"):
 				m_alSplitPercentage = Float.parseFloat(scanner.next());
 				break;
@@ -329,7 +326,6 @@ public class TestEnvironment {
 		Instances tempStructure = new Instances(p_structure); //Need a temporary structure so that we can remove instances that have been selected
 		
 		int numLabled = (int)(p_splitLevel * p_structure.numInstances());
-		m_labeledIndex = new int[numLabled];
 		returnStructure[0] = new Instances(p_structure, numLabled);
 		returnStructure[1] = new Instances(p_structure, p_structure.numInstances() - numLabled);
 			
@@ -339,7 +335,6 @@ public class TestEnvironment {
 		{
 			int j = ran.nextInt(tempStructure.numInstances());
 			Instance selected = tempStructure.get(j);
-			m_labeledIndex[i] = j;
 			returnStructure[0].add(selected);
 			tempStructure.delete(j);
 		}
