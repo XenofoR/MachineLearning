@@ -58,8 +58,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	private Graph m_graph;
 	private double[][] m_leafDistanceMatrix;
 	private InstanceComparator m_instanceComp;
-	InnerTree m_Tree;
 	int m_counter = 0;
+	InnerTree m_Tree;
+	
 	public String PrintCovarianceMatrices()
 	{
 		String output = "";
@@ -359,6 +360,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		double m_classVariance;
 		int m_TP, m_FP;
 		int m_id = 0;
+		
 		//Weka implemented variables
 		protected InnerTree[] m_Successors;
 		
@@ -742,7 +744,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		          }
 		        }
 		        if (emptySuccessor) {
-	        	  m_counter -= 2;
+		          m_Attribute = -1;
 		          m_ClassDistribution = p_classProbs.clone();
 		        }
 		        else

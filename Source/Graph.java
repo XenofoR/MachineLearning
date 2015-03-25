@@ -53,7 +53,7 @@ public class Graph implements Serializable
 		System.out.println("Added split node: " + p_id);
 		InnerGraph graph = new InnerGraph(p_parentId, p_id, p_childId1 , p_childId2);
 		graph.Init();
-		Utilities.Pair<Integer, Integer> temp = new Utilities.Pair<Integer, Integer>(m_graphs.size(), p_id);
+		Utilities.Pair<Integer, Integer> temp = new Utilities.Pair<Integer, Integer>(p_id, m_graphs.size());
 		m_parentIndices.add(temp);
 		m_graphs.add(graph);
 	}
@@ -65,7 +65,7 @@ public class Graph implements Serializable
 		double retVal = 0;
 		for(int i = 0; i < m_graphs.size(); i++)
 		{
-			if(m_graphs.elementAt(i).GetChildren()[0] != -1)
+			if(m_graphs.elementAt(i).GetChildren()[0] != -1) // Non-leaf
 				continue;
 			Instance temp = null;
 			double val = 0;
@@ -122,15 +122,15 @@ public class Graph implements Serializable
 	{
 		
 		int retVal = -1;
-		for(int j = 0; j < m_parentIndices.size(); j++)
-			if(p_parentId == m_parentIndices.elementAt(j).GetFirst())
+		for(int i = 0; i < m_parentIndices.size(); i++)
+			if(p_parentId == m_parentIndices.elementAt(i).GetFirst())
 			{
 				//TODO FIND WHY WE CAN'T FIND PARENT SOMETIMES
-				retVal = m_parentIndices.elementAt(j).GetSecond();
+				retVal = m_parentIndices.elementAt(i).GetSecond();
 				break;
 			}
 		if(retVal == -1)
-			throw new Exception("GraphException:ParentNotFound");
+			throw new Exception("GraphException:ParentNotFound " + p_parentId);
 		return retVal;
 	}
 	
@@ -170,7 +170,7 @@ public class Graph implements Serializable
 		}
 		boolean HasLabeled()
 		{
-			return m_labeledIndices.size() == 0 ? false : true;
+			return !m_labeledIndices.isEmpty();
 		}
 		public void Init()
 		{
