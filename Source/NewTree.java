@@ -315,8 +315,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_plotter.Display2dPlot();
 	    System.out.println("One Tree Finished!\n");
 	    Instance ins = null;
+	    m_graph.ForceRootMerge(true);
 	    double worstDist = m_graph.CalculateHighestUncertaintyAndPropagateLabels(ins);
 	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
+
 	    
 	  }
 	
@@ -350,7 +352,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	protected class InnerTree extends Tree
 	{
-		//Variables used for cluster analysis
+		//Variables used for cluster analysis and semi-supervision
 		double[][] m_covarianceMatrix = null;
 		double[][] m_correlationMatrix = null;
 		Instances m_FPInstances = null; 
@@ -360,6 +362,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		double m_classVariance;
 		int m_TP, m_FP;
 		int m_id = 0;
+		double m_alpha;
+
 		
 		//Weka implemented variables
 		protected InnerTree[] m_Successors;
@@ -589,6 +593,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      int[] p_attIndicesWindow, double p_totalWeight, Random p_random, int p_depth,
 		      double minVariance, int p_parentId, int p_myId) throws Exception {
 			m_id = p_myId;
+
+			
+			m_alpha = p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances());
+
 			m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
 		      if (p_labeledData.numInstances() == 0 && p_unlabeledData.numInstances() == 0) {
@@ -603,7 +611,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      }
 
 		      double priorVar = 0;
-		      double priorCovar = 0;
 		      if (p_labeledData.classAttribute().isNumeric()) {
 
 		        // Compute prior variance
@@ -619,7 +626,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        instance.addAll(p_unlabeledData);
 		        priorVar = NewTree.singleVariance(totalSum, totalSumSquared,
 		          totalSumOfWeights);
-		        priorCovar = SingleCovariance(instance);
 		      }
 
 		      // System.err.println("Total weight " + totalWeight);
@@ -650,7 +656,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
 
+
 		        m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
+
 		        
 		        if(Utilities.g_clusterAnalysis)
 		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
@@ -660,7 +668,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_Prop = null;
 		        return;
 		      }
-
 		      // Compute class distributions and value of splitting
 		      // criterion for each attribute
 		      double val = -Double.MAX_VALUE;
@@ -746,6 +753,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        if (emptySuccessor) {
 		          m_Attribute = -1;
 		          m_ClassDistribution = p_classProbs.clone();
+		          m_Attribute = -1;
 		        }
 		        else
 		        	m_graph.AddParent(m_id, p_parentId, child1, child2 );
@@ -770,7 +778,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      if(Utilities.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 			      
+
 			      m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
+
 			      
 				  m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 
@@ -908,7 +918,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
-			        	double c = (Utilities.g_alphaValue * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
+			        	Instances[] splitInstances = splitData(clusterData, inst.value(att), att);
+			        	double c = (m_alpha * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
 			            currVal = k + c;
 			            k -= c;
 			            Debugger.DebugPrint("Diff between variance and covariane? = " + k, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
@@ -996,7 +1007,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      clusterInstances.setClassIndex(-1);
 			      double clusterPrior = SingleCovariance(clusterInstances);
 			      double clusterVar = Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
-			      double gain = (priorVar - var) + Utilities.g_alphaValue *(clusterPrior - clusterVar);
+			      double gain = (priorVar - var) + m_alpha *(clusterPrior - clusterVar);
 
 			      // Return distribution and split point
 			      subsetWeights[att] = sumOfWeights;

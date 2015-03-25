@@ -73,9 +73,10 @@ public class Graph implements Serializable
 				val = m_graphs.elementAt(i).CalculateHighestUncertaintyAndPropagateLabels(temp);
 			else
 			{
+				System.out.println("No labeled, going into merge mode");
 				int parent = m_graphs.elementAt(i).GetParentId();
-				int index = FindParentIndex(parent);
-				parent = MergeChildren(index);
+				int index = MergeChildren(parent);
+				//parent = MergeChildren(index);
 				val = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(temp);
 			}
 			if(val > retVal)
@@ -113,9 +114,10 @@ public class Graph implements Serializable
 	private double UncertaintyCompleteGraph(Instance p_outInstance) throws Exception
 	{
 		double retVal = 0;
-		if(m_graphs.elementAt(0).m_Points.isEmpty())
+		int index = FindParentIndex(0);
+		if(m_graphs.elementAt(index).m_Points.isEmpty())
 			MergeChildren(0);
-		retVal = m_graphs.elementAt(0).CalculateHighestUncertaintyAndPropagateLabels(p_outInstance);
+		retVal = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outInstance);
 		return retVal;
 	}
 	private int FindParentIndex(int p_parentId) throws Exception
