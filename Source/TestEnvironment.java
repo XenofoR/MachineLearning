@@ -67,7 +67,7 @@ public class TestEnvironment {
 			m_activeForest = new ActiveForest();
 			m_activeForest.setNumTrees(m_trees);
 			m_activeForest.setMaxDepth(m_depth);
-			//m_activeForest.setDontCalculateOutOfBagError(true);
+			//m_activeForest.setPrintTrees(true);
 			
 
 			
@@ -117,11 +117,6 @@ public class TestEnvironment {
 				}
 				supervisedResults[i][1] = m_supervisedForest.toString();
 			}
-		}
-		else
-		{
-			System.out.println("Aborting! Invalid testType: " + m_testType);
-			return;
 		}
 		
 		

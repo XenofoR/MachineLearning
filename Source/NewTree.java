@@ -741,7 +741,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        }
 		        if (emptySuccessor) {
 		          m_ClassDistribution = p_classProbs.clone();
-		          m_Attribute = -1;
 		        }
 		      } else {
 
@@ -756,6 +755,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      //We are a leaf, so we save the covariance matrix
 		      if(m_Attribute == -1)
 		      {
+		    	  m_Attribute = -1;
 		    	  Instances instances = new Instances(p_labeledData);
 			      instances.addAll(p_unlabeledData);
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
