@@ -43,13 +43,14 @@ public class Graph implements Serializable
 	public double GetAverageErrorRate()
 	{
 		double retVal = 0;
-		int total = 0;
+		double total = 0;
 		for(int i = 0; i < m_graphs.size(); i++)
-			for(int j = 0; j < m_graphs.elementAt(i).m_Points.size(); j++)
-			{
-				retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
-				total++;
-			}
+				for(int j = 0; j < m_graphs.elementAt(i).m_Points.size(); j++)
+				{
+					
+					retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
+					total++;
+				}
 		return retVal/total;
 	}
 	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
@@ -333,7 +334,15 @@ public class Graph implements Serializable
 				//Calculate propagated label for instance
 				for(int j = 0; j < distances.length; j++)
 				{
-					label += (distances[j] / totalDist) * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
+					double percentage = 1.0 - (distances[j] / totalDist);
+					// if 0 we only have 1 labeled and then we will simply apply it directly
+					percentage = (percentage == 0) ? 1 : percentage; 
+					label +=  percentage * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
+					if(Double.isNaN(label))
+					{
+						int m = 0;
+						m++;
+					}
 				}
 				//WHY CAN'T YOU SET A BLOODY CLASS VALUE TO AN INSTANCE GRRRRRR
 				//m_Points.elementAt(i).m_instance.setClassValue(label);
@@ -351,7 +360,7 @@ public class Graph implements Serializable
 			//Shortest distance to each point from origin
 			double[] minDist = new double[m_Points.size()];
 			Arrays.fill(minDist, Double.MAX_VALUE);
-			minDist[p_start] = 0; //Origin dist
+			//minDist[p_start] = 0; //Origin dist
 			Set<Utilities.Pair<Point, Double>> queue = new LinkedHashSet<Utilities.Pair<Point, Double>>();
 			queue.add(new Utilities.Pair<Point, Double>(m_Points.elementAt(p_start),0.0));
 			
