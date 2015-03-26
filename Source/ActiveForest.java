@@ -10,7 +10,6 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	//Instances m_unlabledStructure;
 	public ActiveForest() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 	
 	public Vector<Vector<double[]>> GetPurityAndVardiff()

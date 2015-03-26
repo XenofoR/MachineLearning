@@ -1,22 +1,16 @@
-import java.awt.Color;
+
 import java.awt.Paint;
 import java.awt.Shape;
-import java.awt.Window;
 import java.io.Serializable;
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.FastScatterPlot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.AbstractRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
-import org.jfree.util.PaintUtilities;
 import org.jfree.util.ShapeUtilities;
 import org.jfree.data.xy.XYSeriesCollection;
 

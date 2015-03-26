@@ -2,9 +2,7 @@ import java.util.Arrays;
 import java.math.BigInteger;
 
 
-import weka.core.Instance;
 import weka.core.Instances;
-import weka.filters.unsupervised.attribute.Copy;
 
 
 public class Utilities

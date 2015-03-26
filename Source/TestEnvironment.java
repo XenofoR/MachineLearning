@@ -5,13 +5,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Calendar;
-import java.util.Iterator;
 import java.util.Scanner;
 import java.util.Vector;
-import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Random;
 
@@ -19,7 +16,6 @@ import weka.core.Instances;
 import weka.core.Instance;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
-import weka.classifiers.trees.RandomTree;
 public class TestEnvironment {
 	private Loader m_loader;
 	private Instances m_structure;
@@ -95,7 +91,7 @@ public class TestEnvironment {
 		if(m_testType == 2 || m_testType == 3)
 		{
 
-			m_supervisedForest = new SupervisedForest();
+			m_supervisedForest = new RandomForest();
 			m_supervisedForest.setDebug(true);
 			m_supervisedForest.setPrintTrees(true);
 			m_supervisedForest.setNumTrees(m_trees);
@@ -131,8 +127,6 @@ public class TestEnvironment {
 		
 		retString += " \t" + ("====Purity and Variance difference of leafs====" + "\n");
 		Vector<Vector<double[]>> purityVardiff = m_activeForest.GetPurityAndVardiff();
-		double meanPurity = 0.0;
-		double meanVarDiff = 0.0;
 		for(int i = 0; i < purityVardiff.size(); i++)
 		{
 			retString += " \t" + ("Tree" + i + ": ");
@@ -162,12 +156,6 @@ public class TestEnvironment {
 		return retString;
 	}
 	
-	private String ForestInfoToString()
-	{
-		String retString = "\n";
-		
-		return retString;
-	}
 	
 	private void WriteResultFile(String[][] p_activeRes, String[][] p_supervisedRes) throws Exception
 	{
@@ -341,9 +329,5 @@ public class TestEnvironment {
 		return returnStructure;
 	}
 	
-	private void RemoveAttribute(int p_index)
-	{
-		m_structure.deleteAttributeAt(p_index);
-	}
 
 }

@@ -28,7 +28,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import weka.classifiers.Classifier;
 import weka.core.Instances;
 import weka.core.Option;
 import weka.core.Utils;

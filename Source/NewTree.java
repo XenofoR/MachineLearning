@@ -314,10 +314,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_plotter.Display2dPlot();
 	    Utilities.g_numTrees++;
 	    System.out.println("Tree: " + Utilities.g_numTrees  + " Finished!\n");
-	    Instance ins = null;
-	    //m_graph.CalculateHighestUncertaintyAndPropagateLabels(ins);
-	    //System.out.println("GRAPH HAS BEEN GRAPHIFIED");
-	    
+
 	  }
 	
 	
@@ -835,7 +832,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      throws Exception {
 				
 			      double splitPoint = Double.NaN;
-			      Attribute attribute = p_labeledData.attribute(att);
 			      double[][] dist = null;
 			      double[] sums = null;
 			      double[] sumSquared = null;
@@ -903,7 +899,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
-			        	Instances[] splitInstances = splitData(clusterData, inst.value(att), att);
 			        	double c = (m_alpha * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
 			            currVal = k + c;
 			            k -= c;
