@@ -6,8 +6,8 @@ public class Boot
 		try
 		{
 			double temp = 1.0;
-				while(1 + 0.5*temp != 1)
-					temp *= 0.5;
+			while(1 + 0.5*temp != 1)
+				temp *= 0.5;
 			Utilities.g_machineEpsilion = temp;
 		environment.Init("J:/master_thesis_work/MachineLearning/test.file");
 		

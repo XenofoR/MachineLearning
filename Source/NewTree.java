@@ -58,6 +58,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	private Graph m_graph;
 	private double[][] m_leafDistanceMatrix;
 	private InstanceComparator m_instanceComp;
+	int m_counter = 0;
 	InnerTree m_Tree;
 	
 	public String PrintCovarianceMatrices()
@@ -305,16 +306,23 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_Tree = new InnerTree();
 	    m_Info = new Instances(p_labeledData, 0);
 	    m_Tree.buildTree(labeledTrain, unlabeledTrain,  classProbs, attIndicesWindow, totalWeight, rand, 0,
-	      m_MinVarianceProp * trainVariance);
+	      m_MinVarianceProp * trainVariance, -1, 0);
 
 	    // Backfit if required
 	    if (labeledBackfit != null) {
 	      m_Tree.backfitData(labeledBackfit); //TODO change to handle two instances
 	    }
 	    m_plotter.Display2dPlot();
+	    
 	    Utilities.g_numTrees++;
 	    System.out.println("Tree: " + Utilities.g_numTrees  + " Finished!\n");
 
+	    //Will become the worst instance, aka the instance that should be sent to active learning
+	    Instance ins = null;
+	    double worstDist = m_graph.CalculateHighestUncertaintyAndPropagateLabels(ins);
+	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
+	    System.out.println("Average error rate of transduction: " + m_graph.GetAverageErrorRate());
+	    
 	  }
 	
 	
@@ -345,6 +353,42 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    }
 	  }
 	
+	  /**
+	   * Computes variance for subsets.
+	   * 
+	   * @param s
+	   * @param sS
+	   * @param sumOfWeights
+	   * @return the variance
+	   */
+	  protected static double variance(double[] s, double[] sS,
+	    double[] sumOfWeights) {
+
+	    double var = 0;
+
+	    for (int i = 0; i < s.length; i++) {
+	      if (sumOfWeights[i] > 0) {
+	        var += singleVariance(s[i], sS[i], sumOfWeights[i]);
+	      }
+	    }
+
+	    return var;
+	  }
+
+	  /**
+	   * Computes the variance for a single set
+	   * 
+	   * @param s
+	   * @param sS
+	   * @param weight the weight
+	   * @return the variance
+	   */
+	  protected static double singleVariance(double s, double sS, double weight) {
+
+		  double ret = sS - ((s * s) / weight);
+	    return ret;
+	  }
+	
 	protected class InnerTree extends Tree
 	{
 		//Variables used for cluster analysis and semi-supervision
@@ -356,7 +400,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		double m_varianceDiff;
 		double m_classVariance;
 		int m_TP, m_FP;
-		double m_alpha;
+		int m_id = 0;
+		double m_alpha = 0.0;
+
 		
 		//Weka implemented variables
 		protected InnerTree[] m_Successors;
@@ -584,9 +630,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		
 		protected void buildTree(Instances p_labeledData, Instances p_unlabeledData, double[] p_classProbs,
 		      int[] p_attIndicesWindow, double p_totalWeight, Random p_random, int p_depth,
-		      double minVariance) throws Exception {
+		      double minVariance, int p_parentId, int p_myId) throws Exception {
+			m_id = p_myId;
+
 			
-			m_alpha = p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances());
+			m_alpha = (double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances());
+
 			m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
 		      if (p_labeledData.numInstances() == 0 && p_unlabeledData.numInstances() == 0) {
@@ -620,10 +669,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 		      // System.err.println("Total weight " + totalWeight);
 		      // double sum = Utils.sum(classProbs);
-		      if (p_totalWeight < 2 * m_MinNum ||
+		      if ((p_totalWeight < 2 * m_MinNum && p_unlabeledData.numInstances() < 2) ||
 
 		        // Numeric case
-		        (p_labeledData.numInstances() != 0 && (priorVar) / p_totalWeight < minVariance)
+		        (p_labeledData.numInstances() > 1 && (priorVar) / p_totalWeight < minVariance)
 
 		        
 		        ||
@@ -646,7 +695,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
 		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
 
-		       // m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
+
+		        m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
+
 		        
 		        if(Utilities.g_clusterAnalysis)
 		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
@@ -720,26 +771,35 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Instances[] unlabeledSubset = splitData(p_unlabeledData);
 		        m_Successors = new InnerTree[bestDists.length];
 		        double[] attTotalSubsetWeights = totalSubsetWeights[bestIndex];
-
-		        for (int i = 0; i < bestDists.length; i++) {
+		        //TODO TELL THE GRAPH THAT IT NEEDS TO MAKE A "PARENT"
+		        int[] child = new int[2];
+		        child[0] = -1;
+		        child[1] = -1;
+		        System.out.println("=====ID: " + m_id + " ======");
+		        for (int i = 0; i < bestDists.length; i++) 
+		        {
+		        	child[i] = ++m_counter;
 		          m_Successors[i] = new InnerTree();
 		          m_Successors[i].buildTree(subsets[i], unlabeledSubset[i], bestDists[i], p_attIndicesWindow,
 		            p_labeledData.classAttribute().isNominal() ? 0 : attTotalSubsetWeights[i],
-		            p_random, p_depth + 1, minVariance);
+		            p_random, p_depth + 1, minVariance, m_id, child[i]);
+		          	 
 		        }
-
+		        System.out.println("=====END: " + m_id + " ======");
+		        m_graph.AddParent(m_id, p_parentId, child[0], child[1]);
 		        // If all successors are non-empty, we don't need to store the class
 		        // distribution
 		        boolean emptySuccessor = false;
+		        int empty = 0;
 		        for (int i = 0; i < subsets.length; i++) {
 		          if (m_Successors[i].m_ClassDistribution == null) {
-		            emptySuccessor = true;
-		            break;
+		            emptySuccessor = true;		    
 		          }
 		        }
 		        if (emptySuccessor) {
-		          m_ClassDistribution = p_classProbs.clone();
-		        }
+		      
+		          m_ClassDistribution = p_classProbs.clone();     
+		        }		      		        	
 		      } else {
 
 		        // Make leaf
@@ -762,7 +822,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			      if(Utilities.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 			      
-			     // m_graph.AddCluster(p_labeledData, p_unlabeledData, m_covarianceMatrix);
+
+			      m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
+
 			      
 				  m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 
@@ -999,7 +1061,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		
 		private double Covariance(int p_sumParentInstances, Instances[] p_instances) throws Exception
 		{
-			double hejhoppiklingonskogen = 0.0, parentByChild, singleResult;
+			double hejhoppiklingonskogen = 0.0, parentByChild = 0.0, singleResult = 0.0;
 			Debugger.DebugPrint("Entering Covariance", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			Debugger.DebugPrint("SumParents = " + p_sumParentInstances + "\n" + "Sum child1 = " + p_instances[0].numInstances() + "\n" + "Sum child2 = " + p_instances[1].numInstances(),
 								Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
@@ -1016,8 +1078,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		
 		private double SingleCovariance(Instances p_instances) throws Exception
 		{
-			//if(p_instances.numInstances() < 2)
-				//return 0;
 
 			double[][] covarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
 			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix, m_center);
@@ -1028,8 +1088,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			if(det <= 0)
 				return 0.0;
-			return (Math.log(det)/Math.log(2));
+			double ret = (Math.log(det)/Math.log(2));
+			return ret;
 		}
+		
 		
 		protected Instances[] splitData(Instances p_data, double p_splitPoint, int p_attr) throws Exception {
 

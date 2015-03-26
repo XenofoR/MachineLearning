@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Random;
 
+import weka.filters.unsupervised.instance.RemoveDuplicates;
 import weka.core.Instances;
 import weka.core.Instance;
 import weka.classifiers.Evaluation;
@@ -66,7 +67,7 @@ public class TestEnvironment {
 			//m_activeForest.setPrintTrees(true);
 			
 
-			
+
 			Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
 			for(int i = 0; i < m_numTests; i++)
 			{
@@ -80,7 +81,10 @@ public class TestEnvironment {
 				catch(Exception E)
 				{
 					StackTraceElement[] dawdadwadsada = E.getStackTrace();
-					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + dawdadwadsada.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+					String superman ="";
+					for(int il = 0; il < dawdadwadsada.length; il++)
+						superman += dawdadwadsada[il] + "\n";
+					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + superman, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				}
 				activeResults[i][1] = m_activeForest.toString();
 				if(Utilities.g_clusterAnalysis)
@@ -286,12 +290,17 @@ public class TestEnvironment {
 	{
 		try
 		{
-		File file = new File(p_file);
-		m_loader.setFile(file);
-		
-		m_structure = m_loader.getStructure();
-				
-		m_structure.setClassIndex(m_structure.numAttributes() - 1);
+			RemoveDuplicates remover = new RemoveDuplicates();
+			
+			
+			File file = new File(p_file);
+			m_loader.setFile(file);
+			
+			m_structure = m_loader.getStructure();
+					
+			remover.setInputFormat(m_structure);
+			m_structure = remover.useFilter(m_structure, remover);
+			m_structure.setClassIndex(m_structure.numAttributes() - 1);
 		}
 		catch(Exception E)
 		{
@@ -305,9 +314,8 @@ public class TestEnvironment {
 	private Instances[] SplitDataStructure(Instances p_structure, float p_splitLevel) 
 	{
 		Instances[] returnStructure = new Instances[2];
-		
+
 		Instances tempStructure = new Instances(p_structure); //Need a temporary structure so that we can remove instances that have been selected
-		
 		int numLabled = (int)(p_splitLevel * p_structure.numInstances());
 		returnStructure[0] = new Instances(p_structure, numLabled);
 		returnStructure[1] = new Instances(p_structure, p_structure.numInstances() - numLabled);
