@@ -312,7 +312,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	      m_Tree.backfitData(labeledBackfit); //TODO change to handle two instances
 	    }
 	    m_plotter.Display2dPlot();
-	    System.out.println("One Tree Finished!\n");
+	    Utilities.g_numTrees++;
+	    System.out.println("Tree: " + Utilities.g_numTrees  + " Finished!\n");
 	    Instance ins = null;
 	    //m_graph.CalculateHighestUncertaintyAndPropagateLabels(ins);
 	    //System.out.println("GRAPH HAS BEEN GRAPHIFIED");

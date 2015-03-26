@@ -12,6 +12,7 @@ public class Utilities
 	static boolean g_debug;
 	static boolean g_clusterAnalysis;
 	static double g_machineEpsilion;
+	static int g_numTrees;
 	//http://professorjava.weebly.com/matrix-determinant.html
 	
 	static public int CalculateCombination(int p_numenator, int p_denomenator)
