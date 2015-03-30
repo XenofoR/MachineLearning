@@ -46,10 +46,10 @@ public class Graph implements Serializable
 		double total = 0;
 		for(int i = 0; i < m_graphs.size(); i++)
 		{
-			if(!m_graphs.elementAt(i).HasBeenMerge() && m_graphs.elementAt(i).HasLabeled())
+			if((m_graphs.elementAt(i).HasBeenMerged() == false) && m_graphs.elementAt(i).HasLabeled())
 				for(int j = 0; j < m_graphs.elementAt(i).m_Points.size(); j++)
 				{
-					if(!m_graphs.elementAt(i).m_Points.elementAt(j).m_labeled)
+					if(m_graphs.elementAt(i).m_Points.elementAt(j).m_labeled == false)
 					{
 						retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
 						total++;
@@ -60,7 +60,7 @@ public class Graph implements Serializable
 	}
 	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
 	{
-		System.out.println("Added leaf node: " + p_id + " With parent: " + p_parentId);
+		Debugger.DebugPrint("Added leaf node: " + p_id + " With parent: " + p_parentId, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		InnerGraph graph = new InnerGraph(p_parentId, p_id, -1 , -1);
 		graph.Init();
 		graph.AddCluster(p_labeled, p_unlabeled, p_covariance);
@@ -70,7 +70,8 @@ public class Graph implements Serializable
 	}
 	public void AddParent(int p_id, int p_parentId, int p_childId1, int p_childId2)
 	{
-		System.out.println("Added split node: " + p_id + " With Parent: " + p_parentId + " And children: " + p_childId1 + " " + p_childId2);
+		Debugger.DebugPrint("Added split node: " + p_id + " With Parent: " + p_parentId + " And children: " + p_childId1 + " " + p_childId2, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+
 		InnerGraph graph = new InnerGraph(p_parentId, p_id, p_childId1 , p_childId2);
 		graph.Init();
 		Utilities.Pair<Integer, Integer> temp = new Utilities.Pair<Integer, Integer>(p_id, m_graphs.size());
@@ -87,25 +88,28 @@ public class Graph implements Serializable
 		{
 			if(m_graphs.elementAt(i).GetChildren()[0] != -1) // Non-leaf
 				continue;
+			if(m_graphs.elementAt(i).HasBeenMerged())
+				continue;
 			Instance temp = null;
 			double val = 0;
 			if(m_graphs.elementAt(i).HasLabeled())
 				val = m_graphs.elementAt(i).CalculateHighestUncertaintyAndPropagateLabels(temp);
 			else
 			{
-				System.out.println("No labeled, going into merge mode");
+				Debugger.DebugPrint("No labeled, going into merge mode", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				int parent = m_graphs.elementAt(i).GetParentId();
 				int index = MergeChildren(parent);
 				//parent = MergeChildren(index);
 				val = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(temp);
-				System.out.println("Merge Compelete");
+				
 			}
 			if(val > retVal)
 			{
 				retInst = temp;
 				retVal = val;
 			}
-			System.out.println("Checked graph: " + i + "of: " + m_graphs.size());
+		
+			Debugger.DebugPrint("Checked graph: " + i + "of: " + m_graphs.size(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		}
 		p_outInstance = retInst;
 		return retVal;
@@ -142,9 +146,10 @@ public class Graph implements Serializable
 		int index = FindIndexFromId(0);
 		if(m_graphs.elementAt(index).m_Points.isEmpty())
 			MergeChildren(0);
-		System.out.println("Started Dikjstras on root graph, this is going to take a while" );
+		Debugger.DebugPrint("Started Dikjstras on root graph, this is going to take a while", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		retVal = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outInstance);
-		System.out.println("Dujkstra funished" );
+		
+		Debugger.DebugPrint("Dujkstra funished", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		return retVal;
 	}
 	private int FindIndexFromId(int p_id) throws Exception
@@ -194,7 +199,7 @@ public class Graph implements Serializable
 		{
 			return !m_labeledIndices.isEmpty();
 		}
-		boolean HasBeenMerge()
+		boolean HasBeenMerged()
 		{
 			return m_hasBeenMerged;
 		}
@@ -234,16 +239,16 @@ public class Graph implements Serializable
 		//TODO Fix something that makes the graph only do things on the one with labels 
 		public void MergeClusters(InnerGraph p_graph1, InnerGraph p_graph2) throws Exception
 		{					
-			System.out.println("Merging clusters");
-			
+			Debugger.DebugPrint("Merging clusters", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			for(int i = 0; i < p_graph1.m_Points.size(); i++)
 			{
 				Point temp = p_graph1.m_Points.elementAt(i).Clone();
 				temp.m_edges.clear();
 				if(temp.m_labeled)
 					m_labeledIndices.add(m_Points.size());
-				m_Points.add(temp);
+				
 				ConstructEdges(temp);
+				m_Points.add(temp);
 			}
 			for(int i = 0; i < p_graph2.m_Points.size(); i++)
 			{
@@ -251,14 +256,15 @@ public class Graph implements Serializable
 				temp.m_edges.clear();
 				if(temp.m_labeled)
 					m_labeledIndices.add(m_Points.size());
-				m_Points.add(temp);
+				
 				ConstructEdges(temp);
+				m_Points.add(temp);
 			}
 			m_labeledIndices.addAll(p_graph1.m_labeledIndices);
 			for(int i = 0; i < m_Points.size(); i++)
 				m_Points.elementAt(i).m_edges.clear();
 			int offset = p_graph1.m_labeledIndices.size();
-			System.out.println("Merge Complete");
+			Debugger.DebugPrint("Merge Complete", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			
 		}
 		
@@ -308,7 +314,7 @@ public class Graph implements Serializable
 				m_Points.elementAt(i).m_edges.add(edge2);
 			}
 		}
-		//TODO EHM so...yea...fix that merge thing
+		
 		public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance)
 		{
 			if(m_labeledIndices.size() == 0)
@@ -458,7 +464,7 @@ public class Graph implements Serializable
 				m_instance = p_instance;
 				m_labeled = p_labeled;
 				m_covarianceIndex = p_covarianceIndex;
-				m_errorPercentage = 0.0;
+				m_errorPercentage = -Double.MAX_VALUE;
 				m_edges = new Vector<Edge>();
 			}
 			Point Clone()
@@ -467,9 +473,10 @@ public class Graph implements Serializable
 				retPoint.m_instance = (Instance) m_instance.copy();
 				retPoint.m_labeled = m_labeled;
 				retPoint.m_covarianceIndex = m_covarianceIndex;
-				retPoint.m_errorPercentage = 0.0; //This should be calculated by each graph and should therefore not be copiede
-				for(int i = 0; i < m_edges.size(); i++)
-					retPoint.m_edges.add(m_edges.elementAt(i).Clone());
+				retPoint.m_errorPercentage = -Double.MAX_VALUE; //This should be calculated by each graph and should therefore not be copiede
+				//for(int i = 0; i < m_edges.size(); i++)
+				//	retPoint.m_edges.add(m_edges.elementAt(i).Clone());
+				retPoint.m_edges = new Vector<Edge>();
 				return retPoint;
 			}
 			public boolean m_labeled;

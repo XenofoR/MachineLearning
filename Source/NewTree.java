@@ -775,7 +775,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        int[] child = new int[2];
 		        child[0] = -1;
 		        child[1] = -1;
-		        System.out.println("=====ID: " + m_id + " ======");
+		        Debugger.DebugPrint("=====ID: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		        for (int i = 0; i < bestDists.length; i++) 
 		        {
 		        	child[i] = ++m_counter;
@@ -785,7 +785,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		            p_random, p_depth + 1, minVariance, m_id, child[i]);
 		          	 
 		        }
-		        System.out.println("=====END: " + m_id + " ======");
+		        Debugger.DebugPrint("=====END: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		        m_graph.AddParent(m_id, p_parentId, child[0], child[1]);
 		        // If all successors are non-empty, we don't need to store the class
 		        // distribution
