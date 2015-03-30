@@ -39,7 +39,9 @@ import weka.core.Randomizable;
 import weka.core.RevisionUtils;
 import weka.core.Utils;
 import weka.core.WeightedInstancesHandler;
-
+import weka.core.matrix.EigenvalueDecomposition;
+import weka.core.matrix.Matrix;
+import weka.core.matrix.SingularValueDecomposition;
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomTree.java
 /*
  Changes made:
@@ -693,7 +695,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Instances instances = new Instances(p_labeledData);
 		        instances.addAll(p_unlabeledData);
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
-		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
+		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center, true);
 
 
 		        m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
@@ -817,7 +819,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		    	  Instances instances = new Instances(p_labeledData);
 			      instances.addAll(p_unlabeledData);
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
-			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix, m_center);
+			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix, m_center, true);
 			      
 			      if(Utilities.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
@@ -1078,9 +1080,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		
 		private double SingleCovariance(Instances p_instances) throws Exception
 		{
-
+			SingleConditionalCovariance(p_instances);
 			double[][] covarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
-			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix, m_center);
+			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix, m_center, true);
 			
 			double det = Utilities.CalculateDeterminant(covarianceMatrix);
 			Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
@@ -1092,6 +1094,65 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			return ret;
 		}
 		
+		private double SingleConditionalCovariance(Instances p_instances) throws Exception
+		{
+			double ret = 0.0;
+			int m = p_instances.numInstances();
+			int n = p_instances.numAttributes();
+			double[][] A = new double[m][n];
+			for(int i = 0; i < m; i++)
+					A[i] = p_instances.get(i).toDoubleArray();
+			
+			Matrix Amatrix = new Matrix(A);
+			
+			Matrix M = Amatrix.transpose().times(Amatrix);
+			
+			EigenvalueDecomposition eigM = M.eig();
+			
+			double[] eigValyueM = eigM.getRealEigenvalues();
+			double[][] V = eigM.getV().transpose().getArray();
+			double minEigenValue = Double.MAX_VALUE;
+			double[] meanLine = new double[n];
+			for(int i = 0; i < eigValyueM.length; i++)
+				if(eigValyueM[i] < minEigenValue)
+				{
+					minEigenValue = eigValyueM[i];
+					meanLine = V[i];
+				}
+			
+			double[][] J = new double[V.length][V[0].length];
+			
+			//TODO look into why Criminisi skips first two values
+			for(int i = 0; i < J.length; i++)
+				for(int j = 0; j < J[0].length; j++)
+					J[i][j] = -1 * V[i][j]*V[i][j] / eigValyueM[j];
+			
+			
+			double[][] cov = new double[n][n];
+			Utilities.CalculateCovarianceMatrix(p_instances, cov, null, false);
+			double[][] S = new double[V.length][V[0].length];
+			double[] rowA = new double[n];
+			for(int k = 0; k < m; k++)
+			{
+				rowA = A[k];
+			for(int i = 0; i < J.length; i++)
+				for(int j = 0; j < J[0].length; j++)
+					S[i][j] += rowA[j]*(rowA[j]*meanLine[j])*(cov[i][j]*meanLine[j]);
+			}
+			
+			Matrix conditionalCov = null;
+			Matrix matrixJ = new Matrix(J);
+			Matrix matrixS = new Matrix(S);
+
+			conditionalCov = matrixJ.times(matrixS).times(matrixJ);
+			
+			return ret;
+		}
+		
+		/*private double ConditionalCovariance(Instances p_instances) throws Exception
+		{
+			
+		}*/
 		
 		protected Instances[] splitData(Instances p_data, double p_splitPoint, int p_attr) throws Exception {
 

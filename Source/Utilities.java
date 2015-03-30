@@ -40,17 +40,28 @@ public class Utilities
  		return interNum.divide(interDen).intValue();
 	}
 	//http://www.cs.otago.ac.nz/cosc453/student_tutorials/principal_components.pdf
-	static public void CalculateCovarianceMatrix(Instances p_instances, double[][] p_destination, double[] p_meanDestination)
+	static public void CalculateCovarianceMatrix(Instances p_instances, double[][] p_destination, double[] p_meanDestination, boolean p_unlabeled)
 	{
 		
-		double[] mean = Mean(p_instances);
-		for(int  i = 0; i < mean.length; i++)
-			p_meanDestination[i] = mean[i];
+		double[] mean = Mean(p_instances, p_unlabeled);
+		if(p_meanDestination != null)
+			for(int  i = 0; i < mean.length; i++)
+				p_meanDestination[i] = mean[i];
 		for(int i = 0; i < p_instances.numInstances() ;i++)
 		{			
-			double[] tempVector = new double[p_instances.instance(i).numAttributes() -1];
+			double[] tempVector;
+			double[][] tempMatrix; 
+			if(p_unlabeled)
+			{
+				tempVector = new double[p_instances.instance(i).numAttributes() -1];
+				tempMatrix = new double[p_instances.numAttributes() - 1][p_instances.numAttributes() - 1];
+			}
+			else
+			{
+				tempVector = new double[p_instances.instance(i).numAttributes()];
+				tempMatrix = new double[p_instances.numAttributes()][p_instances.numAttributes()];
+			}
 			Subtract(p_instances.instance(i).toDoubleArray(), mean, tempVector);
-			double[][] tempMatrix = new double[p_instances.numAttributes() - 1][p_instances.numAttributes() - 1];
 			OuterProduct(tempVector, tempVector, tempMatrix);
 			Add(p_destination, tempMatrix, p_destination);
 
@@ -123,9 +134,13 @@ public class Utilities
 			retVal += p_instances.instance(i).toDoubleArray()[p_index];
 		return (retVal / p_instances.numInstances());
 	}
-	private static double[] Mean(Instances p_instances)
+	private static double[] Mean(Instances p_instances, boolean p_unlabeled)
 	{
-		double[] retVal = new double[p_instances.numAttributes() -1];
+		double[] retVal;
+		if(p_unlabeled)
+			retVal = new double[p_instances.numAttributes() -1];
+		else
+			retVal = new double[p_instances.numAttributes()];
 		for(int i = 0; i < p_instances.numAttributes() -1; i++)
 		{
 			retVal[i] = MeanOfAttribute(p_instances, i);
