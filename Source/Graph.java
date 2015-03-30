@@ -1,4 +1,8 @@
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -78,12 +82,11 @@ public class Graph implements Serializable
 		m_idToIndexMap.add(temp);
 		m_graphs.add(graph);
 	}
-	public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance) throws Exception
+	public Instance CalculateHighestUncertaintyAndPropagateLabels(double[] p_outVal) throws Exception
 	{
 		if(m_forceRootMerge)
-			return UncertaintyCompleteGraph(p_outInstance);
+			return UncertaintyCompleteGraph(p_outVal);
 		Instance retInst = null;
-		double retVal = 0;
 		for(int i = 0; i < m_graphs.size(); i++)
 		{
 			if(m_graphs.elementAt(i).GetChildren()[0] != -1) // Non-leaf
@@ -93,26 +96,27 @@ public class Graph implements Serializable
 			Instance temp = null;
 			double val = 0;
 			if(m_graphs.elementAt(i).HasLabeled())
-				val = m_graphs.elementAt(i).CalculateHighestUncertaintyAndPropagateLabels(temp);
+				retInst = m_graphs.elementAt(i).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
 			else
 			{
 				Debugger.DebugPrint("No labeled, going into merge mode", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				int parent = m_graphs.elementAt(i).GetParentId();
 				int index = MergeChildren(parent);
+				index = FindIndexFromId(index);
 				//parent = MergeChildren(index);
-				val = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(temp);
+				retInst = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
 				
 			}
-			if(val > retVal)
+			if(val > p_outVal[0])
 			{
 				retInst = temp;
-				retVal = val;
+				p_outVal[0] = val;
 			}
 		
 			Debugger.DebugPrint("Checked graph: " + i + "of: " + m_graphs.size(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		}
-		p_outInstance = retInst;
-		return retVal;
+		
+		return retInst;
 	}
 	
 	public void ForceRootMerge(boolean p_force)
@@ -134,20 +138,21 @@ public class Graph implements Serializable
 		int childIndex1 = FindIndexFromId(children[0]);
 		int childIndex2 = FindIndexFromId(children[1]);
 		m_graphs.elementAt(index).MergeClusters(m_graphs.elementAt(childIndex1), m_graphs.elementAt(childIndex2));
-		for(int i = 0; i < children.length; i++)
-			m_graphs.elementAt(childIndex1).SetHasBeenMerged(true);
+
+		m_graphs.elementAt(childIndex1).SetHasBeenMerged(true);
+		m_graphs.elementAt(childIndex2).SetHasBeenMerged(true);
 		if(!m_graphs.elementAt(index).HasLabeled())
 			retVal = MergeChildren(m_graphs.elementAt(index).GetParentId());
 		return retVal;
 	}
-	private double UncertaintyCompleteGraph(Instance p_outInstance) throws Exception
+	private Instance UncertaintyCompleteGraph(double[] p_outVal) throws Exception
 	{
-		double retVal = 0;
+		Instance retVal = null;
 		int index = FindIndexFromId(0);
 		if(m_graphs.elementAt(index).m_Points.isEmpty())
 			MergeChildren(0);
 		Debugger.DebugPrint("Started Dikjstras on root graph, this is going to take a while", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-		retVal = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outInstance);
+		retVal = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
 		
 		Debugger.DebugPrint("Dujkstra funished", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		return retVal;
@@ -260,10 +265,8 @@ public class Graph implements Serializable
 				ConstructEdges(temp);
 				m_Points.add(temp);
 			}
-			m_labeledIndices.addAll(p_graph1.m_labeledIndices);
 			for(int i = 0; i < m_Points.size(); i++)
 				m_Points.elementAt(i).m_edges.clear();
-			int offset = p_graph1.m_labeledIndices.size();
 			Debugger.DebugPrint("Merge Complete", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			
 		}
@@ -315,17 +318,18 @@ public class Graph implements Serializable
 			}
 		}
 		
-		public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance)
+		public Instance CalculateHighestUncertaintyAndPropagateLabels(double[] p_outVal)
 		{
 			if(m_labeledIndices.size() == 0)
-				return -1;
+				return null;
 			
 			
-			double retVal = 0;
-			double localShortest = 0, totalDist = 0, label = 0;
+			Instance retVal = null;;
+			double out = 0;
+			double localShortestLongest = 0, totalDist = 0, label = 0;
 			for(int i = 0; i < m_Points.size(); i++)
 			{
-				localShortest = Double.MAX_VALUE;
+				localShortestLongest = 0;
 				totalDist = 0;
 				label = 0;
 				if(m_Points.elementAt(i).m_labeled)
@@ -335,16 +339,17 @@ public class Graph implements Serializable
 				for(int j = 0; j < m_labeledIndices.size(); j++)
 				{
 					totalDist += distances[j];
-					 if(distances[j] < localShortest)
+					 if(distances[j] > localShortestLongest)
 					 {
-						 localShortest = distances[j];
+						 localShortestLongest = distances[j];
 					 }
 				}
 				//Save the longest shortest path
-				if(localShortest > retVal)
+				if(localShortestLongest > out)
 				{
-					retVal = localShortest;
-					p_outInstance = m_Points.elementAt(i).m_instance;
+					retVal = m_Points.elementAt(i).m_instance;
+					out = localShortestLongest;
+					//TODO JESUS FUCKING CHRIST JAVA WHY ARE YOU SUCH A FUCKING JOKE LANGUAGE
 				}
 				//Calculate propagated label for instance
 				for(int j = 0; j < distances.length; j++)
@@ -362,7 +367,7 @@ public class Graph implements Serializable
 				m_Points.elementAt(i).m_errorPercentage = error;
 				m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
 			}
-			
+			p_outVal[0] = out;
 			return retVal;
 		}
 		private double[] Dijkstra(int p_start)
@@ -464,7 +469,7 @@ public class Graph implements Serializable
 				m_instance = p_instance;
 				m_labeled = p_labeled;
 				m_covarianceIndex = p_covarianceIndex;
-				m_errorPercentage = -Double.MAX_VALUE;
+				m_errorPercentage = Double.MAX_VALUE;
 				m_edges = new Vector<Edge>();
 			}
 			Point Clone()
@@ -473,7 +478,7 @@ public class Graph implements Serializable
 				retPoint.m_instance = (Instance) m_instance.copy();
 				retPoint.m_labeled = m_labeled;
 				retPoint.m_covarianceIndex = m_covarianceIndex;
-				retPoint.m_errorPercentage = -Double.MAX_VALUE; //This should be calculated by each graph and should therefore not be copiede
+				retPoint.m_errorPercentage = Double.MAX_VALUE; //This should be calculated by each graph and should therefore not be copiede
 				//for(int i = 0; i < m_edges.size(); i++)
 				//	retPoint.m_edges.add(m_edges.elementAt(i).Clone());
 				retPoint.m_edges = new Vector<Edge>();

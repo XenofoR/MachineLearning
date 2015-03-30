@@ -297,7 +297,6 @@ public class TestEnvironment {
 			m_loader.setFile(file);
 			
 			m_structure = m_loader.getStructure();
-					
 			remover.setInputFormat(m_structure);
 			m_structure = remover.useFilter(m_structure, remover);
 			m_structure.setClassIndex(m_structure.numAttributes() - 1);
