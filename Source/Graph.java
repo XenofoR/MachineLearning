@@ -45,12 +45,17 @@ public class Graph implements Serializable
 		double retVal = 0;
 		double total = 0;
 		for(int i = 0; i < m_graphs.size(); i++)
+		{
+			if(!m_graphs.elementAt(i).HasBeenMerge() && m_graphs.elementAt(i).HasLabeled())
 				for(int j = 0; j < m_graphs.elementAt(i).m_Points.size(); j++)
 				{
-					
-					retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
-					total++;
+					if(!m_graphs.elementAt(i).m_Points.elementAt(j).m_labeled)
+					{
+						retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
+						total++;
+					}
 				}
+		}
 		return retVal/total;
 	}
 	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
@@ -93,6 +98,7 @@ public class Graph implements Serializable
 				int index = MergeChildren(parent);
 				//parent = MergeChildren(index);
 				val = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(temp);
+				System.out.println("Merge Compelete");
 			}
 			if(val > retVal)
 			{
@@ -124,7 +130,8 @@ public class Graph implements Serializable
 		int childIndex1 = FindIndexFromId(children[0]);
 		int childIndex2 = FindIndexFromId(children[1]);
 		m_graphs.elementAt(index).MergeClusters(m_graphs.elementAt(childIndex1), m_graphs.elementAt(childIndex2));
-
+		for(int i = 0; i < children.length; i++)
+			m_graphs.elementAt(childIndex1).SetHasBeenMerged(true);
 		if(!m_graphs.elementAt(index).HasLabeled())
 			retVal = MergeChildren(m_graphs.elementAt(index).GetParentId());
 		return retVal;
@@ -137,17 +144,15 @@ public class Graph implements Serializable
 			MergeChildren(0);
 		System.out.println("Started Dikjstras on root graph, this is going to take a while" );
 		retVal = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outInstance);
-		System.out.println("Dijkstra finished" );
+		System.out.println("Dujkstra funished" );
 		return retVal;
 	}
 	private int FindIndexFromId(int p_id) throws Exception
 	{
-		
 		int retVal = -1;
 		for(int i = 0; i < m_idToIndexMap.size(); i++)
 			if(p_id == m_idToIndexMap.elementAt(i).GetFirst())
 			{
-				//TODO FIND WHY WE CAN'T FIND PARENT SOMETIMES
 				retVal = m_idToIndexMap.elementAt(i).GetSecond();
 				break;
 			}
@@ -156,13 +161,6 @@ public class Graph implements Serializable
 		return retVal;
 	}
 	
-
-	//TODO merge code to innerGraph. Make a function that forces Root node level merge.
-	
-	
-
-
-	
 	private class InnerGraph
 	{
 		Vector<Point> m_Points;
@@ -170,6 +168,7 @@ public class Graph implements Serializable
 		private int m_parentId;
 		private int[] m_child;
 		Vector<Integer> m_labeledIndices;
+		private boolean m_hasBeenMerged;
 		InnerGraph(int p_parentId, int p_id, int p_child1, int p_child2)
 		{
 			m_id = p_id;
@@ -177,6 +176,7 @@ public class Graph implements Serializable
 			m_child = new int[2];
 			m_child[0] = p_child1;
 			m_child[1] = p_child2;
+			m_hasBeenMerged = false;
 		}
 		int GetId()
 		{
@@ -193,6 +193,14 @@ public class Graph implements Serializable
 		boolean HasLabeled()
 		{
 			return !m_labeledIndices.isEmpty();
+		}
+		boolean HasBeenMerge()
+		{
+			return m_hasBeenMerged;
+		}
+		void SetHasBeenMerged(boolean p_merged)
+		{
+			m_hasBeenMerged = p_merged;
 		}
 		public void Init()
 		{
@@ -223,7 +231,7 @@ public class Graph implements Serializable
 			}
 			
 		}
-		
+		//TODO Fix something that makes the graph only do things on the one with labels 
 		public void MergeClusters(InnerGraph p_graph1, InnerGraph p_graph2) throws Exception
 		{					
 			System.out.println("Merging clusters");
@@ -300,10 +308,13 @@ public class Graph implements Serializable
 				m_Points.elementAt(i).m_edges.add(edge2);
 			}
 		}
+		//TODO EHM so...yea...fix that merge thing
 		public double CalculateHighestUncertaintyAndPropagateLabels(Instance p_outInstance)
 		{
 			if(m_labeledIndices.size() == 0)
 				return -1;
+			
+			
 			double retVal = 0;
 			double localShortest = 0, totalDist = 0, label = 0;
 			for(int i = 0; i < m_Points.size(); i++)
@@ -314,8 +325,6 @@ public class Graph implements Serializable
 				if(m_Points.elementAt(i).m_labeled)
 					continue;
 				//Calculate distance to each label
-				
-				//TODO No need to iterate over each label, just return the äntire arräy yå
 				double[] distances = Dijkstra(i);
 				for(int j = 0; j < m_labeledIndices.size(); j++)
 				{
@@ -338,11 +347,6 @@ public class Graph implements Serializable
 					// if 0 we only have 1 labeled and then we will simply apply it directly
 					percentage = (percentage == 0) ? 1 : percentage; 
 					label +=  percentage * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
-					if(Double.isNaN(label))
-					{
-						int m = 0;
-						m++;
-					}
 				}
 				//WHY CAN'T YOU SET A BLOODY CLASS VALUE TO AN INSTANCE GRRRRRR
 				//m_Points.elementAt(i).m_instance.setClassValue(label);
