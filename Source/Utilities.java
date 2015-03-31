@@ -3,6 +3,8 @@ import java.math.BigInteger;
 
 
 import weka.core.Instances;
+import weka.core.matrix.Matrix;
+import weka.core.matrix.SingularValueDecomposition;
 
 
 public class Utilities
@@ -77,6 +79,32 @@ public class Utilities
 			Scale(p_destination, 1 );
 		}
 		
+	}
+	
+	static public double[][] CalculateInverse(double[][] p_matrix)
+	{
+		//Deep copy matrix
+		Matrix matrix = Matrix.constructWithCopy(p_matrix);
+		SingularValueDecomposition SVD = new SingularValueDecomposition(matrix);
+		Matrix S,V,U;
+		S = SVD.getS();
+		V = SVD.getV();
+		U = SVD.getU();
+		//calculate tolerance
+		double tolerance = Utilities.g_machineEpsilion * Math.max(S.getColumnDimension(), S.getRowDimension()) * S.norm2();
+		
+		//Pseudo invert S
+		for(int i = 0; i < S.getColumnDimension(); i++)
+			if(S.get(i, i) >= tolerance) //tolerance should remove floating point errors on variables smaller than a really small value
+				S.set(i, i, 1/S.get(i, i));
+			else
+				S.set(i, i, 0);
+		S = S.transpose();
+		//m^+ = V * S^+ * U'
+		matrix = V.times(S);
+		matrix = matrix.times(U.transpose());
+		
+		return matrix.getArray();
 	}
 	
 	static public double CalculateDeterminant(double[][] p_matrix)

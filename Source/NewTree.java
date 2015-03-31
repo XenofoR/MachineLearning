@@ -10,7 +10,6 @@ import java.util.Vector;
 import java.lang.Math;
 import java.math.BigInteger;
 import java.lang.reflect.Array;
-
 import javax.rmi.CORBA.Util;
 import javax.swing.DebugGraphics;
 import javax.xml.crypto.KeySelector.Purpose;
@@ -1103,7 +1102,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			for(int i = 0; i < m; i++)
 					A[i] = p_instances.get(i).toDoubleArray();
 			
-			Matrix Amatrix = new Matrix(A);
+			Matrix Amatrix = Matrix.constructWithCopy(A);
 			
 			Matrix M = Amatrix.transpose().times(Amatrix);
 			
@@ -1122,8 +1121,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			double[][] J = new double[V.length][V[0].length];
 			
-			//TODO look into why Criminisi skips first two values
-			for(int i = 0; i < J.length; i++)
+			for(int i = 1; i < J.length; i++)
 				for(int j = 0; j < J[0].length; j++)
 					J[i][j] = -1 * V[i][j]*V[i][j] / eigValyueM[j];
 			
@@ -1141,12 +1139,41 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			}
 			
 			Matrix conditionalCov = null;
-			Matrix matrixJ = new Matrix(J);
-			Matrix matrixS = new Matrix(S);
+			Matrix matrixJ = Matrix.constructWithCopy(J);
+			Matrix matrixS = Matrix.constructWithCopy(S);
 
 			conditionalCov = matrixJ.times(matrixS).times(matrixJ);
+
+			double[][] nablaF = new double[n][n];
 			
-			return ret;
+			for(int i = 0; i < n; i++)
+				for(int j = 0; j < n; j++)
+				{
+					if(i == j)
+					{
+						nablaF[i][j] = -1/meanLine[n-1];
+					}
+					else if(j == n-1)
+					{
+						nablaF[i][j] = meanLine[i]/Math.pow(meanLine[j], 2);
+					}
+					else
+					{
+						nablaF[i][j] = 0;
+					}
+				}
+
+			
+			Matrix nablaFmatrix = Matrix.constructWithCopy(nablaF);
+			
+			conditionalCov = nablaFmatrix.times(conditionalCov).times(nablaFmatrix.transpose());
+			
+			double det = Utilities.CalculateDeterminant(conditionalCov.getArray());
+			if(det <= 0)
+				return 0.0;
+			
+			double infogain = Math.log(Math.abs(det))/Math.log(2);;
+			return infogain;
 		}
 		
 		/*private double ConditionalCovariance(Instances p_instances) throws Exception
