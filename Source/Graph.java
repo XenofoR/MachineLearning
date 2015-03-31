@@ -1,14 +1,12 @@
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Vector;
+
+
 
 
 import weka.core.Instance;
@@ -87,6 +85,7 @@ public class Graph implements Serializable
 		if(m_forceRootMerge)
 			return UncertaintyCompleteGraph(p_outVal);
 		Instance retInst = null;
+		double val = 0;
 		for(int i = 0; i < m_graphs.size(); i++)
 		{
 			if(m_graphs.elementAt(i).GetChildren()[0] != -1) // Non-leaf
@@ -94,9 +93,9 @@ public class Graph implements Serializable
 			if(m_graphs.elementAt(i).HasBeenMerged())
 				continue;
 			Instance temp = null;
-			double val = 0;
+			
 			if(m_graphs.elementAt(i).HasLabeled())
-				retInst = m_graphs.elementAt(i).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
+				temp = m_graphs.elementAt(i).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
 			else
 			{
 				Debugger.DebugPrint("No labeled, going into merge mode", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
@@ -104,18 +103,17 @@ public class Graph implements Serializable
 				int index = MergeChildren(parent);
 				index = FindIndexFromId(index);
 				//parent = MergeChildren(index);
-				retInst = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
-				
+				temp = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
 			}
-			if(val > p_outVal[0])
+			if(val < p_outVal[0])
 			{
 				retInst = temp;
-				p_outVal[0] = val;
+				val = p_outVal[0];
 			}
 		
 			Debugger.DebugPrint("Checked graph: " + i + "of: " + m_graphs.size(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		}
-		
+		p_outVal[0] = val;
 		return retInst;
 	}
 	
@@ -244,11 +242,10 @@ public class Graph implements Serializable
 		//TODO Fix something that makes the graph only do things on the one with labels 
 		public void MergeClusters(InnerGraph p_graph1, InnerGraph p_graph2) throws Exception
 		{					
-			Debugger.DebugPrint("Merging clusters", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			Debugger.DebugPrint("Merging clusters " + p_graph1.GetId() + " " + p_graph2.GetId(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			for(int i = 0; i < p_graph1.m_Points.size(); i++)
 			{
 				Point temp = p_graph1.m_Points.elementAt(i).Clone();
-				temp.m_edges.clear();
 				if(temp.m_labeled)
 					m_labeledIndices.add(m_Points.size());
 				
@@ -258,15 +255,12 @@ public class Graph implements Serializable
 			for(int i = 0; i < p_graph2.m_Points.size(); i++)
 			{
 				Point temp = p_graph2.m_Points.elementAt(i).Clone();
-				temp.m_edges.clear();
 				if(temp.m_labeled)
 					m_labeledIndices.add(m_Points.size());
 				
 				ConstructEdges(temp);
 				m_Points.add(temp);
 			}
-			for(int i = 0; i < m_Points.size(); i++)
-				m_Points.elementAt(i).m_edges.clear();
 			Debugger.DebugPrint("Merge Complete", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			
 		}
@@ -304,7 +298,8 @@ public class Graph implements Serializable
 				mahalanobis +=  CalculateMahalanobisDistance(currPointArray, pointArray, m_Points.elementAt(i).m_covarianceIndex);
 				mahalanobis /= 2;
 				
-				
+				if(mahalanobis > 10000)
+					Debugger.DebugPrint("Really high distance for edge detected: " + mahalanobis, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				
 				edge.m_weight = mahalanobis;
 				
