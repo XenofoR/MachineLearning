@@ -670,7 +670,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 		      // System.err.println("Total weight " + totalWeight);
 		      // double sum = Utils.sum(classProbs);
-		      if ((p_totalWeight < 2 * m_MinNum && p_unlabeledData.numInstances() < 2) ||
+		      if ((p_totalWeight < 2 * m_MinNum && p_unlabeledData.numInstances() < 3) ||
 
 		        // Numeric case
 		        (p_labeledData.numInstances() > 1 && (priorVar) / p_totalWeight < minVariance)

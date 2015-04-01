@@ -344,14 +344,15 @@ public class Graph implements Serializable
 				{
 					retVal = m_Points.elementAt(i).m_instance;
 					out = localShortestLongest;
-					//TODO JESUS FUCKING CHRIST JAVA WHY ARE YOU SUCH A FUCKING JOKE LANGUAGE
+					//TODO JESUS FUCKING CHRIST JAVA WHY ARE YOU SUCH A FUCKING JOKE LANGUAGE					
 				}
+				double test = 0;
 				//Calculate propagated label for instance
 				for(int j = 0; j < distances.length; j++)
 				{
-					double percentage = 1.0 - (distances[j] / totalDist);
+					double percentage =  Math.abs((distances[j] / totalDist) - 1)/(distances.length-1);	
 					// if 0 we only have 1 labeled and then we will simply apply it directly
-					percentage = (percentage == 0) ? 1 : percentage; 
+					percentage = (percentage == 0  || Double.isNaN(percentage)) ? 1 : percentage; 
 					label +=  percentage * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
 				}
 				//WHY CAN'T YOU SET A BLOODY CLASS VALUE TO AN INSTANCE GRRRRRR
@@ -418,7 +419,6 @@ public class Graph implements Serializable
 			U = SVD.getU();
 			//calculate tolerance
 			double tolerance = Utilities.g_machineEpsilion * Math.max(S.getColumnDimension(), S.getRowDimension()) * S.norm2();
-			int etest = 23;
 			//Pseudo invert S
 			for(int i = 0; i < S.getColumnDimension(); i++)
 				if(S.get(i, i) >= tolerance) //tolerance should remove floating point errors on variables smaller than a really small value
@@ -447,7 +447,7 @@ public class Graph implements Serializable
 				retVal += tempVec[i] * distanceVec[i]; 
 			}
 			if(retVal < 0 || Double.isInfinite(retVal) || Double.isNaN(retVal))
-				System.out.println("HOUSTON WE HAVE A PROBLEM");
+				System.out.println("Edge distance is infinite, negative or NaN, most likely caused by zero covariance matrix");
 			return retVal;
 		}
 		//==================INTERNAL STRUCTS=======================================
