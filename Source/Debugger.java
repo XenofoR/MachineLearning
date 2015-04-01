@@ -57,11 +57,11 @@ public  class Debugger implements Serializable
 		if((p_debugType == DebugType.FILE && m_debugFilePath == null) ||  m_globalDebugLevel == g_debug_NONE)
 			return false;
 		String stacktrace = "";
-		for(int i = 0; i < Thread.currentThread().getStackTrace().length; i++)
-		{
-			StackTraceElement temp = Thread.currentThread().getStackTrace()[i];
-			stacktrace += "\t" +temp.getFileName()+":"+temp.getMethodName()+":"+temp.getLineNumber();
-		}
+	//	for(int i = 0; i < Thread.currentThread().getStackTrace().length; i++)
+	//	{
+	//		StackTraceElement temp = Thread.currentThread().getStackTrace()[i];
+	//		stacktrace += "\t" +temp.getFileName()+":"+temp.getMethodName()+":"+temp.getLineNumber();
+	//	}
 		
 		if(p_debugType == DebugType.CONSOLE || p_debugType == DebugType.BOTH)
 		{

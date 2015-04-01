@@ -319,8 +319,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    System.out.println("Tree: " + Utilities.g_numTrees  + " Finished!\n");
 
 	    //Will become the worst instance, aka the instance that should be sent to active learning
-	    Instance ins = null;
-	    double worstDist = m_graph.CalculateHighestUncertaintyAndPropagateLabels(ins);
+	    //Instance ins = null;
+	    double[] dist = {0};
+	    Instance ins = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
 	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
 	    System.out.println("Average error rate of transduction: " + m_graph.GetAverageErrorRate());
 	    
@@ -776,17 +777,16 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        int[] child = new int[2];
 		        child[0] = -1;
 		        child[1] = -1;
-		        System.out.println("=====ID: " + m_id + " ======");
+		        Debugger.DebugPrint("=====ID: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		        for (int i = 0; i < bestDists.length; i++) 
 		        {
 		        	child[i] = ++m_counter;
 		          m_Successors[i] = new InnerTree();
 		          m_Successors[i].buildTree(subsets[i], unlabeledSubset[i], bestDists[i], p_attIndicesWindow,
 		            p_labeledData.classAttribute().isNominal() ? 0 : attTotalSubsetWeights[i],
-		            p_random, p_depth + 1, minVariance, m_id, child[i]);
-		          	 
+		            p_random, p_depth + 1, minVariance, m_id, child[i]);		          	 
 		        }
-		        System.out.println("=====END: " + m_id + " ======");
+		        Debugger.DebugPrint("=====END: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		        m_graph.AddParent(m_id, p_parentId, child[0], child[1]);
 		        // If all successors are non-empty, we don't need to store the class
 		        // distribution

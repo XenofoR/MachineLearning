@@ -75,7 +75,7 @@ public class Utilities
 		}
 		else
 		{
-			Debugger.DebugPrint("CalculateCovarianceMatrix only recieved 1 instance  results will be a zero matrix", Debugger.g_debug_HIGH, Debugger.DebugType.CONSOLE);
+			Debugger.DebugPrint("CalculateCovarianceMatrix only recieved 1 instance  results will be a zero matrix", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			Scale(p_destination, 1 );
 		}
 		
