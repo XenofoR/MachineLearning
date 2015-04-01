@@ -10,7 +10,6 @@ import java.util.Vector;
 import java.lang.Math;
 import java.math.BigInteger;
 import java.lang.reflect.Array;
-
 import javax.rmi.CORBA.Util;
 import javax.swing.DebugGraphics;
 import javax.xml.crypto.KeySelector.Purpose;
@@ -39,7 +38,9 @@ import weka.core.Randomizable;
 import weka.core.RevisionUtils;
 import weka.core.Utils;
 import weka.core.WeightedInstancesHandler;
-
+import weka.core.matrix.EigenvalueDecomposition;
+import weka.core.matrix.Matrix;
+import weka.core.matrix.SingularValueDecomposition;
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomTree.java
 /*
  Changes made:
@@ -694,7 +695,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Instances instances = new Instances(p_labeledData);
 		        instances.addAll(p_unlabeledData);
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
-		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center);
+		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center, true);
 
 
 		        m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
@@ -817,7 +818,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		    	  Instances instances = new Instances(p_labeledData);
 			      instances.addAll(p_unlabeledData);
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
-			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix, m_center);
+			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix, m_center, true);
 			      
 			      if(Utilities.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
@@ -961,10 +962,13 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          if (inst.value(att) > currSplit) {
 			        	double k = variance(currSums, currSumSquared,
 					              currSumOfWeights);
+			        	double m = ConditionalCovariance(splitData(p_labeledData, inst.value(att), att));
 			        	double c = (m_alpha * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
-			            currVal = k + c;
-			            k -= c;
-			            Debugger.DebugPrint("Diff between variance and covariane? = " + k, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			            currVal = m + c;
+			            if(currVal < 0)
+			            	continue;
+			            m -= c;
+			            Debugger.DebugPrint("Diff between variance and covariane? = " + m, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			            if (currVal < bestVal) {
 			              bestVal = currVal;
 			              splitPoint = (inst.value(att) + currSplit) / 2.0;
@@ -1039,9 +1043,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        }
 			      }
 			      // Compute variance gain
-			      double priorVar = singleVariance(totalSum, totalSumSquared,
+			     /* double priorVar = singleVariance(totalSum, totalSumSquared,
 			        totalSumOfWeights);
-			      double var = variance(sums, sumSquared, sumOfWeights);
+			      double var = variance(sums, sumSquared, sumOfWeights);*/
+			      
+			      double priorVar = SingleConditionalCovariance(p_labeledData);
+			      double var = ConditionalCovariance(splitData(p_labeledData, splitPoint, att));
 			      
 			      //Add cluster gain over the parent to the final gain calculations.
 			      Instances clusterInstances = new Instances(p_labeledData);
@@ -1078,9 +1085,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		
 		private double SingleCovariance(Instances p_instances) throws Exception
 		{
-
 			double[][] covarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
-			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix, m_center);
+			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix, m_center, true);
 			
 			double det = Utilities.CalculateDeterminant(covarianceMatrix);
 			Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
@@ -1092,6 +1098,106 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			return ret;
 		}
 		
+		private double SingleConditionalCovariance(Instances p_instances) throws Exception
+		{
+			int m = p_instances.numInstances();
+			int n = p_instances.numAttributes();
+			
+			if(m == 0) //No gain if no instances
+				return 0.0;
+			
+			double[][] A = new double[m][n];
+			for(int i = 0; i < m; i++)
+					A[i] = p_instances.get(i).toDoubleArray();
+			
+			Matrix Amatrix = Matrix.constructWithCopy(A);
+			
+			Matrix M = Amatrix.transpose().times(Amatrix);
+			
+			//Fetch the eigen values and eigen vectors from the M matrix, this is all we need from it
+			EigenvalueDecomposition eigM = M.eig();
+			
+			double[] eigValue = eigM.getRealEigenvalues();
+			double[][] V = eigM.getV().transpose().getArray();
+			double minEigenValue = Double.MAX_VALUE;
+			double[] meanLine = new double[n];
+			for(int i = 0; i < eigValue.length; i++)
+				if(eigValue[i] < minEigenValue) //The vector with the smallest eigen value represents the optimal line solution
+				{
+					minEigenValue = eigValue[i];
+					meanLine = V[i];
+				}
+			
+			double[][] J = new double[V.length][V[0].length];
+			
+			//Construct a jacobian matrix as per Criminisi's definition
+			for(int i = 1; i < J.length; i++)
+				for(int j = 0; j < J[0].length; j++)
+					J[i][j] = -1 * V[i][j]*V[i][j] / eigValue[j];
+			
+			
+			double[][] cov = new double[n][n];
+			Utilities.CalculateCovarianceMatrix(p_instances, cov, null, false);
+			double[][] S = new double[V.length][V[0].length];
+			double[] rowA = new double[n];
+			for(int k = 0; k < m; k++)
+			{
+				rowA = A[k];
+				for(int i = 0; i < J.length; i++)
+					for(int j = 0; j < J[0].length; j++)
+						S[i][j] += rowA[j]*(rowA[j]*meanLine[j])*(cov[i][j]*meanLine[j]);
+			}
+			
+			Matrix conditionalCov = null;
+			Matrix matrixJ = Matrix.constructWithCopy(J);
+			Matrix matrixS = Matrix.constructWithCopy(S);
+
+			conditionalCov = matrixJ.times(matrixS).times(matrixJ);
+
+			double[][] nablaF = new double[n][n];
+			
+			for(int i = 0; i < n; i++)
+				for(int j = 0; j < n; j++)
+				{
+					if(i == j)
+					{
+						nablaF[i][j] = -1/meanLine[n-1];
+					}
+					else if(j == n-1)
+					{
+						nablaF[i][j] = meanLine[i]/Math.pow(meanLine[j], 2);
+					}
+					else
+					{
+						nablaF[i][j] = 0;
+					}
+				}
+
+			
+			Matrix nablaFmatrix = Matrix.constructWithCopy(nablaF);
+			
+			conditionalCov = nablaFmatrix.times(conditionalCov).times(nablaFmatrix.transpose());
+			
+			double det = Utilities.CalculateDeterminant(conditionalCov.getArray());
+			if(det <= 0)
+				return 0.0;
+			
+			double infogain = Math.log(Math.abs(det))/Math.log(2);;
+			return infogain;
+		}
+		
+		private double ConditionalCovariance(Instances[] p_instances) throws Exception
+		{
+			double hejhoppiklingonskogen = 0.0, singleResult = 0.0;
+			for(int i = 0; i < 2; i++)
+			{
+				singleResult =  SingleConditionalCovariance(p_instances[i]);			
+				hejhoppiklingonskogen += singleResult;
+				Debugger.DebugPrint("Covariance value= " + hejhoppiklingonskogen, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			}
+			Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			return hejhoppiklingonskogen;
+		}
 		
 		protected Instances[] splitData(Instances p_data, double p_splitPoint, int p_attr) throws Exception {
 
