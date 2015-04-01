@@ -321,7 +321,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    //Will become the worst instance, aka the instance that should be sent to active learning
 	    //Instance ins = null;
 	    double[] dist = {0};
-	    Instance ins = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
+	   // Instance ins = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
 	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
 	    System.out.println("Average error rate of transduction: " + m_graph.GetAverageErrorRate());
 	    
@@ -698,7 +698,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center, true);
 
 
-		        m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
+		     //   m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
 
 		        
 		        if(Utilities.g_clusterAnalysis)
@@ -787,7 +787,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		            p_random, p_depth + 1, minVariance, m_id, child[i]);		          	 
 		        }
 		        Debugger.DebugPrint("=====END: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-		        m_graph.AddParent(m_id, p_parentId, child[0], child[1]);
+		     //   m_graph.AddParent(m_id, p_parentId, child[0], child[1]);
 		        // If all successors are non-empty, we don't need to store the class
 		        // distribution
 		        boolean emptySuccessor = false;
@@ -824,7 +824,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 			      
 
-			      m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
+			     // m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
 
 			      
 				  m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
@@ -1092,8 +1092,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			det = Math.abs(det);
 			
-			if(det <= 0)
-				return 0.0;
+			if(det == 0)
+				return -Double.MAX_VALUE;
 			double ret = (Math.log(det)/Math.log(2));
 			return ret;
 		}
@@ -1178,11 +1178,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			conditionalCov = nablaFmatrix.times(conditionalCov).times(nablaFmatrix.transpose());
 			
-			double det = Utilities.CalculateDeterminant(conditionalCov.getArray());
-			if(det <= 0)
-				return 0.0;
+			double infogain = 0.0;
+			for(int i = 0; i < m; i++)
+			{
+				int[] currentPoint = new int[1];
+				currentPoint[0] = i;
+				double ret = Math.sqrt(Amatrix.getMatrix(currentPoint, 0, n-1).times(conditionalCov).times(Amatrix.getMatrix(currentPoint, 0, n-1).transpose()).norm2());
+				ret = Math.log(ret)/Math.log(2);
+				infogain += ret;
+			}
 			
-			double infogain = Math.log(Math.abs(det))/Math.log(2);;
+			
 			return infogain;
 		}
 		
