@@ -636,7 +636,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			m_id = p_myId;
 
 			
-			m_alpha = (double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances());
+			m_alpha = 10;//(double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances());
 
 			m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
@@ -1092,8 +1092,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			det = Math.abs(det);
 			
-			if(det <= 0)
-				return 0.0;
+			if(det == 0)
+				return -Double.MAX_VALUE;
 			double ret = (Math.log(det)/Math.log(2));
 			return ret;
 		}
@@ -1178,11 +1178,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			conditionalCov = nablaFmatrix.times(conditionalCov).times(nablaFmatrix.transpose());
 			
-			double det = Utilities.CalculateDeterminant(conditionalCov.getArray());
-			if(det <= 0)
-				return 0.0;
+			double infogain = 0.0;
+			for(int i = 0; i < m; i++)
+			{
+				int[] currentPoint = new int[1];
+				currentPoint[0] = i;
+				double ret = Math.sqrt(Amatrix.getMatrix(currentPoint, 0, n-1).times(conditionalCov).times(Amatrix.getMatrix(currentPoint, 0, n-1).transpose()).norm2());
+				ret = Math.log(ret)/Math.log(2);
+				infogain += ret;
+			}
 			
-			double infogain = Math.log(Math.abs(det))/Math.log(2);;
+			
 			return infogain;
 		}
 		

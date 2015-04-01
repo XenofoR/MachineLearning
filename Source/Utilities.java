@@ -44,7 +44,7 @@ public class Utilities
 	//http://www.cs.otago.ac.nz/cosc453/student_tutorials/principal_components.pdf
 	static public void CalculateCovarianceMatrix(Instances p_instances, double[][] p_destination, double[] p_meanDestination, boolean p_unlabeled)
 	{
-		
+			
 		double[] mean = Mean(p_instances, p_unlabeled);
 		if(p_meanDestination != null)
 			for(int  i = 0; i < mean.length; i++)
@@ -75,6 +75,8 @@ public class Utilities
 		}
 		else
 		{
+			for(int i = 0; i < p_destination.length;i++)
+				p_destination[i][i] = 1;
 			Debugger.DebugPrint("CalculateCovarianceMatrix only recieved 1 instance  results will be a zero matrix", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			Scale(p_destination, 1 );
 		}
