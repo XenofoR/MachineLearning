@@ -636,7 +636,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			m_id = p_myId;
 
 			
-			m_alpha = (double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances());
+			m_alpha = 10;//(double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances());
 
 			m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
