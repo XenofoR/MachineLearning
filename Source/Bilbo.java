@@ -608,7 +608,7 @@ public class Bilbo
 	((Randomizable) m_Classifiers[j]).setSeed(m_random.nextInt());
       }
     }
-    
+    //Insert oracle loop here TODO
     buildClassifiers();
     
     // calc OOB error?

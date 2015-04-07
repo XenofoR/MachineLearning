@@ -58,6 +58,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	private Plotter m_plotter;
 	private Graph m_graph;
 	private double[][] m_leafDistanceMatrix;
+	private Instance m_worstInstance;
+	private double m_worstDistance;
 	private InstanceComparator m_instanceComp;
 	int m_counter = 0;
 	InnerTree m_Tree;
@@ -321,13 +323,25 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    //Will become the worst instance, aka the instance that should be sent to active learning
 	    //Instance ins = null;
 	    double[] dist = {0};
-	    Instance ins = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
+	    m_worstInstance = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
+	    m_worstDistance = dist[0];
 	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
 	    System.out.println("Average error rate of transduction: " + m_graph.GetAverageErrorRate());
 	    
 	  }
 	
-	
+	public Instance GetWorstInstance()
+	{
+		return m_worstInstance;
+	}
+	public double GetWorstDistance()
+	{
+		return m_worstDistance;
+	}
+	public void GetTransductedInstances(Instances p_outInstances)
+	{
+		m_graph.GetInstances(p_outInstances);
+	}
 	public String toString() {
 
 	    // only ZeroR model?

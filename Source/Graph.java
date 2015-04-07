@@ -35,13 +35,14 @@ public class Graph implements Serializable
 		m_idToIndexMap = new Vector<Utilities.Pair<Integer, Integer>>();
 	}
 	
-	/*public void GetInstances(Instances p_retInstances)
+	public void GetInstances(Instances p_outInstances)
 	{
-		for(int i = 0; i < m_Points.size(); i++)
-			p_retInstances.add(m_Points.elementAt(i).m_instance);
-		
+		for(int i = 0; i < m_graphs.size(); i++)
+		{
+			if((m_graphs.elementAt(i).HasBeenMerged() == false) && m_graphs.elementAt(i).HasLabeled())
+				m_graphs.elementAt(i).GetInstances(p_outInstances);
+		}
 	}
-	*/
 	public double GetAverageErrorRate()
 	{
 		double retVal = 0;
@@ -197,6 +198,11 @@ public class Graph implements Serializable
 		int[] GetChildren()
 		{
 			return m_child;
+		}
+		void GetInstances(Instances p_outInstances)
+		{
+			for(int i = 0; i < m_Points.size(); i++)
+				p_outInstances.add(m_Points.elementAt(i).m_instance);
 		}
 		boolean HasLabeled()
 		{
