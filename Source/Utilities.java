@@ -75,8 +75,8 @@ public class Utilities
 		}
 		else
 		{
-			for(int i = 0; i < p_destination.length;i++)
-				p_destination[i][i] = 1;
+			//for(int i = 0; i < p_destination.length;i++)
+				//p_destination[i][i] = 1;
 			Debugger.DebugPrint("CalculateCovarianceMatrix only recieved 1 instance  results will be a zero matrix", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			Scale(p_destination, 1 );
 		}

@@ -965,7 +965,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	double m = ConditionalCovariance(splitData(p_labeledData, inst.value(att), att));
 			        	double c = (m_alpha * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
 			            currVal = m + c;
-			            if(currVal < 0)
+			            if(currVal == Double.NaN)
 			            	continue;
 			            m -= c;
 			            Debugger.DebugPrint("Diff between variance and covariane? = " + m, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
@@ -1093,7 +1093,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			det = Math.abs(det);
 			
 			if(det == 0)
-				return -Double.MAX_VALUE;
+				return Double.NaN;
 			double ret = (Math.log(det)/Math.log(2));
 			return ret;
 		}
@@ -1104,7 +1104,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			int n = p_instances.numAttributes();
 			
 			if(m == 0) //No gain if no instances
-				return 0.0;
+				return Double.NaN;
 			
 			double[][] A = new double[m][n];
 			for(int i = 0; i < m; i++)
