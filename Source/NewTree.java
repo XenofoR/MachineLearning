@@ -330,6 +330,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    
 	  }
 	
+	public void DoInduction(Instances p_instances) throws Exception
+	{
+		m_Tree.DoInduction(p_instances);
+	}
+	
 	public Instance GetWorstInstance()
 	{
 		return m_worstInstance;
@@ -409,9 +414,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	{
 		//Variables used for cluster analysis and semi-supervision
 		double[][] m_covarianceMatrix = null;
+		double[][] m_conditionalMatrix = null;
 		double[][] m_correlationMatrix = null;
 		Instances m_FPInstances = null; 
 		double[] m_center = null;
+		double m_meanRegressionValue = 0.0;
 		double m_purity;
 		double m_varianceDiff;
 		double m_classVariance;
@@ -643,6 +650,21 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        return returnedDist;
 		      }
 		    }
+		
+		protected void DoInduction(Instances p_instances) throws Exception
+		{
+			if(m_Attribute == -1)
+			{
+				SingleConditionalCovariance(p_instances);
+				m_meanRegressionValue = p_instances.meanOrMode(p_instances.classAttribute());
+			}
+			else
+			{
+				Instances[] dataSplit = splitData(p_instances);
+				m_Successors[0].DoInduction(dataSplit[0]);
+				m_Successors[1].DoInduction(dataSplit[1]);
+			}
+		}
 		
 		protected void buildTree(Instances p_labeledData, Instances p_unlabeledData, double[] p_classProbs,
 		      int[] p_attIndicesWindow, double p_totalWeight, Random p_random, int p_depth,
@@ -1191,6 +1213,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			Matrix nablaFmatrix = Matrix.constructWithCopy(nablaF);
 			
 			conditionalCov = nablaFmatrix.times(conditionalCov).times(nablaFmatrix.transpose());
+			m_conditionalMatrix = conditionalCov.getArray();
+			m_center = meanLine;
 			
 			double infogain = 0.0;
 			for(int i = 0; i < m; i++)
