@@ -622,7 +622,7 @@ public class Bilbo
 	{
 		inst.clear();
     	((NewTree)m_Classifiers[i]).GetTransductedInstances(inst);
-    	//((NewTree)m_Classifiers[i]).DoInduction(Inst);¨
+    	((NewTree)m_Classifiers[i]).DoInduction(inst);
     	// Ehm, do something boyski
 	}
     // calc OOB error?
