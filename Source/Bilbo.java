@@ -609,8 +609,22 @@ public class Bilbo
       }
     }
     //Insert oracle loop here TODO
-    buildClassifiers();
+
+	
+    	
+
+    	
     
+    
+    buildClassifiers();
+    Instances inst = new Instances(m_data);
+	for(int i = 0 ; i < m_Classifiers.length; i++)
+	{
+		inst.clear();
+    	((NewTree)m_Classifiers[i]).GetTransductedInstances(inst);
+    	//((NewTree)m_Classifiers[i]).DoInduction(Inst);¨
+    	// Ehm, do something boyski
+	}
     // calc OOB error?
     if (getCalcOutOfBag()) {
       double outOfBagCount = 0.0;
