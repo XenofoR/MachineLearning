@@ -1,4 +1,4 @@
-MaxDepth=10NumTrees=1NumFeatures=0NumTests=1InputPath=J:/master_thesis_work/MachineLearning/Datasets/OutputPath=J:/master_thesis_work/MachineLearning/Results/Files=CCPP.csvTestType=1DataSize=0.1SplitLevel=0.1
+MaxDepth=10NumTrees=1NumFeatures=0NumTests=10InputPath=J:/master_thesis_work/MachineLearning/Datasets/OutputPath=J:/master_thesis_work/MachineLearning/Results/Files=CCPP.csvTestType=1DataSize=0.1SplitLevel=1.0
 Plot=falseClusterAnalysis=true
 DebugLevel=LOW
 

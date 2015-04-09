@@ -645,6 +645,7 @@ public class Bilbo
           if (m_inBag[j][i])
             continue;
           
+         
           if (numeric) {
             double pred = ((NewTree)m_Classifiers[j]).classifyInstance(m_data.instance(i));
             if (!Utils.isMissingValue(pred)) {
@@ -681,8 +682,8 @@ public class Bilbo
         if (!Utils.isMissingValue(vote) && !m_data.instance(i).classIsMissing()) {
           outOfBagCount += m_data.instance(i).weight();
           if (numeric) {
-            errorSum += StrictMath.abs(vote - m_data.instance(i).classValue()) 
-              * m_data.instance(i).weight();
+            errorSum += (StrictMath.abs(vote - m_data.instance(i).classValue()) 
+              * m_data.instance(i).weight()) / m_data.instance(i).classValue();
           }
           else {
             if (vote != m_data.instance(i).classValue())
