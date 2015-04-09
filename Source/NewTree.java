@@ -1140,7 +1140,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			int n = p_instances.numAttributes();
 			
 			if(m == 0) //No gain if no instances
-				return Double.NaN;
+				return 0.0;
 			
 			double[][] A = new double[m][n];
 			for(int i = 0; i < m; i++)
@@ -1283,10 +1283,30 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      // Return the subsets
 		      return subsets;
 		    }
+		
+		protected double classifyInstance(Instance p_instance)
+		{
+			if(m_Attribute == -1)
+			{
+				double returnValue = 0.0;
+				double realValue = p_instance.classValue();
+				p_instance.setClassValue(1);
+				for(int i = 0; i < p_instance.numAttributes(); i++)
+					returnValue += m_center[i] * p_instance.toDoubleArray()[i];
+				
+				return returnValue;
+			}
+			else
+			{
+				return m_Successors[p_instance.toDoubleArray()[m_Attribute] < m_SplitPoint ? 0 : 1].classifyInstance(p_instance);
+			}
+		}
+	}
+	public double classifyInstance(Instance p_instance)
+	{
+		
+		return m_Tree.classifyInstance(p_instance);
 	}
 	
-	
-	
-	 
 }
 	
