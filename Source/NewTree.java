@@ -1037,9 +1037,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				          currSumSquared[1] -= classValSquared;
 				          currSumOfWeights[1] -= inst.weight();
 			          }
+			          if(i % 50 == 0)
+			        	  System.gc();
 			        }
 
 			      // Compute weights
+			      
 			      props[0] = new double[sums.length];
 			      for (int k = 0; k < props[0].length; k++) {
 			        props[0][k] = sumOfWeights[k];

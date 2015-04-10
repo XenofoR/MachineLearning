@@ -233,45 +233,46 @@ public class Graph implements Serializable
 				m_labeledIndices.add(m_Points.size());
 				Point point = new Point(tempL.instance(i), true, index);
 				//Build edges
-				ConstructEdges(point);
+				ConstructEdges(point,0,0);
 				m_Points.add(point);	
 			}
 			for(int i = 0; i < tempU.size(); i++)
 			{
 				Point point = new Point(tempU.instance(i), false, index);
 				//Build edges
-				ConstructEdges(point);
+				ConstructEdges(point,0,0);
 				m_Points.add(point);	
 			}
 			
 		}
-		//TODO Fix something that makes the graph only do things on the one with labels 
 		public void MergeClusters(InnerGraph p_graph1, InnerGraph p_graph2) throws Exception
 		{					
 			Debugger.DebugPrint("Merging clusters " + p_graph1.GetId() + " " + p_graph2.GetId(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			int endOfFirstGraph = 0;
 			for(int i = 0; i < p_graph1.m_Points.size(); i++)
 			{
-				Point temp = p_graph1.m_Points.elementAt(i).Clone();
+				Point temp = p_graph1.m_Points.elementAt(i);
 				if(temp.m_labeled)
 					m_labeledIndices.add(m_Points.size());
-				
-				ConstructEdges(temp);
+				endOfFirstGraph++;
 				m_Points.add(temp);
 			}
+		
 			for(int i = 0; i < p_graph2.m_Points.size(); i++)
 			{
-				Point temp = p_graph2.m_Points.elementAt(i).Clone();
+				Point temp = p_graph2.m_Points.elementAt(i);
 				if(temp.m_labeled)
 					m_labeledIndices.add(m_Points.size());
-				
-				ConstructEdges(temp);
+				//We only need to construct the edges between clusters once,
+				//therefore we do it after the first cluster has been completed to save time.
+				ConstructEdges(temp,0,endOfFirstGraph);
 				m_Points.add(temp);
 			}
 			Debugger.DebugPrint("Merge Complete", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			
 		}
 		
-		private void ConstructEdges(Point p_currPoint)
+		private void ConstructEdges(Point p_currPoint, int p_startNode, int p_endNode)
 		{
 			double[] currPointArray, pointArray;
 			//Index that the current point will have after it's added
@@ -284,7 +285,8 @@ public class Graph implements Serializable
 				currPointArray[i] = p_currPoint.m_instance.toDoubleArray()[i];
 			
 			//since it is a complete graph we will need edges to all other points
-			for(int i = 0; i < m_Points.size(); i++)
+			int to = (p_endNode <= m_Points.size()) ? p_endNode : m_Points.size();
+			for(int i = p_startNode; i < to; i++)
 			{
 				//If labeled ignore last attribute since it is a label
 				pointArray =  new double [m_Points.elementAt(i).m_instance.numAttributes() -1];
@@ -305,12 +307,11 @@ public class Graph implements Serializable
 				mahalanobis /= 2;
 				
 				if(mahalanobis > 10000)
-					Debugger.DebugPrint("Really high distance for edge detected: " + mahalanobis, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+					Debugger.DebugPrint("Really high distance for edge detected: " + mahalanobis, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 				
 				edge.m_weight = mahalanobis;
 				
 				p_currPoint.m_edges.add(edge);
-				//TODO check so that this doesn't change the edge added to currpoint
 				Edge edge2 = new Edge();
 				edge2.m_pointIndex1 = i;
 				edge2.m_pointIndex2 = myIndex;
@@ -318,6 +319,8 @@ public class Graph implements Serializable
 				m_Points.elementAt(i).m_edges.add(edge2);
 			}
 		}
+		
+		
 		
 		public Instance CalculateHighestUncertaintyAndPropagateLabels(double[] p_outVal)
 		{
@@ -350,9 +353,8 @@ public class Graph implements Serializable
 				{
 					retVal = m_Points.elementAt(i).m_instance;
 					out = localShortestLongest;
-					//TODO JESUS FUCKING CHRIST JAVA WHY ARE YOU SUCH A FUCKING JOKE LANGUAGE					
+					//TODO Working with java is like working with a lava flow, with your hand.					
 				}
-				double test = 0;
 				//Calculate propagated label for instance
 				for(int j = 0; j < distances.length; j++)
 				{
@@ -364,7 +366,7 @@ public class Graph implements Serializable
 				//WHY CAN'T YOU SET A BLOODY CLASS VALUE TO AN INSTANCE GRRRRRR
 				int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
 				double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
-				m_Points.elementAt(i).m_errorPercentage = error;
+				m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
 				m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
 			}
 			p_outVal[0] = out;
@@ -407,7 +409,7 @@ public class Graph implements Serializable
 				retMat[i] = minDist[m_labeledIndices.elementAt(i)];
 			return retMat;
 		}
-		//TODO IF THE COVARIANCE MATRIX IS ZERO, I.e Only one instance in the cluster we will have huge issues.
+		
 		private double CalculateMahalanobisDistance(double[] p_first, double[] p_second, int p_covMatIndex)
 		{
 			double retVal = 0;
