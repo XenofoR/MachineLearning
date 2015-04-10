@@ -268,6 +268,7 @@ public class Graph implements Serializable
 				ConstructEdges(temp,0,endOfFirstGraph);
 				m_Points.add(temp);
 			}
+			System.gc();
 			Debugger.DebugPrint("Merge Complete", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			
 		}
