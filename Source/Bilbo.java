@@ -34,6 +34,7 @@ import weka.classifiers.RandomizableParallelIteratedSingleClassifierEnhancer;
 import weka.core.AdditionalMeasureProducer;
 import weka.core.Aggregateable;
 import weka.core.Instance;
+import weka.core.InstanceComparator;
 import weka.core.Instances;
 import weka.core.Option;
 import weka.core.Randomizable;
@@ -657,6 +658,79 @@ public class Bilbo
     m_data = null;
   }
 
+  public void SelectAtRandom(int p_numRan, Instances p_retInst)
+  {
+	  Random rand = new Random();
+	 
+	  for(int i = 0; i < p_numRan; i++)
+	  {
+		  int index = rand.nextInt(m_unlabeledData.size());
+		  p_retInst.add(m_unlabeledData.instance(index));
+	  }
+  }
+  public void SelectWorst(Instances p_retInst)
+  {
+	  double worstDist = 0;
+	  Instance inst = null;
+	  for(int i = 0; i < m_Classifiers.length; i++)
+	  {
+		  if(((NewTree) m_Classifiers[i]).GetWorstDistance() > worstDist)
+		  {
+			  worstDist = ((NewTree) m_Classifiers[i]).GetWorstDistance();
+			  inst = ((NewTree) m_Classifiers[i]).GetWorstInstance();
+		  }
+	  }
+	  p_retInst.add(inst);
+  }
+  
+  public void SelectEnsemble(int p_number, Instances p_retInst)
+  {
+	  //THIS DOES NOT WORK. DO NOT ATTEMPT TO USE IT OUR YOU WILL CRY
+	  Instances worst = new Instances(m_unlabeledData.instance(0).dataset());
+	  SelectAllWorst(worst);
+	  InstanceComparator comp = new InstanceComparator();
+	  worst.setClassIndex(-1);
+	  int[] counter = new int[worst.size()];
+	  for(int i = 0 ; i < worst.size(); i++)
+		  for(int j = i+1 ; j < worst.size(); j++)
+			  if(comp.compare(worst.instance(i), worst.instance(j)) == 0)
+			  {
+				  counter[i]++;
+				  worst.remove(j);
+				  j--;
+			  }
+	  int[] topChoices = new int[p_number];
+	  Arrays.fill(topChoices, -1);
+	  for(int i = 0; i < counter.length; i++ )
+	  {
+		  if(counter[i] == 0)
+	 /*Prison*/break;
+		  for(int j = 0; j < topChoices.length; j++)
+		  {
+			  if(counter[i] > counter[topChoices[j]] || topChoices[j] == -1)
+			  {
+				  int temp = topChoices[j];
+				  topChoices[j] = i;
+				  for(int Hi_kim = j+1; j < topChoices.length; j++)
+				  {
+					  int elTempinator = topChoices[Hi_kim];
+					  topChoices[Hi_kim] = temp;
+				  }
+				  
+			  }
+		  }
+	  }
+	 
+  }
+  
+  public void SelectAllWorst(Instances p_retInst)
+  {
+	  for(int i = 0; i < m_Classifiers.length; i++)
+	  {
+		  p_retInst.add(((NewTree) m_Classifiers[i]).GetWorstInstance());
+	  }
+  }
+  
   public void SetTargetErrorRate(double p_maxError)
   {
 	  m_MaxOutOfBagError = p_maxError;
