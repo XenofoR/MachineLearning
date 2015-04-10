@@ -245,6 +245,7 @@ public class Graph implements Serializable
 			}
 			
 		}
+		//TODO: FIX THE ISSUE WITH EDGE POINTS BEING THE SAME SINCE IN MERGES GRAPH 1's edges _WILL_ have the same indices as graph 2's
 		public void MergeClusters(InnerGraph p_graph1, InnerGraph p_graph2) throws Exception
 		{					
 			Debugger.DebugPrint("Merging clusters " + p_graph1.GetId() + " " + p_graph2.GetId(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
@@ -322,55 +323,60 @@ public class Graph implements Serializable
 		}
 		
 		
-		
+		//TODO SWAPARONI THE DJISKTRARONTI TESTS
 		public Instance CalculateHighestUncertaintyAndPropagateLabels(double[] p_outVal)
 		{
+			Debugger.DebugPrint("Starting path finding with " + (m_Points.size() - m_labeledIndices.size()) +" unlabeled and " + m_labeledIndices.size() + " lableled instance(s)", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			if(m_labeledIndices.size() == 0)
 				return null;
-			
-			
 			Instance retVal = null;;
 			double out = 0;
-			double localShortestLongest = 0, totalDist = 0, label = 0;
-			for(int i = 0; i < m_Points.size(); i++)
+			double[] totalDist = new double[m_Points.size()];
+			double[][] pointToLabeled = new double[m_Points.size()][m_labeledIndices.size()];
+			for(int i = 0; i < m_labeledIndices.size(); i++)
 			{
-				localShortestLongest = 0;
-				totalDist = 0;
-				label = 0;
-				if(m_Points.elementAt(i).m_labeled)
-					continue;
-				//Calculate distance to each label
-				double[] distances = Dijkstra(i);
-				for(int j = 0; j < m_labeledIndices.size(); j++)
-				{
-					totalDist += distances[j];
-					 if(distances[j] > localShortestLongest)
-					 {
-						 localShortestLongest = distances[j];
-					 }
-				}
-				//Save the longest shortest path
-				if(localShortestLongest > out)
-				{
-					retVal = m_Points.elementAt(i).m_instance;
-					out = localShortestLongest;
-					//TODO Working with java is like working with a lava flow, with your hand.					
-				}
-				//Calculate propagated label for instance
+				int index = m_labeledIndices.elementAt(i);
+				//Calculate from label to each point
+				double[] distances = Dijkstra(index);
 				for(int j = 0; j < distances.length; j++)
 				{
-					double percentage =  Math.abs((distances[j] / totalDist) - 1)/(distances.length-1);	
+					if(m_labeledIndices.contains(j))
+					{
+						pointToLabeled[j][i] =  -1;
+						totalDist[j] = -1;
+					}
+					else
+					{
+						pointToLabeled[j][i] =  distances[j];
+						totalDist[j] += distances[j];
+					}
+				}
+			}
+			for(int i = 0; i < pointToLabeled.length; i++)
+			{
+				if(m_labeledIndices.contains(i))
+					continue;
+				double label = 0;
+				for(int j = 0; j < m_labeledIndices.size(); j++)
+				{
+					if(pointToLabeled[i][j] > out)
+					{
+						retVal = m_Points.elementAt(i).m_instance;
+						out = pointToLabeled[i][j];
+						//TODO Working with java is like working with a lava flow, with your hand.					
+					}
+					double percentage =  Math.abs((pointToLabeled[i][j] / totalDist[j]) - 1)/(pointToLabeled[i].length-1);	
 					// if 0 we only have 1 labeled and then we will simply apply it directly
 					percentage = (percentage == 0  || Double.isNaN(percentage)) ? 1 : percentage; 
 					label +=  percentage * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
 				}
-				//WHY CAN'T YOU SET A BLOODY CLASS VALUE TO AN INSTANCE GRRRRRR
 				int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
 				double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
 				m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
 				m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
-			}
+			}			
 			p_outVal[0] = out;
+			Debugger.DebugPrint("Path Finding Complete", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			return retVal;
 		}
 		private double[] Dijkstra(int p_start)
@@ -405,10 +411,8 @@ public class Graph implements Serializable
 					}
 				}
 			}
-			double[] retMat = new double[m_labeledIndices.size()];
-			for(int i = 0; i < m_labeledIndices.size(); i++)
-				retMat[i] = minDist[m_labeledIndices.elementAt(i)];
-			return retMat;
+
+			return minDist;
 		}
 		
 		private double CalculateMahalanobisDistance(double[] p_first, double[] p_second, int p_covMatIndex)
