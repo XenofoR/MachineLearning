@@ -809,7 +809,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Instances[] unlabeledSubset = splitData(p_unlabeledData);
 		        m_Successors = new InnerTree[bestDists.length];
 		        double[] attTotalSubsetWeights = totalSubsetWeights[bestIndex];
-		        //TODO TELL THE GRAPH THAT IT NEEDS TO MAKE A "PARENT"
 		        int[] child = new int[2];
 		        child[0] = -1;
 		        child[1] = -1;
@@ -827,7 +826,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        // If all successors are non-empty, we don't need to store the class
 		        // distribution
 		        boolean emptySuccessor = false;
-		        int empty = 0;
 		        for (int i = 0; i < subsets.length; i++) {
 		          if (m_Successors[i].m_ClassDistribution == null) {
 		            emptySuccessor = true;		    
@@ -996,15 +994,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        		inst = p_unlabeledData.instance(i - indexOfFirstMissingValue);
 			        	
 			          if (inst.value(att) > currSplit) {
-			        	double k = variance(currSums, currSumSquared,
-					              currSumOfWeights);
 			        	double m = ConditionalCovariance(splitData(p_labeledData, inst.value(att), att));
 			        	double c = (m_alpha * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
 			            currVal = m + c;
 			            if(currVal == Double.NaN)
 			            	continue;
-			            m -= c;
-			            Debugger.DebugPrint("Diff between variance and covariane? = " + m, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			            if (currVal < bestVal) {
 			              bestVal = currVal;
 			              splitPoint = (inst.value(att) + currSplit) / 2.0;
@@ -1082,9 +1076,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        }
 			      }
 			      // Compute variance gain
-			     /* double priorVar = singleVariance(totalSum, totalSumSquared,
-			        totalSumOfWeights);
-			      double var = variance(sums, sumSquared, sumOfWeights);*/
 			      
 			      double priorVar = SingleConditionalCovariance(p_labeledData);
 			      double var = ConditionalCovariance(splitData(p_labeledData, splitPoint, att));
@@ -1296,7 +1287,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				p_instance.setClassValue(1);
 				for(int i = 0; i < p_instance.numAttributes(); i++)
 					returnValue += -(m_center[i]/m_center[m_center.length-1]) * p_instance.toDoubleArray()[i];
-
 				p_instance.setClassValue(realValue);
 				return returnValue;
 

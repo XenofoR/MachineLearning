@@ -58,7 +58,7 @@ public class TestEnvironment {
 		}
 		
 		Instances[] smallerSet = SplitDataStructure(m_structure, m_DataSeizeOffset);
-		
+
 		
 		if(m_testType == 2 || m_testType == 3)
 		{
@@ -86,6 +86,7 @@ public class TestEnvironment {
 				supervisedResults[i][1] = m_supervisedForest.toString();
 			}
 		}
+
 		if(m_testType == 1 || m_testType == 3)
 		{
 			m_activeForest = new ActiveForest();
