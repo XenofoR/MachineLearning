@@ -22,7 +22,7 @@ public class Graph implements Serializable
 	
 	Vector<InnerGraph> m_graphs;
 	Vector<double[][]> m_covarianeMatrices;
-	Vector<Utilities.Pair<Integer, Integer>> m_idToIndexMap;
+	Vector<OurUtil.Pair<Integer, Integer>> m_idToIndexMap;
 	boolean m_forceRootMerge = false;
 	Graph()
 	{
@@ -32,7 +32,7 @@ public class Graph implements Serializable
 	{
 		m_covarianeMatrices = new Vector<double[][]>();		
 		m_graphs = new Vector<InnerGraph>();
-		m_idToIndexMap = new Vector<Utilities.Pair<Integer, Integer>>();
+		m_idToIndexMap = new Vector<OurUtil.Pair<Integer, Integer>>();
 	}
 	
 	public void GetInstances(Instances p_outInstances)
@@ -67,7 +67,7 @@ public class Graph implements Serializable
 		InnerGraph graph = new InnerGraph(p_parentId, p_id, -1 , -1);
 		graph.Init();
 		graph.AddCluster(p_labeled, p_unlabeled, p_covariance);
-		Utilities.Pair<Integer, Integer> temp = new Utilities.Pair<Integer, Integer>(p_id, m_graphs.size());
+		OurUtil.Pair<Integer, Integer> temp = new OurUtil.Pair<Integer, Integer>(p_id, m_graphs.size());
 		m_idToIndexMap.add(temp);
 		m_graphs.add(graph);
 	}
@@ -77,7 +77,7 @@ public class Graph implements Serializable
 
 		InnerGraph graph = new InnerGraph(p_parentId, p_id, p_childId1 , p_childId2);
 		graph.Init();
-		Utilities.Pair<Integer, Integer> temp = new Utilities.Pair<Integer, Integer>(p_id, m_graphs.size());
+		OurUtil.Pair<Integer, Integer> temp = new OurUtil.Pair<Integer, Integer>(p_id, m_graphs.size());
 		m_idToIndexMap.add(temp);
 		m_graphs.add(graph);
 	}
@@ -378,13 +378,13 @@ public class Graph implements Serializable
 			double[] minDist = new double[m_Points.size()];
 			Arrays.fill(minDist, Double.MAX_VALUE);
 			//minDist[p_start] = 0; //Origin dist
-			Set<Utilities.Pair<Point, Double>> queue = new LinkedHashSet<Utilities.Pair<Point, Double>>();
-			queue.add(new Utilities.Pair<Point, Double>(m_Points.elementAt(p_start),0.0));
+			Set<OurUtil.Pair<Point, Double>> queue = new LinkedHashSet<OurUtil.Pair<Point, Double>>();
+			queue.add(new OurUtil.Pair<Point, Double>(m_Points.elementAt(p_start),0.0));
 			
 			while(!queue.isEmpty())
 			{
 				// Java.... why are you not c++
-				Utilities.Pair<Point, Double> itr = queue.iterator().next();
+				OurUtil.Pair<Point, Double> itr = queue.iterator().next();
 				Point currPoint =  itr.GetFirst();
 				double currDist =  itr.GetSecond();
 				queue.remove(itr);
@@ -397,10 +397,10 @@ public class Graph implements Serializable
 					double totalDist = currDist + localDist;
 					if(totalDist < minDist[temp.m_pointIndex2])
 					{
-						queue.remove(new Utilities.Pair<Point, Double>(target, minDist[temp.m_pointIndex2]));
+						queue.remove(new OurUtil.Pair<Point, Double>(target, minDist[temp.m_pointIndex2]));
 						
 						minDist[temp.m_pointIndex2] = totalDist;
-						queue.add(new Utilities.Pair<Point, Double>(target, totalDist));
+						queue.add(new OurUtil.Pair<Point, Double>(target, totalDist));
 					}
 				}
 			}
@@ -416,7 +416,7 @@ public class Graph implements Serializable
 			
 			//retval = D^T * M^-1 * D
 			double[] distanceVec = new double[p_first.length];
-			Utilities.Subtract(p_first, p_second, distanceVec);
+			OurUtil.Subtract(p_first, p_second, distanceVec);
 			//double[][] matrix = new double[m_covarianeMatrices.elementAt(p_covMatIndex).length][];
 			//Deep copy matrix
 			Matrix matrix = Matrix.constructWithCopy(m_covarianeMatrices.elementAt(p_covMatIndex));
@@ -426,7 +426,7 @@ public class Graph implements Serializable
 			V = SVD.getV();
 			U = SVD.getU();
 			//calculate tolerance
-			double tolerance = Utilities.g_machineEpsilion * Math.max(S.getColumnDimension(), S.getRowDimension()) * S.norm2();
+			double tolerance = OurUtil.g_machineEpsilion * Math.max(S.getColumnDimension(), S.getRowDimension()) * S.norm2();
 			//Pseudo invert S
 			for(int i = 0; i < S.getColumnDimension(); i++)
 				if(S.get(i, i) >= tolerance) //tolerance should remove floating point errors on variables smaller than a really small value

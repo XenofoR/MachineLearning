@@ -59,6 +59,33 @@ public class TestEnvironment {
 		
 		Instances[] smallerSet = SplitDataStructure(m_structure, m_DataSeizeOffset);
 		
+		
+		if(m_testType == 2 || m_testType == 3)
+		{
+
+			m_supervisedForest = new RandomForest();
+			m_supervisedForest.setDebug(true);
+			m_supervisedForest.setPrintTrees(true);
+			m_supervisedForest.setNumTrees(m_trees);
+			m_supervisedForest.setMaxDepth(m_depth);
+			
+			
+			for(int i = 0; i < m_numTests; i++)
+			{
+				try
+				{
+					Random ran = new Random();
+					m_supervisedForest.setSeed(ran.nextInt());
+					m_supervisedForest.buildClassifier(smallerSet[0]);
+				}
+				catch(Exception E)
+				{
+					StackTraceElement[] dawdadwadsada = E.getStackTrace();
+					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + dawdadwadsada.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+				}
+				supervisedResults[i][1] = m_supervisedForest.toString();
+			}
+		}
 		if(m_testType == 1 || m_testType == 3)
 		{
 			m_activeForest = new ActiveForest();
@@ -87,38 +114,11 @@ public class TestEnvironment {
 					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + superman, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				}
 				activeResults[i][1] = m_activeForest.toString();
-				if(Utilities.g_clusterAnalysis)
+				if(OurUtil.g_clusterAnalysis)
 					activeResults[i][1] += ClusterAnalysisToString();
 
 			}
 		}
-		if(m_testType == 2 || m_testType == 3)
-		{
-
-			m_supervisedForest = new RandomForest();
-			m_supervisedForest.setDebug(true);
-			m_supervisedForest.setPrintTrees(true);
-			m_supervisedForest.setNumTrees(m_trees);
-			m_supervisedForest.setMaxDepth(m_depth);
-			
-			
-			for(int i = 0; i < m_numTests; i++)
-			{
-				try
-				{
-					Random ran = new Random();
-					m_supervisedForest.setSeed(ran.nextInt());
-					m_supervisedForest.buildClassifier(smallerSet[0]);
-				}
-				catch(Exception E)
-				{
-					StackTraceElement[] dawdadwadsada = E.getStackTrace();
-					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + dawdadwadsada.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-				}
-				supervisedResults[i][1] = m_supervisedForest.toString();
-			}
-		}
-		
 		
 		WriteResultFile(activeResults, supervisedResults);
 		
@@ -260,15 +260,15 @@ public class TestEnvironment {
 				Debugger.g_plot = scanner.nextBoolean();
 				break;
 			case("ClusterAnalysis"):
-				Utilities.g_clusterAnalysis = scanner.nextBoolean();
+				OurUtil.g_clusterAnalysis = scanner.nextBoolean();
 				break;
 			case("DebugLevel"):
 				String temp = scanner.next();
-				Utilities.g_debug = true;
+				OurUtil.g_debug = true;
 				if(temp.equals("NONE") == true)
 				{
 					Debugger.Init(Debugger.g_debug_NONE, null);
-					Utilities.g_debug = false;
+					OurUtil.g_debug = false;
 				}
 				else if(temp.equals("LOW") == true)
 					Debugger.Init(Debugger.g_debug_LOW, null);
@@ -276,6 +276,9 @@ public class TestEnvironment {
 					Debugger.Init(Debugger.g_debug_MEDIUM, null);
 				else if(temp.equals("HIGH") == true)
 					Debugger.Init(Debugger.g_debug_HIGH, null);
+				break;
+			case("Threshold"):
+				OurUtil.g_threshold = Float.parseFloat(scanner.next());
 				break;
 			default:
 				System.out.println("Bad line found in test file: " + id);

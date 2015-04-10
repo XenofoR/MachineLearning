@@ -29,7 +29,7 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception
 	{	
-		Utilities.g_numTrees = 0;
+		OurUtil.g_numTrees = 0;
 		// remove instances with missing class
 		p_labeledData = new Instances(p_labeledData);
 		p_labeledData.deleteWithMissingClass();

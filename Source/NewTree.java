@@ -139,7 +139,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 						{
 							impurity ++;
 						}
-				FN += Utilities.CalculateCombination(impurity, 2);
+				FN += OurUtil.CalculateCombination(impurity, 2);
 			}
 			
 			TP += TPFPvalues.get(i)[0];
@@ -190,9 +190,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		double totalCorrelation[] = {0.0, 0.0};
 		for(int i = 0; i < covarianceMatrix.size(); i++)
 		{
-			correlation = Utilities.NormalizeMatrix(covarianceMatrix.get(i)).clone();
-			double det = Utilities.CalculateDeterminant(correlation);
-			double det2 = Utilities.CalculateDeterminant(covarianceMatrix.get(i));
+			correlation = OurUtil.NormalizeMatrix(covarianceMatrix.get(i)).clone();
+			double det = OurUtil.CalculateDeterminant(correlation);
+			double det2 = OurUtil.CalculateDeterminant(covarianceMatrix.get(i));
 			if(det < -1 || det > 1)
 			{
 				System.out.println("" + Arrays.toString(correlation[0]) + "\n");
@@ -317,8 +317,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    }
 	    m_plotter.Display2dPlot();
 	    
-	    Utilities.g_numTrees++;
-	    System.out.println("Tree: " + Utilities.g_numTrees  + " Finished!\n");
+	    OurUtil.g_numTrees++;
+	    System.out.println("Tree: " + OurUtil.g_numTrees  + " Finished!\n");
 
 	    //Will become the worst instance, aka the instance that should be sent to active learning
 	    //Instance ins = null;
@@ -731,13 +731,13 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        Instances instances = new Instances(p_labeledData);
 		        instances.addAll(p_unlabeledData);
 		        m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
-		        Utilities.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center, true);
+		        OurUtil.CalculateCovarianceMatrix(instances, m_covarianceMatrix, m_center, true);
 
 
 		        m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
 
 		        
-		        if(Utilities.g_clusterAnalysis)
+		        if(OurUtil.g_clusterAnalysis)
 		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 		        
 			    m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
@@ -854,9 +854,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		    	  Instances instances = new Instances(p_labeledData);
 			      instances.addAll(p_unlabeledData);
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
-			      Utilities.CalculateCovarianceMatrix( instances, m_covarianceMatrix, m_center, true);
+			      OurUtil.CalculateCovarianceMatrix( instances, m_covarianceMatrix, m_center, true);
 			      
-			      if(Utilities.g_clusterAnalysis)
+			      if(OurUtil.g_clusterAnalysis)
 			    	  PerformLeafAnalysis(p_labeledData, p_unlabeledData);
 			      
 
@@ -915,8 +915,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			    unlabaledVariance /= p_unlabeledData.numInstances() == 1 ? 1 : (p_unlabeledData.numInstances() - 1);
 			    
 			    m_varianceDiff = Math.abs(m_classVariance - unlabaledVariance);
-			    m_TP = Utilities.CalculateCombination((int)m_purity, 2);
-			    m_FP = Utilities.CalculateCombination(p_unlabeledData.numInstances(), 2) - m_TP;
+			    m_TP = OurUtil.CalculateCombination((int)m_purity, 2);
+			    m_FP = OurUtil.CalculateCombination(p_unlabeledData.numInstances(), 2) - m_TP;
 			    m_purity /= p_unlabeledData.numInstances(); 
 			}
 			else
@@ -1125,9 +1125,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		private double SingleCovariance(Instances p_instances) throws Exception
 		{
 			double[][] covarianceMatrix = new double[p_instances.numAttributes() -1][p_instances.numAttributes() - 1];
-			Utilities.CalculateCovarianceMatrix(p_instances, covarianceMatrix, m_center, true);
+			OurUtil.CalculateCovarianceMatrix(p_instances, covarianceMatrix, m_center, true);
 			
-			double det = Utilities.CalculateDeterminant(covarianceMatrix);
+			double det = OurUtil.CalculateDeterminant(covarianceMatrix);
 			Debugger.DebugPrint("Determinant: "+ det, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			det = Math.abs(det);
 			
@@ -1176,7 +1176,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			
 			double[][] cov = new double[n][n];
-			Utilities.CalculateCovarianceMatrix(p_instances, cov, null, false);
+			OurUtil.CalculateCovarianceMatrix(p_instances, cov, null, false);
 			double[][] S = new double[V.length][V[0].length];
 			double[] rowA = new double[n];
 			for(int k = 0; k < m; k++)

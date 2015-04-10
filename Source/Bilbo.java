@@ -27,6 +27,8 @@ import java.util.Random;
 import java.util.Vector;
 import java.util.ArrayList;
 
+import javax.swing.text.Utilities;
+
 import weka.classifiers.Classifier;
 import weka.classifiers.RandomizableParallelIteratedSingleClassifierEnhancer;
 import weka.core.AdditionalMeasureProducer;
@@ -160,7 +162,7 @@ public class Bilbo
 
   /** The out of bag error that has been calculated */
   protected double m_OutOfBagError;  
-    
+  protected double m_MaxOutOfBagError;  
   /**
    * Constructor.
    */
@@ -627,10 +629,45 @@ public class Bilbo
 	}
     // calc OOB error?
     if (getCalcOutOfBag()) {
-      double outOfBagCount = 0.0;
+      m_OutOfBagError = CalculateOutOfBagError();
+    }
+    else {
+      m_OutOfBagError = 0;
+    }
+    if(p_unlabeledData.size() != 0)
+    {
+    	while(m_MaxOutOfBagError - OurUtil.g_threshold >= CalculateOutOfBagError() )
+    	{
+    		if(p_unlabeledData.size() == 0)
+    			break;
+    		
+    	}
+    }
+    //TODO: PSEUDO CODE INC™
+    //Check if our oob error is within acceptable parameters
+    //If not, call oracle to get new labels, this can be done in many ways depending on how you decide what to label.
+    //Redo forests
+    //Redo all
+    //While loop i guess is usefull?
+    
+    
+    
+    
+    // save memory
+    m_data = null;
+  }
+
+  public void SetTargetErrorRate(double p_maxError)
+  {
+	  m_MaxOutOfBagError = p_maxError;
+  }
+  
+  public double CalculateOutOfBagError() throws Exception
+  {
+	  double outOfBagCount = 0.0;
       double errorSum = 0.0;
       boolean numeric = m_data.classAttribute().isNumeric();
-      
+      double retVal = 0.0;
       for (int i = 0; i < m_data.numInstances(); i++) {
         double vote;
         double[] votes;
@@ -683,7 +720,7 @@ public class Bilbo
           outOfBagCount += m_data.instance(i).weight();
           if (numeric) {
             errorSum += (StrictMath.abs(vote - m_data.instance(i).classValue()) 
-              * m_data.instance(i).weight()) / m_data.instance(i).classValue();
+              * m_data.instance(i).weight()) ;
           }
           else {
             if (vote != m_data.instance(i).classValue())
@@ -693,17 +730,11 @@ public class Bilbo
       }
       
       if (outOfBagCount > 0) {
-        m_OutOfBagError = errorSum / outOfBagCount;
+    	  retVal = errorSum / outOfBagCount;
       }
-    }
-    else {
-      m_OutOfBagError = 0;
-    }
-    
-    // save memory
-    m_data = null;
+	  return retVal;
   }
-
+  
   /**
    * Calculates the class membership probabilities for the given test
    * instance.
