@@ -305,7 +305,7 @@ public class Graph implements Serializable
 				mahalanobis /= 2;
 				
 				if(mahalanobis > 10000)
-					Debugger.DebugPrint("Really high distance for edge detected: " + mahalanobis, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+					Debugger.DebugPrint("Really high distance for edge detected: " + mahalanobis, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 				
 				edge.m_weight = mahalanobis;
 				

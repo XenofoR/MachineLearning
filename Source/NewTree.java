@@ -1293,7 +1293,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				p_instance.setClassValue(1);
 				for(int i = 0; i < p_instance.numAttributes(); i++)
 					returnValue += -(m_center[i]/m_center[m_center.length-1]) * p_instance.toDoubleArray()[i];
-
 				p_instance.setClassValue(realValue);
 				return returnValue;
 
