@@ -101,7 +101,7 @@ public class Graph implements Serializable
 			{
 				Debugger.DebugPrint("No labeled, going into merge mode", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				int parent = m_graphs.elementAt(i).GetParentId();
-				int index = MergeChildren(parent);
+				int index = MergeChildren(parent, parent);
 				index = FindIndexFromId(index);
 				//parent = MergeChildren(index);
 				temp = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
@@ -122,7 +122,7 @@ public class Graph implements Serializable
 	{
 		m_forceRootMerge = p_force;
 	}
-	private int MergeChildren(int p_id) throws Exception
+	private int MergeChildren(int p_id, int p_origin) throws Exception
 	{
 		if(p_id == -1)
 			throw new Exception("MergeException:NoLabeledData");
@@ -133,15 +133,15 @@ public class Graph implements Serializable
 		int[] children = m_graphs.elementAt(index).GetChildren();
 		
 		for(int i = 0; i < children.length; i++)
-			MergeChildren(children[i]);
+			MergeChildren(children[i], p_id);
 		int childIndex1 = FindIndexFromId(children[0]);
 		int childIndex2 = FindIndexFromId(children[1]);
 		m_graphs.elementAt(index).MergeClusters(m_graphs.elementAt(childIndex1), m_graphs.elementAt(childIndex2));
 
 		m_graphs.elementAt(childIndex1).SetHasBeenMerged(true);
 		m_graphs.elementAt(childIndex2).SetHasBeenMerged(true);
-		if(!m_graphs.elementAt(index).HasLabeled())
-			retVal = MergeChildren(m_graphs.elementAt(index).GetParentId());
+		if(!m_graphs.elementAt(index).HasLabeled() && p_origin != m_graphs.elementAt(index).GetParentId())
+			retVal = MergeChildren(m_graphs.elementAt(index).GetParentId(), p_id);
 		return retVal;
 	}
 	private Instance UncertaintyCompleteGraph(double[] p_outVal) throws Exception
@@ -149,7 +149,7 @@ public class Graph implements Serializable
 		Instance retVal = null;
 		int index = FindIndexFromId(0);
 		if(m_graphs.elementAt(index).m_Points.isEmpty())
-			MergeChildren(0);
+			MergeChildren(0, 0);
 		Debugger.DebugPrint("Started Dikjstras on root graph, this is going to take a while", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		retVal = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
 		
@@ -233,30 +233,31 @@ public class Graph implements Serializable
 				m_labeledIndices.add(m_Points.size());
 				Point point = new Point(tempL.instance(i), true, index);
 				//Build edges
-				ConstructEdges(point,0,0);
+				ConstructEdges(point, 0 , m_Points.size());
 				m_Points.add(point);	
 			}
 			for(int i = 0; i < tempU.size(); i++)
 			{
 				Point point = new Point(tempU.instance(i), false, index);
 				//Build edges
-				ConstructEdges(point,0,0);
+				ConstructEdges(point, 0 , m_Points.size());
 				m_Points.add(point);	
 			}
 			
 		}
 		//TODO: FIX THE ISSUE WITH EDGE POINTS BEING THE SAME SINCE IN MERGES GRAPH 1's edges _WILL_ have the same indices as graph 2's
 		public void MergeClusters(InnerGraph p_graph1, InnerGraph p_graph2) throws Exception
-		{					
-			Debugger.DebugPrint("Merging clusters " + p_graph1.GetId() + " " + p_graph2.GetId(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-			int endOfFirstGraph = 0;
+		{	
+			
+			Debugger.DebugPrint("Merging clusters " + p_graph1.GetId() + " " + p_graph2.GetId() +" to cluster: " +m_id, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			int firstGraphlast = 0;
 			for(int i = 0; i < p_graph1.m_Points.size(); i++)
 			{
 				Point temp = p_graph1.m_Points.elementAt(i);
 				if(temp.m_labeled)
 					m_labeledIndices.add(m_Points.size());
-				endOfFirstGraph++;
 				m_Points.add(temp);
+				firstGraphlast++;
 			}
 		
 			for(int i = 0; i < p_graph2.m_Points.size(); i++)
@@ -264,9 +265,14 @@ public class Graph implements Serializable
 				Point temp = p_graph2.m_Points.elementAt(i);
 				if(temp.m_labeled)
 					m_labeledIndices.add(m_Points.size());
+				for(int j = 0; j < temp.m_edges.size(); j++)
+				{
+					temp.m_edges.elementAt(j).m_pointIndex1 += firstGraphlast;
+					temp.m_edges.elementAt(j).m_pointIndex2 += firstGraphlast;
+				}
 				//We only need to construct the edges between clusters once,
 				//therefore we do it after the first cluster has been completed to save time.
-				ConstructEdges(temp,0,endOfFirstGraph);
+				ConstructEdges(temp,0, firstGraphlast);
 				m_Points.add(temp);
 			}
 			System.gc();
@@ -274,7 +280,7 @@ public class Graph implements Serializable
 			
 		}
 		
-		private void ConstructEdges(Point p_currPoint, int p_startNode, int p_endNode)
+		private void ConstructEdges(Point p_currPoint, int p_start, int p_end)
 		{
 			double[] currPointArray, pointArray;
 			//Index that the current point will have after it's added
@@ -287,8 +293,8 @@ public class Graph implements Serializable
 				currPointArray[i] = p_currPoint.m_instance.toDoubleArray()[i];
 			
 			//since it is a complete graph we will need edges to all other points
-			int to = (p_endNode <= m_Points.size()) ? p_endNode : m_Points.size();
-			for(int i = p_startNode; i < to; i++)
+			int end = (p_end <= m_Points.size()) ? p_end : m_Points.size();
+			for(int i = p_start; i < m_Points.size(); i++)
 			{
 				//If labeled ignore last attribute since it is a label
 				pointArray =  new double [m_Points.elementAt(i).m_instance.numAttributes() -1];
