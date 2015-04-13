@@ -194,7 +194,7 @@ public abstract class NewPISCE extends
         Runnable newTask = new Runnable() {
           public void run() {
             try {
-	      ((NewTree)currentClassifier).buildClassifier( getTrainingSet(m_data, iteration), getTrainingSet(m_unlabeledData, iteration));
+	      ((NewTree)currentClassifier).buildClassifier( getTrainingSet(m_data, iteration), m_unlabeledData);
             } catch (Exception ex) {
               ex.printStackTrace();
 	      numFailed.incrementAndGet();
@@ -219,7 +219,7 @@ public abstract class NewPISCE extends
     } else {
       // simple single-threaded execution
       for (int i = 0; i < m_Classifiers.length; i++) {
-	((NewTree)m_Classifiers[i]).buildClassifier( getTrainingSet(m_data, i), getTrainingSet(m_unlabeledData, i));
+	((NewTree)m_Classifiers[i]).buildClassifier( getTrainingSet(m_data, i), m_unlabeledData);
       }
     }
   }

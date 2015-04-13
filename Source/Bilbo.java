@@ -845,6 +845,7 @@ public class Bilbo
       if (outOfBagCount > 0) {
     	  retVal = errorSum / outOfBagCount;
       }
+      System.out.println("OOB value: " + retVal + "\n");
 	  return retVal;
   }
   

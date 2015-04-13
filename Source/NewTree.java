@@ -1279,7 +1279,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      return subsets;
 		    }
 		
-		protected double classifyInstance(Instance p_instance)
+		/*protected double classifyInstance(Instance p_instance)
 		{
 			if(m_Attribute == -1)
 			{
@@ -1296,13 +1296,13 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			{
 				return m_Successors[p_instance.toDoubleArray()[m_Attribute] < m_SplitPoint ? 0 : 1].classifyInstance(p_instance);
 			}
-		}
+		}*/
 	}
-	public double classifyInstance(Instance p_instance)
+	/*public double classifyInstance(Instance p_instance)
 	{
 		
 		return m_Tree.classifyInstance(p_instance);
-	}
+	}*/
 	
 }
 	
