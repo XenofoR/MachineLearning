@@ -94,7 +94,7 @@ public class TestEnvironment {
 				m_activeForest.setNumTrees(m_trees);
 				m_activeForest.setMaxDepth(m_depth);
 				//m_activeForest.setPrintTrees(true);
-				m_activeForest.GIVETHISTOBILBO(m_supervisedForest.measureOutOfBagError());
+				//m_activeForest.GIVETHISTOBILBO(m_supervisedForest.measureOutOfBagError());
 	
 	
 				Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);

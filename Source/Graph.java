@@ -295,7 +295,7 @@ public class Graph implements Serializable
 			
 			//since it is a complete graph we will need edges to all other points
 			int end = (p_end <= m_Points.size()) ? p_end : m_Points.size();
-			for(int i = p_start; i < m_Points.size(); i++)
+			for(int i = p_start; i < end; i++)
 			{
 				//If labeled ignore last attribute since it is a label
 				pointArray =  new double [m_Points.elementAt(i).m_instance.numAttributes() -1];
@@ -372,7 +372,7 @@ public class Graph implements Serializable
 						out = pointToLabeled[i][j];
 						//TODO Working with java is like working with a lava flow, with your hand.					
 					}
-					double percentage =  Math.abs((pointToLabeled[i][j] / totalDist[j]) - 1)/(pointToLabeled[i].length-1);	
+					double percentage =  Math.abs((pointToLabeled[i][j] / totalDist[i]) - 1)/(pointToLabeled[i].length-1);	
 					// if 0 we only have 1 labeled and then we will simply apply it directly
 					percentage = (percentage == 0  || (Double.isNaN(percentage)) || Double.isInfinite(percentage)) ? 1 : percentage; 
 					label +=  percentage * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();

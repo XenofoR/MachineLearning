@@ -630,6 +630,7 @@ public class Bilbo
     else {
       m_OutOfBagError = 0;
     }
+
     //=========== ACTIVE LEARNING CODE IS HERE MY FRIEND ================
     if(p_unlabeledData.size() != 0)
     {
