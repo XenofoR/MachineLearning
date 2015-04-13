@@ -615,7 +615,7 @@ public class Bilbo
     }
      
     buildClassifiers();
-    Instances inst = new Instances(m_data);
+    Instances inst = new Instances(m_data , 0);
 	for(int i = 0 ; i < m_Classifiers.length; i++)
 	{
 		inst.clear();
@@ -637,7 +637,7 @@ public class Bilbo
     	{
     		if(p_unlabeledData.size() == 0)
     			break;
-    		Instances toOracle = new Instances(m_unlabeledData.instance(0).dataset());
+    		Instances toOracle = new Instances(m_unlabeledData,0);
     		switch(OurUtil.g_activeTech)
     		{
     		case Random:
