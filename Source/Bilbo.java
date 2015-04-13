@@ -630,6 +630,7 @@ public class Bilbo
     else {
       m_OutOfBagError = 0;
     }
+
     //=========== ACTIVE LEARNING CODE IS HERE MY FRIEND ================
     if(p_unlabeledData.size() != 0)
     {
@@ -637,7 +638,7 @@ public class Bilbo
     	{
     		if(p_unlabeledData.size() == 0)
     			break;
-    		Instances toOracle = new Instances(m_unlabeledData.instance(0).dataset());
+    		Instances toOracle = new Instances(m_unlabeledData, 0);
     		switch(OurUtil.g_activeTech)
     		{
     		case Random:
