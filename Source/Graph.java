@@ -373,7 +373,7 @@ public class Graph implements Serializable
 					}
 					double percentage =  Math.abs((pointToLabeled[i][j] / totalDist[j]) - 1)/(pointToLabeled[i].length-1);	
 					// if 0 we only have 1 labeled and then we will simply apply it directly
-					percentage = (percentage == 0  || Double.isNaN(percentage)) ? 1 : percentage; 
+					percentage = (percentage == 0  || (Double.isNaN(percentage)) || Double.isInfinite(percentage)) ? 1 : percentage; 
 					label +=  percentage * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
 				}
 				int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
