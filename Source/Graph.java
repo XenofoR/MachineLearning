@@ -33,6 +33,7 @@ public class Graph implements Serializable
 		m_covarianeMatrices = new Vector<double[][]>();		
 		m_graphs = new Vector<InnerGraph>();
 		m_idToIndexMap = new Vector<OurUtil.Pair<Integer, Integer>>();
+		
 	}
 	
 	public void GetInstances(Instances p_outInstances)

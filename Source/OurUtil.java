@@ -14,7 +14,16 @@ public class OurUtil
 	static double g_machineEpsilion;
 	static int g_numTrees;
 	static double g_threshold;
-	//http://professorjava.weebly.com/matrix-determinant.html
+    static int g_activeNumber;
+    static ActiveTechnique g_activeTech;
+	public enum ActiveTechnique
+	{
+		Random,
+		Worst,
+		AllWorst,
+		Ensemble,
+		NONE
+	}
 	
 	static public int CalculateCombination(int p_numenator, int p_denomenator)
 	{

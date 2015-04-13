@@ -59,68 +59,68 @@ public class TestEnvironment {
 		
 		Instances[] smallerSet = SplitDataStructure(m_structure, m_DataSeizeOffset);
 
-		
-		if(m_testType == 2 || m_testType == 3)
+		for(int i = 0; i < m_numTests; i++)
 		{
-
-			m_supervisedForest = new RandomForest();
-			m_supervisedForest.setDebug(true);
-			m_supervisedForest.setPrintTrees(true);
-			m_supervisedForest.setNumTrees(m_trees);
-			m_supervisedForest.setMaxDepth(m_depth);
-			
-			
-			for(int i = 0; i < m_numTests; i++)
+			if(m_testType == 2 || m_testType == 3)
 			{
-				try
-				{
-					Random ran = new Random();
-					m_supervisedForest.setSeed(ran.nextInt());
-					m_supervisedForest.buildClassifier(smallerSet[0]);
-				}
-				catch(Exception E)
-				{
-					StackTraceElement[] dawdadwadsada = E.getStackTrace();
-					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + dawdadwadsada.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-				}
-				supervisedResults[i][1] = m_supervisedForest.toString();
+	
+				m_supervisedForest = new RandomForest();
+				m_supervisedForest.setDebug(true);
+				m_supervisedForest.setPrintTrees(true);
+				m_supervisedForest.setNumTrees(m_trees);
+				m_supervisedForest.setMaxDepth(m_depth);
+				
+				
+				
+					try
+					{
+						Random ran = new Random();
+						m_supervisedForest.setSeed(ran.nextInt());
+						m_supervisedForest.buildClassifier(smallerSet[0]);
+					}
+					catch(Exception E)
+					{
+						StackTraceElement[] dawdadwadsada = E.getStackTrace();
+						Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + dawdadwadsada.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+					}
+					supervisedResults[i][1] = m_supervisedForest.toString();
+				
+				
+			}
+			
+			if(m_testType == 1 || m_testType == 3)
+			{
+				m_activeForest = new ActiveForest();
+				m_activeForest.setNumTrees(m_trees);
+				m_activeForest.setMaxDepth(m_depth);
+				//m_activeForest.setPrintTrees(true);
+				m_activeForest.GIVETHISTOBILBO(m_supervisedForest.measureOutOfBagError());
+	
+	
+				Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
+				
+	
+					try
+					{
+						Random ran = new Random();
+						m_activeForest.setSeed(ran.nextInt());
+						m_activeForest.buildClassifier(test[0], test[1]);
+					}
+					catch(Exception E)
+					{
+						StackTraceElement[] dawdadwadsada = E.getStackTrace();
+						String superman ="";
+						for(int il = 0; il < dawdadwadsada.length; il++)
+							superman += dawdadwadsada[il] + "\n";
+						Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + superman, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+					}
+					activeResults[i][1] = m_activeForest.toString();
+					if(OurUtil.g_clusterAnalysis)
+						activeResults[i][1] += ClusterAnalysisToString();
+	
+				
 			}
 		}
-
-		if(m_testType == 1 || m_testType == 3)
-		{
-			m_activeForest = new ActiveForest();
-			m_activeForest.setNumTrees(m_trees);
-			m_activeForest.setMaxDepth(m_depth);
-			//m_activeForest.setPrintTrees(true);
-			
-
-
-			Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
-			for(int i = 0; i < m_numTests; i++)
-			{
-
-				try
-				{
-					Random ran = new Random();
-					m_activeForest.setSeed(ran.nextInt());
-					m_activeForest.buildClassifier(test[0], test[1]);
-				}
-				catch(Exception E)
-				{
-					StackTraceElement[] dawdadwadsada = E.getStackTrace();
-					String superman ="";
-					for(int il = 0; il < dawdadwadsada.length; il++)
-						superman += dawdadwadsada[il] + "\n";
-					Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + superman, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-				}
-				activeResults[i][1] = m_activeForest.toString();
-				if(OurUtil.g_clusterAnalysis)
-					activeResults[i][1] += ClusterAnalysisToString();
-
-			}
-		}
-		
 		WriteResultFile(activeResults, supervisedResults);
 		
 		
@@ -280,6 +280,22 @@ public class TestEnvironment {
 				break;
 			case("Threshold"):
 				OurUtil.g_threshold = Float.parseFloat(scanner.next());
+				break;
+			case("ActiveTech"):
+				temp = scanner.next();
+				if(temp.equals("Random") == true)
+					OurUtil.g_activeTech = OurUtil.ActiveTechnique.Random;
+				else if(temp.equals("Worst") == true)
+					OurUtil.g_activeTech = OurUtil.ActiveTechnique.Worst;
+				else if(temp.equals("AllWorst") == true)
+					OurUtil.g_activeTech = OurUtil.ActiveTechnique.AllWorst;
+				else if(temp.equals("Ensemble") == true)
+					OurUtil.g_activeTech = OurUtil.ActiveTechnique.Ensemble;
+				else
+					OurUtil.g_activeTech = OurUtil.ActiveTechnique.NONE;
+				break;
+			case("ActiveNumber"):
+				OurUtil.g_activeNumber = scanner.nextInt();
 				break;
 			default:
 				System.out.println("Bad line found in test file: " + id);

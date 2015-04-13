@@ -10,6 +10,7 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	//Instances m_unlabledStructure;
 	public ActiveForest() {
 		super();
+		m_bagger = new Bilbo();
 	}
 	
 	public Vector<Vector<double[]>> GetPurityAndVardiff()
@@ -21,7 +22,10 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	{
 		return m_bagger.CalculateRandIndex();
 	}
-	
+	public void GIVETHISTOBILBO(double p_maxError)
+	{
+		m_bagger.SetTargetErrorRate(p_maxError);
+	}
 	public double[] CalculateCorrelationPercentage()
 	{
 		return m_bagger.CalculateCorrelationPercentage();
@@ -34,7 +38,7 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 		p_labeledData = new Instances(p_labeledData);
 		p_labeledData.deleteWithMissingClass();
 
-	    m_bagger = new Bilbo();
+	    
 
 	    // RandomTree implements WeightedInstancesHandler, so we can
 	    // represent copies using weights to achieve speed-up.

@@ -164,12 +164,14 @@ public class Bilbo
   /** The out of bag error that has been calculated */
   protected double m_OutOfBagError;  
   protected double m_MaxOutOfBagError;  
+  protected Philadelphiaost m_oracle;
   /**
    * Constructor.
    */
   public Bilbo() {
     
     m_Classifier = new NewTree();
+    m_oracle = new Philadelphiaost();
   }
   
   public Vector<Vector<double[]>> GetPurityAndVardiff()
@@ -592,7 +594,7 @@ public class Bilbo
     // get fresh Instances object
     m_data = new Instances(data);
     m_unlabeledData = new Instances(p_unlabeledData);
-    
+    m_oracle.Init(p_unlabeledData);
     super.buildClassifier(m_data);
 
     if (m_CalcOutOfBag && (m_BagSizePercent != 100)) {
@@ -611,14 +613,7 @@ public class Bilbo
 	((Randomizable) m_Classifiers[j]).setSeed(m_random.nextInt());
       }
     }
-    //Insert oracle loop here TODO
-
-	
-    	
-
-    	
-    
-    
+     
     buildClassifiers();
     Instances inst = new Instances(m_data);
 	for(int i = 0 ; i < m_Classifiers.length; i++)
@@ -635,21 +630,47 @@ public class Bilbo
     else {
       m_OutOfBagError = 0;
     }
+    //=========== ACTIVE LEARNING CODE IS HERE MY FRIEND ================
     if(p_unlabeledData.size() != 0)
     {
-    	while(m_MaxOutOfBagError - OurUtil.g_threshold >= CalculateOutOfBagError() )
+    	while((m_MaxOutOfBagError - OurUtil.g_threshold) <= CalculateOutOfBagError() )
     	{
     		if(p_unlabeledData.size() == 0)
     			break;
+    		Instances toOracle = new Instances(m_unlabeledData.instance(0).dataset());
+    		switch(OurUtil.g_activeTech)
+    		{
+    		case Random:
+    			SelectAtRandom(OurUtil.g_activeNumber, toOracle);
+    			break;
+    		case Worst:
+    			SelectWorst(toOracle);
+    			break;
+    		case AllWorst:
+    			SelectAllWorst(toOracle);
+    			break;
+    		case Ensemble:
+    			Debugger.DebugPrint("WHY ARE YOU USING A FUNCTION THAT'S NOT PROPERLY IMPLEMENTED YOU SMUCK", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+    			SelectEnsemble(OurUtil.g_activeNumber, toOracle);
+    			break;
+    		case NONE:
+			default:
+				throw new Exception("No or NONE active learning tech chosen, please pick one of the following: Random, Worst, Allworst, Ensemble");
+    		}
     		
+    		Instances fromOracle = m_oracle.ConsultOracle(toOracle);
+    		m_data.addAll(fromOracle);
+    		super.buildClassifier(m_data);
+    		buildClassifiers();
+    		for(int i = 0 ; i < m_Classifiers.length; i++)
+    		{
+    			inst.clear();
+    	    	((NewTree)m_Classifiers[i]).GetTransductedInstances(inst);
+    	    	((NewTree)m_Classifiers[i]).DoInduction(inst);
+    		}
     	}
     }
-    //TODO: PSEUDO CODE INC™
-    //Check if our oob error is within acceptable parameters
-    //If not, call oracle to get new labels, this can be done in many ways depending on how you decide what to label.
-    //Redo forests
-    //Redo all
-    //While loop i guess is usefull?
+
     
     
     
@@ -657,6 +678,8 @@ public class Bilbo
     // save memory
     m_data = null;
   }
+  
+  
 
   public void SelectAtRandom(int p_numRan, Instances p_retInst)
   {
@@ -666,6 +689,7 @@ public class Bilbo
 	  {
 		  int index = rand.nextInt(m_unlabeledData.size());
 		  p_retInst.add(m_unlabeledData.instance(index));
+		  m_unlabeledData.remove(index);
 	  }
   }
   public void SelectWorst(Instances p_retInst)
@@ -680,12 +704,19 @@ public class Bilbo
 			  inst = ((NewTree) m_Classifiers[i]).GetWorstInstance();
 		  }
 	  }
+	  InstanceComparator comp = new InstanceComparator();
+	  for(int i = 0; i < m_unlabeledData.size(); i++)
+		  if(comp.compare(inst, m_unlabeledData.instance(i)) == 0)
+		  {
+			  m_unlabeledData.remove(i);
+			  break;
+		  }
 	  p_retInst.add(inst);
   }
   
   public void SelectEnsemble(int p_number, Instances p_retInst)
   {
-	  //THIS DOES NOT WORK. DO NOT ATTEMPT TO USE IT OUR YOU WILL CRY
+	  //TODO:THIS DOES NOT WORK. DO NOT ATTEMPT TO USE IT OUR YOU WILL CRY
 	  Instances worst = new Instances(m_unlabeledData.instance(0).dataset());
 	  SelectAllWorst(worst);
 	  InstanceComparator comp = new InstanceComparator();
@@ -729,6 +760,13 @@ public class Bilbo
 	  {
 		  p_retInst.add(((NewTree) m_Classifiers[i]).GetWorstInstance());
 	  }
+	  InstanceComparator comp = new InstanceComparator();
+	  for(int j = 0; j < p_retInst.size(); j++)
+		  for(int i = 0; i < m_unlabeledData.size(); i++)
+		  {
+			  if(comp.compare(p_retInst.instance(j), m_unlabeledData.instance(i)) == 0)
+					  m_unlabeledData.remove(i);
+		  }
   }
   
   public void SetTargetErrorRate(double p_maxError)
@@ -941,13 +979,10 @@ public class Bilbo
   }
 
   /**
-   * Main method for testing this class.
-   *
-   * @param argv the options
+   HI KIM IAM A COMMENT. I NEED YOU TO SEND YOUR MONY TO ME IN CHINA: IN CHINA I CAN BVRING YOU VERY BIG HOUSE. 
+   EVEN BIGGER THAN U THINK. IT IS CALLED THE FORBIDDEN CITY AND IT CAN BE ALL YOURS
    */
-  public static void main(String [] argv) {
-    runClassifier(new Bilbo(), argv);
-  }
+
   
   protected List<Classifier> m_classifiersCache;
 

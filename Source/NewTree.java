@@ -83,7 +83,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		m_graph = new Graph();
 	}
 	
-	
 	public Vector<double[]> GetPurityAndVardiff()
 	{
 		Vector<double[]> returnVector = new Vector<double[]>();
@@ -222,6 +221,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
 		m_graph.Init();
+		System.gc();
+		m_counter = 0;
 	    // Make sure K value is in range
 	    if (m_KValue > p_labeledData.numAttributes() - 1) {
 	      m_KValue = p_labeledData.numAttributes() - 1;
