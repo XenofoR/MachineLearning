@@ -634,10 +634,15 @@ public class Bilbo
     //=========== ACTIVE LEARNING CODE IS HERE MY FRIEND ================
     if(p_unlabeledData.size() != 0)
     {
+    	boolean b = false;;
+    	int counter = 0;
     	while((m_MaxOutOfBagError - OurUtil.g_threshold) <= CalculateOutOfBagError() )
     	{
     		if(p_unlabeledData.size() == 0)
+    		{
+    			b =  true;
     			break;
+    		}
     		Instances toOracle = new Instances(m_unlabeledData,0);
     		switch(OurUtil.g_activeTech)
     		{
@@ -669,7 +674,9 @@ public class Bilbo
     	    	((NewTree)m_Classifiers[i]).GetTransductedInstances(inst);
     	    	((NewTree)m_Classifiers[i]).DoInduction(inst);
     		}
+    		counter ++;
     	}
+    	System.out.println("Number of active runs: " + counter + "Ended early: " + b + "\n");
     }
 
     
