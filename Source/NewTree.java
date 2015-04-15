@@ -813,7 +813,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        int[] child = new int[2];
 		        child[0] = -1;
 		        child[1] = -1;
-		        Debugger.DebugPrint("=====ID: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+		        Debugger.DebugPrint("=====ID: " + m_id + " ======", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		        for (int i = 0; i < bestDists.length; i++) 
 		        {
 		        	child[i] = ++m_counter;
@@ -822,7 +822,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		            p_labeledData.classAttribute().isNominal() ? 0 : attTotalSubsetWeights[i],
 		            p_random, p_depth + 1, minVariance, m_id, child[i]);		          	 
 		        }
-		        Debugger.DebugPrint("=====END: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+		        Debugger.DebugPrint("=====END: " + m_id + " ======", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		        m_graph.AddParent(m_id, p_parentId, child[0], child[1]);
 		        // If all successors are non-empty, we don't need to store the class
 		        // distribution
@@ -1298,7 +1298,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			}
 		}*/
 	}
-	/*public double classifyInstance(Instance p_instance)
+	/*
+	 * public double classifyInstance(Instance p_instance)
 	{
 		
 		return m_Tree.classifyInstance(p_instance);

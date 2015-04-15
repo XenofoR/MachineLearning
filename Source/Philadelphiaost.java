@@ -16,6 +16,7 @@ public class Philadelphiaost
 	{
 		Instances retInsts = new Instances(m_instances, 0); // might need to change if new doesn't do what i want
 		InstanceComparator comp = new InstanceComparator();
+		comp.setIncludeClass(false);
 		int breakCounter = 0;
 		for(int i =0; i < p_instances.size(); i++)
 		{

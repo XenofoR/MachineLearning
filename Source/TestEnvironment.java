@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.Random;
 
 import weka.filters.unsupervised.instance.RemoveDuplicates;
+import weka.core.InstanceComparator;
 import weka.core.Instances;
 import weka.core.Instance;
 import weka.classifiers.Evaluation;
@@ -20,14 +21,16 @@ import weka.classifiers.trees.RandomForest;
 public class TestEnvironment {
 	private Loader m_loader;
 	private Instances m_structure;
+	//private ActiveForest m_supervisedForest;
 	private RandomForest m_supervisedForest;
 	private ActiveForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_numTests;
 	float m_alSplitPercentage, m_DataSeizeOffset;
-	Evaluation m_evaluator;
+	Validator m_evaluator;
 	String m_test;
 	String m_inputPath, m_outputPath, m_currentTest;
-	
+	Philadelphiaost m_oracle;
+	InstanceComparator m_comparer;
 	public TestEnvironment()
 	{
 		
@@ -39,6 +42,8 @@ public class TestEnvironment {
 		m_currentTest = path.getFileName().toString();
 		ProcessFile(path);
 		m_loader = new Loader();
+		m_oracle = new Philadelphiaost();
+		m_comparer = new InstanceComparator();
 		
 	}
 	
@@ -49,7 +54,7 @@ public class TestEnvironment {
 		CreateDataStructure(m_inputPath + m_test);
 		try
 		{
-			m_evaluator = new Evaluation(m_structure);
+			m_evaluator = new Validator();
 		}
 		catch(Exception E)
 		{
@@ -58,12 +63,16 @@ public class TestEnvironment {
 		}
 		
 		Instances[] smallerSet = SplitDataStructure(m_structure, m_DataSeizeOffset);
-
+		Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
+		Random ran = new Random();
 		for(int i = 0; i < m_numTests; i++)
 		{
+			int seed = ran.nextInt();
+			double oob = 0.0;
 			if(m_testType == 2 || m_testType == 3)
 			{
-	
+				Instances emptySet = new Instances(smallerSet[0], 0);
+				//m_supervisedForest = new ActiveForest();
 				m_supervisedForest = new RandomForest();
 				m_supervisedForest.setDebug(true);
 				m_supervisedForest.setPrintTrees(true);
@@ -74,9 +83,10 @@ public class TestEnvironment {
 				
 					try
 					{
-						Random ran = new Random();
-						m_supervisedForest.setSeed(ran.nextInt());
-						m_supervisedForest.buildClassifier(smallerSet[0]);
+						
+						m_supervisedForest.setSeed(seed);
+						//m_supervisedForest.buildClassifier(test[0], emptySet);
+						m_supervisedForest.buildClassifier(test[0]);
 					}
 					catch(Exception E)
 					{
@@ -85,26 +95,71 @@ public class TestEnvironment {
 					}
 					supervisedResults[i][1] = m_supervisedForest.toString();
 				
-				
+				m_evaluator.Init(smallerSet[1], m_supervisedForest);
+				m_evaluator.ValidateModel();
+				System.out.println("superMAE: " + m_evaluator.GetMAE() + "\n");
+				System.out.println("superMAPE: " + m_evaluator.GetMAPE() + "\n");
+				oob = m_evaluator.GetMAE();
 			}
 			
 			if(m_testType == 1 || m_testType == 3)
 			{
+				m_evaluator = null;
+				m_evaluator = new Validator();
+				
+				
 				m_activeForest = new ActiveForest();
 				m_activeForest.setNumTrees(m_trees);
 				m_activeForest.setMaxDepth(m_depth);
 				//m_activeForest.setPrintTrees(true);
-				m_activeForest.GIVETHISTOBILBO(m_supervisedForest.measureOutOfBagError());
+				m_supervisedForest = null;
 	
-	
-				Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
-				
-	
+
 					try
 					{
-						Random ran = new Random();
-						m_activeForest.setSeed(ran.nextInt());
+						m_oracle.Init(test[1]);
+						m_activeForest.setSeed(seed);
 						m_activeForest.buildClassifier(test[0], test[1]);
+						m_evaluator.Init(smallerSet[1], m_activeForest);
+						m_evaluator.ValidateModel();
+						
+						System.out.println("activeMAE: " + m_evaluator.GetMAE() + "\n");
+						System.out.println("activeMAPE: " + m_evaluator.GetMAPE() + "\n");
+						
+						Instances inst = new Instances(test[1],0);
+						m_comparer.setIncludeClass(false);
+						while(oob < m_evaluator.GetMAE())
+						{
+							m_evaluator = null;
+							m_evaluator = new Validator();
+							inst.clear();
+							inst = m_activeForest.GetOracleData();
+							inst.setClassIndex(-1);
+							  for(int j = 0; j < test[1].size(); j++)
+								  for(int k = 0; k < inst.size(); k++)
+									  if(m_comparer.compare(inst.instance(k), test[1].instance(j)) == 0)
+									  {
+										  test[1].remove(j);
+										  break;
+									  }
+							  
+							  
+							test[0].addAll(m_oracle.ConsultOracle(m_activeForest.GetOracleData()));
+							
+							m_activeForest = null;
+							m_activeForest = new ActiveForest();
+							m_activeForest.setNumTrees(m_trees);
+							m_activeForest.setMaxDepth(m_depth);
+							
+							m_activeForest.setSeed(ran.nextInt());
+							m_activeForest.buildClassifier(test[0], test[1]);
+							
+							m_evaluator.Init(smallerSet[1], m_activeForest);
+							m_evaluator.ValidateModel();
+							
+							System.out.println("activeMAE: " + m_evaluator.GetMAE() + "\n");
+							System.out.println("activeMAPE: " + m_evaluator.GetMAPE() + "\n");
+						}	
 					}
 					catch(Exception E)
 					{

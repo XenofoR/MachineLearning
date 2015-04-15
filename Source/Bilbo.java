@@ -164,14 +164,13 @@ public class Bilbo
   /** The out of bag error that has been calculated */
   protected double m_OutOfBagError;  
   protected double m_MaxOutOfBagError;  
-  protected Philadelphiaost m_oracle;
+  Instances toOracle;
   /**
    * Constructor.
    */
   public Bilbo() {
     
     m_Classifier = new NewTree();
-    m_oracle = new Philadelphiaost();
   }
   
   public Vector<Vector<double[]>> GetPurityAndVardiff()
@@ -217,6 +216,11 @@ public class Bilbo
 	  index[1] /= m_Classifiers.length;
 	  
 	  return index;
+  }
+  
+  public Instances getOracleData()
+  {
+	  return toOracle;
   }
   
   /**
@@ -594,7 +598,6 @@ public class Bilbo
     // get fresh Instances object
     m_data = new Instances(data);
     m_unlabeledData = new Instances(p_unlabeledData);
-    m_oracle.Init(p_unlabeledData);
     super.buildClassifier(m_data);
 
     if (m_CalcOutOfBag && (m_BagSizePercent != 100)) {
@@ -616,6 +619,7 @@ public class Bilbo
      
     buildClassifiers();
     Instances inst = new Instances(m_data , 0);
+    
 	for(int i = 0 ; i < m_Classifiers.length; i++)
 	{
 		inst.clear();
@@ -631,19 +635,9 @@ public class Bilbo
       m_OutOfBagError = 0;
     }
 
-    //=========== ACTIVE LEARNING CODE IS HERE MY FRIEND ================
-    if(p_unlabeledData.size() != 0)
+    if(m_unlabeledData.numInstances() != 0)
     {
-    	boolean b = false;;
-    	int counter = 0;
-    	while((m_MaxOutOfBagError - OurUtil.g_threshold) <= CalculateOutOfBagError() )
-    	{
-    		if(p_unlabeledData.size() == 0)
-    		{
-    			b =  true;
-    			break;
-    		}
-    		Instances toOracle = new Instances(m_unlabeledData,0);
+    		toOracle = new Instances(m_unlabeledData,0);
     		switch(OurUtil.g_activeTech)
     		{
     		case Random:
@@ -663,26 +657,7 @@ public class Bilbo
 			default:
 				throw new Exception("No or NONE active learning tech chosen, please pick one of the following: Random, Worst, Allworst, Ensemble");
     		}
-    		
-    		Instances fromOracle = m_oracle.ConsultOracle(toOracle);
-    		m_data.addAll(fromOracle);
-    		super.buildClassifier(m_data);
-    		buildClassifiers();
-    		for(int i = 0 ; i < m_Classifiers.length; i++)
-    		{
-    			inst.clear();
-    	    	((NewTree)m_Classifiers[i]).GetTransductedInstances(inst);
-    	    	((NewTree)m_Classifiers[i]).DoInduction(inst);
-    		}
-    		counter ++;
-    	}
-    	System.out.println("Number of active runs: " + counter + "Ended early: " + b + "\n");
     }
-
-    
-    
-    
-    
     // save memory
     m_data = null;
   }
@@ -839,8 +814,10 @@ public class Bilbo
         if (!Utils.isMissingValue(vote) && !m_data.instance(i).classIsMissing()) {
           outOfBagCount += m_data.instance(i).weight();
           if (numeric) {
-            errorSum += (StrictMath.abs(vote - m_data.instance(i).classValue()) 
-              * m_data.instance(i).weight()) ;
+        	  errorSum += StrictMath.abs(vote - m_data.instance(i).classValue() 
+                      * m_data.instance(i).weight()) ;
+            /*errorSum += (StrictMath.abs(vote - m_data.instance(i).classValue()) / m_data.instance(i).classValue() 
+              * m_data.instance(i).weight()) ;*/
           }
           else {
             if (vote != m_data.instance(i).classValue())
@@ -852,7 +829,7 @@ public class Bilbo
       if (outOfBagCount > 0) {
     	  retVal = errorSum / outOfBagCount;
       }
-      System.out.println("OOB value: " + retVal + "\n");
+      Debugger.DebugPrint("OOB value: " + retVal + "\n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 	  return retVal;
   }
   

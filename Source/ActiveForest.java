@@ -26,10 +26,30 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	{
 		m_bagger.SetTargetErrorRate(p_maxError);
 	}
+	
+	public Instances GetOracleData()
+	{
+		return m_bagger.getOracleData();
+	}
+	
 	public double[] CalculateCorrelationPercentage()
 	{
 		return m_bagger.CalculateCorrelationPercentage();
 	}
+	
+	 /**
+	   * Gets the out of bag error that was calculated as the classifier was built.
+	   * 
+	   * @return the out of bag error
+	   */
+	  public double measureOutOfBagError() {
+
+	    if (m_bagger != null && !m_dontCalculateOutOfBagError) {
+	      return m_bagger.measureOutOfBagError();
+	    } else {
+	      return Double.NaN;
+	    }
+	  }
 	
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception
 	{	

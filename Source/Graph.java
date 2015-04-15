@@ -64,7 +64,7 @@ public class Graph implements Serializable
 	}
 	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
 	{
-		Debugger.DebugPrint("Added leaf node: " + p_id + " With parent: " + p_parentId, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+		Debugger.DebugPrint("Added leaf node: " + p_id + " With parent: " + p_parentId, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		InnerGraph graph = new InnerGraph(p_parentId, p_id, -1 , -1);
 		graph.Init();
 		graph.AddCluster(p_labeled, p_unlabeled, p_covariance);
@@ -74,7 +74,7 @@ public class Graph implements Serializable
 	}
 	public void AddParent(int p_id, int p_parentId, int p_childId1, int p_childId2)
 	{
-		Debugger.DebugPrint("Added split node: " + p_id + " With Parent: " + p_parentId + " And children: " + p_childId1 + " " + p_childId2, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+		Debugger.DebugPrint("Added split node: " + p_id + " With Parent: " + p_parentId + " And children: " + p_childId1 + " " + p_childId2, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 
 		InnerGraph graph = new InnerGraph(p_parentId, p_id, p_childId1 , p_childId2);
 		graph.Init();
@@ -250,7 +250,7 @@ public class Graph implements Serializable
 		public void MergeClusters(InnerGraph p_graph1, InnerGraph p_graph2) throws Exception
 		{	
 			
-			Debugger.DebugPrint("Merging clusters " + p_graph1.GetId() + " " + p_graph2.GetId() +" to cluster: " +m_id, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			Debugger.DebugPrint("Merging clusters " + p_graph1.GetId() + " " + p_graph2.GetId() +" to cluster: " +m_id, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			int firstGraphlast = 0;
 			for(int i = 0; i < p_graph1.m_Points.size(); i++)
 			{
@@ -277,7 +277,7 @@ public class Graph implements Serializable
 				m_Points.add(temp);
 			}
 			System.gc();
-			Debugger.DebugPrint("Merge Complete", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			Debugger.DebugPrint("Merge Complete", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			
 		}
 		
