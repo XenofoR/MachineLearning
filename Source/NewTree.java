@@ -658,6 +658,18 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			{
 				SingleConditionalCovariance(p_instances);
 				m_meanRegressionValue = p_instances.meanOrMode(p_instances.classAttribute());
+				
+				double totalSum = 0, totalSumSquared = 0, totalSumOfWeights = 0;
+		        for (int i = 0; i < p_instances.numInstances(); i++) {
+		          Instance inst = p_instances.instance(i);
+		          totalSum += inst.classValue() * inst.weight();
+		          totalSumSquared += inst.classValue() * inst.classValue()
+		            * inst.weight();
+		          totalSumOfWeights += inst.weight();
+		        }
+		        m_ClassDistribution[0] = m_meanRegressionValue;
+		        
+		        m_Distribution[1] = p_instances.numInstances();
 			}
 			else
 			{
@@ -1279,7 +1291,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      return subsets;
 		    }
 		
-		/*protected double classifyInstance(Instance p_instance)
+		protected double classifyInstance(Instance p_instance)
 		{
 			if(m_Attribute == -1)
 			{
@@ -1296,14 +1308,14 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			{
 				return m_Successors[p_instance.toDoubleArray()[m_Attribute] < m_SplitPoint ? 0 : 1].classifyInstance(p_instance);
 			}
-		}*/
+		}
 	}
-	/*
-	 * public double classifyInstance(Instance p_instance)
+	
+	 public double classifyInstance(Instance p_instance)
 	{
 		
 		return m_Tree.classifyInstance(p_instance);
-	}*/
+	}
 	
 }
 	

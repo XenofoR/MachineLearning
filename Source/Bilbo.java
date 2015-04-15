@@ -650,7 +650,6 @@ public class Bilbo
     			SelectAllWorst(toOracle);
     			break;
     		case Ensemble:
-    			Debugger.DebugPrint("WHY ARE YOU USING A FUNCTION THAT'S NOT PROPERLY IMPLEMENTED YOU SMUCK", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
     			SelectEnsemble(OurUtil.g_activeNumber, toOracle);
     			break;
     		case NONE:
@@ -699,11 +698,10 @@ public class Bilbo
   
   public void SelectEnsemble(int p_number, Instances p_retInst)
   {
-	  //TODO:THIS DOES NOT WORK. DO NOT ATTEMPT TO USE IT OUR YOU WILL CRY
-	  Instances worst = new Instances(m_unlabeledData.instance(0).dataset());
+	  Instances worst = new Instances(m_unlabeledData,0);
 	  SelectAllWorst(worst);
 	  InstanceComparator comp = new InstanceComparator();
-	  worst.setClassIndex(-1);
+	  comp.setIncludeClass(false);
 	  int[] counter = new int[worst.size()];
 	  for(int i = 0 ; i < worst.size(); i++)
 		  for(int j = i+1 ; j < worst.size(); j++)
@@ -715,26 +713,22 @@ public class Bilbo
 			  }
 	  int[] topChoices = new int[p_number];
 	  Arrays.fill(topChoices, -1);
-	  for(int i = 0; i < counter.length; i++ )
+	  for(int i = 0; i < p_number; i++)
 	  {
-		  if(counter[i] == 0)
-	 /*Prison*/break;
-		  for(int j = 0; j < topChoices.length; j++)
+		  int highestVote = -1;
+		  for(int j = 0; j < counter.length; j++)
 		  {
-			  if(counter[i] > counter[topChoices[j]] || topChoices[j] == -1)
+			  if(counter[j] > highestVote)
 			  {
-				  int temp = topChoices[j];
-				  topChoices[j] = i;
-				  for(int Hi_kim = j+1; j < topChoices.length; j++)
-				  {
-					  int elTempinator = topChoices[Hi_kim];
-					  topChoices[Hi_kim] = temp;
-				  }
-				  
+				  topChoices[i] = j;
+				  highestVote = counter[j];
 			  }
 		  }
+		  counter[topChoices[i]] = -1;
+		  p_retInst.add(worst.instance(topChoices[i]));
 	  }
-	 
+	  
+	  worst = null;
   }
   
   public void SelectAllWorst(Instances p_retInst)
