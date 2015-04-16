@@ -1044,7 +1044,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				          currSumSquared[1] -= classValSquared;
 				          currSumOfWeights[1] -= inst.weight();
 			          }
-			          if(i % 50 == 0)
+			          if(i % 100 == 0)
 			        	  System.gc();
 			        }
 
@@ -1298,8 +1298,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				double returnValue = 0.0;
 				double realValue = p_instance.classValue();
 				p_instance.setClassValue(1);
-				for(int i = 0; i < p_instance.numAttributes(); i++)
+				for(int i = 0; i < p_instance.numAttributes()-1; i++)
 					returnValue += -(m_center[i]/m_center[m_center.length-1]) * p_instance.toDoubleArray()[i];
+				returnValue += m_center[p_instance.numAttributes()-1];
 				p_instance.setClassValue(realValue);
 				return returnValue;
 
@@ -1311,11 +1312,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		}
 	}
 	
-	 public double classifyInstance(Instance p_instance)
+	 /*public double classifyInstance(Instance p_instance)
 	{
 		
 		return m_Tree.classifyInstance(p_instance);
-	}
+	}*/
 	
 }
 	

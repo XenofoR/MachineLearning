@@ -115,6 +115,7 @@ public class Graph implements Serializable
 		
 			Debugger.DebugPrint("Checked graph: " + i + "of: " + m_graphs.size(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		}
+		System.gc();
 		p_outVal[0] = val;
 		return retInst;
 	}
@@ -276,7 +277,7 @@ public class Graph implements Serializable
 				ConstructEdges(temp,0, firstGraphlast);
 				m_Points.add(temp);
 			}
-			System.gc();
+			//System.gc(); 
 			Debugger.DebugPrint("Merge Complete", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			
 		}

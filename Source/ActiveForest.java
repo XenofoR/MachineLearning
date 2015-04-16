@@ -22,10 +22,6 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	{
 		return m_bagger.CalculateRandIndex();
 	}
-	public void GIVETHISTOBILBO(double p_maxError)
-	{
-		m_bagger.SetTargetErrorRate(p_maxError);
-	}
 	
 	public Instances GetOracleData()
 	{

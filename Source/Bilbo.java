@@ -745,11 +745,7 @@ public class Bilbo
 					  m_unlabeledData.remove(i);
 		  }
   }
-  
-  public void SetTargetErrorRate(double p_maxError)
-  {
-	  m_MaxOutOfBagError = p_maxError;
-  }
+
   
   public double CalculateOutOfBagError() throws Exception
   {
