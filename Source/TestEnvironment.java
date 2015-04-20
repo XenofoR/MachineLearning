@@ -62,6 +62,12 @@ public class TestEnvironment {
 			return;
 		}
 		
+		//m_structure.deleteAttributeAt(0);
+		//m_structure.deleteAttributeAt(0);
+		//m_structure.deleteAttributeAt(0);
+		//m_structure.deleteAttributeAt(0);
+		//m_structure.deleteAttributeAt(0);
+		
 		Instances[] smallerSet = SplitDataStructure(m_structure, m_DataSeizeOffset);
 		Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
 		Random ran = new Random();
@@ -99,7 +105,7 @@ public class TestEnvironment {
 				m_evaluator.ValidateModel();
 				System.out.println("superMAE: " + m_evaluator.GetMAE() + "\n");
 				System.out.println("superMAPE: " + m_evaluator.GetMAPE() + "\n");
-				oob = m_evaluator.GetMAE();
+				oob = 0.01;
 			}
 			
 			if(m_testType == 1 || m_testType == 3)
@@ -151,7 +157,7 @@ public class TestEnvironment {
 							m_activeForest.setNumTrees(m_trees);
 							m_activeForest.setMaxDepth(m_depth);
 							
-							m_activeForest.setSeed(ran.nextInt());
+							m_activeForest.setSeed(seed);
 							m_activeForest.buildClassifier(test[0], test[1]);
 							
 							m_evaluator.Init(smallerSet[1], m_activeForest);
