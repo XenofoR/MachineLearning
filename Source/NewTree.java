@@ -324,6 +324,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    //Will become the worst instance, aka the instance that should be sent to active learning
 	    //Instance ins = null;
 	    double[] dist = {0};
+	    m_graph.ForceRootMerge(true);
 	    m_worstInstance = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
 	    m_worstDistance = dist[0];
 	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
@@ -1147,7 +1148,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			int n = p_instances.numAttributes();
 			
 			if(m == 0) //No gain if no instances
-				return 0.0;
+				return Double.NaN;
 			
 			double[][] A = new double[m][n];
 			for(int i = 0; i < m; i++)
@@ -1297,10 +1298,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			{
 				double returnValue = 0.0;
 				double realValue = p_instance.classValue();
-				p_instance.setClassValue(1);
-				for(int i = 0; i < p_instance.numAttributes()-1; i++)
-					returnValue += -(m_center[i]/m_center[m_center.length-1]) * p_instance.toDoubleArray()[i];
-				returnValue += m_center[p_instance.numAttributes()-1];
+				double temp[] = new double[p_instance.numAttributes()-1];
+				for(int i = 0; i < p_instance.numAttributes()-1; i++){
+					temp[i] = -m_center[i]/m_center[m_center.length-1];
+					returnValue += temp[i] * p_instance.toDoubleArray()[i];
+					int k = 0;
+				}
 				p_instance.setClassValue(realValue);
 				return returnValue;
 

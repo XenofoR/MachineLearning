@@ -62,11 +62,6 @@ public class TestEnvironment {
 			return;
 		}
 		
-		//m_structure.deleteAttributeAt(0);
-		//m_structure.deleteAttributeAt(0);
-		//m_structure.deleteAttributeAt(0);
-		//m_structure.deleteAttributeAt(0);
-		//m_structure.deleteAttributeAt(0);
 		
 		Instances[] smallerSet = SplitDataStructure(m_structure, m_DataSeizeOffset);
 		Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
@@ -105,6 +100,8 @@ public class TestEnvironment {
 				m_evaluator.ValidateModel();
 				System.out.println("superMAE: " + m_evaluator.GetMAE() + "\n");
 				System.out.println("superMAPE: " + m_evaluator.GetMAPE() + "\n");
+				System.out.println("superPrecision: " + m_evaluator.GetPrecision() + "\n");
+				System.out.println("superSMAPE: " + m_evaluator.GetSMAPE() + "\n");
 				oob = 0.01;
 			}
 			
@@ -131,6 +128,8 @@ public class TestEnvironment {
 						
 						System.out.println("activeMAE: " + m_evaluator.GetMAE() + "\n");
 						System.out.println("activeMAPE: " + m_evaluator.GetMAPE() + "\n");
+						System.out.println("activePrecision: " + m_evaluator.GetPrecision() + "\n");
+						System.out.println("activeSMAPE: " + m_evaluator.GetSMAPE() + "\n");
 						
 						Instances inst = new Instances(test[1],0);
 						m_comparer.setIncludeClass(false);
@@ -165,6 +164,8 @@ public class TestEnvironment {
 							
 							System.out.println("activeMAE: " + m_evaluator.GetMAE() + "\n");
 							System.out.println("activeMAPE: " + m_evaluator.GetMAPE() + "\n");
+							System.out.println("activePrecision: " + m_evaluator.GetPrecision() + "\n");
+							System.out.println("activeSMAPE: " + m_evaluator.GetSMAPE() + "\n");
 						}	
 					}
 					catch(Exception E)
