@@ -7,11 +7,10 @@ public class Validator
 {
 	RandomForest m_model = null;
 	Instances m_validationSet = null;
-	double m_variance = 0.0;
-	double m_precision = 0.0;
 	double m_MAE = 0.0;
 	double m_MAPE = 0.0;
-	double m_SMAPE = 0.0;
+	double m_errorVariance = 0.0;
+	double m_errorDiviation = 0.0;
 	Validator()
 	{
 		
@@ -22,12 +21,8 @@ public class Validator
 		m_validationSet = p_validationSet;
 		m_validationSet.setClassIndex(m_validationSet.numAttributes()-1);
 		m_model = p_model;
+
 		
-		double mean = m_validationSet.meanOrMode(m_validationSet.classAttribute());
-		
-		for(int i = 0; i < m_validationSet.numInstances(); i++)
-			m_variance += Math.pow(m_validationSet.instance(i).classValue() - mean,2);
-		m_variance /= m_validationSet.numInstances();
 	}
 	
 	void ValidateModel() throws Exception
@@ -35,33 +30,26 @@ public class Validator
 		double tempMAE = 0.0;
 		double tempMAPE = 0.0;
 		double tempSMAPE = 0.0;
-		double truePositive = 0.0;
-		double falsePositive = 0.0;
-		double trueNegative = 0.0;
+		double[] predictions = new double[m_validationSet.numInstances()];
 		for(int i = 0; i < m_validationSet.numInstances(); i++)
 		{
 			double prediction = m_model.classifyInstance(m_validationSet.instance(i));
 			
-			if(m_validationSet.instance(i).classValue() - m_variance < prediction && prediction < m_validationSet.instance(i).classValue() + m_variance)
-			{
-				truePositive++;
-			}
-			else
-			{
-				falsePositive++;
-				//continue;
-			}
-			
+			predictions[i] = Math.abs(prediction - m_validationSet.instance(i).classValue());
 			tempMAE += Math.abs(prediction - m_validationSet.instance(i).classValue());
 			tempSMAPE += prediction + m_validationSet.instance(i).classValue();
 			tempMAPE += Math.abs(prediction - m_validationSet.instance(i).classValue()) / m_validationSet.instance(i).classValue();
 		}
 		
-		m_precision = truePositive / (truePositive+falsePositive);
 		
 		m_MAE = tempMAE / m_validationSet.numInstances();
 		m_MAPE = tempMAPE / m_validationSet.numInstances();
-		m_SMAPE = tempMAE / tempSMAPE;
+		
+		for(int i = 0; i < m_validationSet.numInstances(); i++)
+			m_errorVariance += Math.pow(predictions[i] - m_MAE, 2);
+		
+		m_errorVariance /= m_validationSet.numInstances();
+		m_errorDiviation = Math.sqrt(m_errorVariance);
 	}
 	
 	double GetMAE()
@@ -74,13 +62,14 @@ public class Validator
 		return m_MAPE;
 	}
 	
-	double GetPrecision()
+	double GetErrorVar()
 	{
-		return m_precision;
+		return m_errorVariance;
 	}
 	
-	double GetSMAPE()
+	double GetErrorDiv()
 	{
-		return m_SMAPE;
+		return m_errorDiviation;
 	}
+	
 }

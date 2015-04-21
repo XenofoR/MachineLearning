@@ -324,7 +324,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    //Will become the worst instance, aka the instance that should be sent to active learning
 	    //Instance ins = null;
 	    double[] dist = {0};
-	    m_graph.ForceRootMerge(true);
 	    m_worstInstance = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
 	    m_worstDistance = dist[0];
 	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
@@ -1148,7 +1147,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			int n = p_instances.numAttributes();
 			
 			if(m == 0) //No gain if no instances
-				return Double.NaN;
+				return 0.0;
 			
 			double[][] A = new double[m][n];
 			for(int i = 0; i < m; i++)

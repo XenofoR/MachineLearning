@@ -100,8 +100,9 @@ public class TestEnvironment {
 				m_evaluator.ValidateModel();
 				System.out.println("superMAE: " + m_evaluator.GetMAE() + "\n");
 				System.out.println("superMAPE: " + m_evaluator.GetMAPE() + "\n");
-				System.out.println("superPrecision: " + m_evaluator.GetPrecision() + "\n");
-				System.out.println("superSMAPE: " + m_evaluator.GetSMAPE() + "\n");
+				System.out.println("superErrorVar: " + m_evaluator.GetErrorVar() + "\n");
+				System.out.println("superErrorDiv: " + m_evaluator.GetErrorDiv() + "\n");
+
 				oob = 0.01;
 			}
 			
@@ -128,8 +129,9 @@ public class TestEnvironment {
 						
 						System.out.println("activeMAE: " + m_evaluator.GetMAE() + "\n");
 						System.out.println("activeMAPE: " + m_evaluator.GetMAPE() + "\n");
-						System.out.println("activePrecision: " + m_evaluator.GetPrecision() + "\n");
-						System.out.println("activeSMAPE: " + m_evaluator.GetSMAPE() + "\n");
+						System.out.println("activeErrorVar: " + m_evaluator.GetErrorVar() + "\n");
+						System.out.println("activeErrorDiv: " + m_evaluator.GetErrorDiv() + "\n");
+
 						
 						Instances inst = new Instances(test[1],0);
 						m_comparer.setIncludeClass(false);
@@ -164,8 +166,9 @@ public class TestEnvironment {
 							
 							System.out.println("activeMAE: " + m_evaluator.GetMAE() + "\n");
 							System.out.println("activeMAPE: " + m_evaluator.GetMAPE() + "\n");
-							System.out.println("activePrecision: " + m_evaluator.GetPrecision() + "\n");
-							System.out.println("activeSMAPE: " + m_evaluator.GetSMAPE() + "\n");
+							System.out.println("activeErrorVar: " + m_evaluator.GetErrorVar() + "\n");
+							System.out.println("activeErrorDiv: " + m_evaluator.GetErrorDiv() + "\n");
+
 						}	
 					}
 					catch(Exception E)
