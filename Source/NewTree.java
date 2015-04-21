@@ -63,7 +63,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	private InstanceComparator m_instanceComp;
 	int m_counter = 0;
 	InnerTree m_Tree;
-	
+	double m_treeVariance = 0.0;
 	public String PrintCovarianceMatrices()
 	{
 		String output = "";
@@ -301,7 +301,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 	    double trainVariance = 0;
 	    if (p_labeledData.classAttribute().isNumeric()) {
-	      trainVariance = NewTree.singleVariance(classProbs[0], totalSumSquared,
+	    	m_treeVariance = trainVariance = NewTree.singleVariance(classProbs[0], totalSumSquared,
 	        totalWeight) / totalWeight;
 	      classProbs[0] /= totalWeight;
 	    }
@@ -1303,6 +1303,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 					returnValue += temp[i] * p_instance.toDoubleArray()[i];
 					int k = 0;
 				}
+				
+				if(m_meanRegressionValue - m_treeVariance > returnValue || m_meanRegressionValue + m_treeVariance < returnValue)
+					return m_meanRegressionValue;
+				
 				p_instance.setClassValue(realValue);
 				return returnValue;
 
