@@ -25,12 +25,16 @@ public class TestEnvironment {
 	private RandomForest m_supervisedForest;
 	private ActiveForest m_activeForest;
 	int m_depth, m_trees, m_features, m_testType, m_numTests;
-	float m_alSplitPercentage, m_DataSeizeOffset;
-	Validator m_evaluator;
+	Validator m_validator;
 	String m_test;
 	String m_inputPath, m_outputPath, m_currentTest;
 	Philadelphiaost m_oracle;
 	InstanceComparator m_comparer;
+	int m_validationFolds = 1;
+	float m_activeLabeled = 1;
+	float m_supervisedLabeled = 1;
+	float m_activeUnlabeled = 1;
+	float m_trainingSize = 1;
 	public TestEnvironment()
 	{
 		
@@ -44,149 +48,89 @@ public class TestEnvironment {
 		m_loader = new Loader();
 		m_oracle = new Philadelphiaost();
 		m_comparer = new InstanceComparator();
+		m_validator = new Validator(m_validationFolds);
 		
 	}
 	
 	public void Run() throws Exception
 	{
-		String[][] activeResults = new String[m_numTests][2];
-		String[][] supervisedResults = new String[m_numTests][2];
+		double[][] supervisedMAE;
+		double[][] activeMAE;
+		double[][] supervisedMAPE;
+		double[][] activeMAPE;
+		
 		CreateDataStructure(m_inputPath + m_test);
-		try
+
+		
+		
+		
+		switch(m_testType)
 		{
-			m_evaluator = new Validator();
-		}
-		catch(Exception E)
-		{
-			Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-			return;
+		case 1:
+			for(int i = 0; i < m_numTests; i++)
+			{
+				Instances[] folds = SplitDataStructure(m_structure, m_validationFolds);
+				m_validator.Init(folds); 
+				
+				supervisedMAE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
+				supervisedMAPE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
+				
+				activeMAE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
+				activeMAPE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
+				
+				for(int j = 0; j < m_validationFolds; j++)
+				{
+					Instances currFold = m_validator.GetTrainingSet();
+					m_supervisedForest = new RandomForest();
+					m_activeForest = new ActiveForest();
+					Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
+					Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
+					
+					int k = 0;
+					while(active[1].numInstances() >= OurUtil.g_activeNumber)
+					{
+						m_supervisedForest.buildClassifier(supervised[0]);
+						m_activeForest.buildClassifier(active[0], active[1]);
+						Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
+						
+						RemovePredefined(temp, active[1]);
+						active[0].addAll(temp);
+						supervised[0].addAll(RemoveAtRandom(OurUtil.g_activeNumber, supervised[1]));
+						
+						m_validator.ValidateModel(m_supervisedForest);
+						supervisedMAE[i][k] += m_validator.GetMAE();
+						supervisedMAPE[i][k] += m_validator.GetMAPE();
+						
+						m_validator.ValidateModel(m_activeForest);
+						activeMAE[i][k] += m_validator.GetMAE();
+						activeMAPE[i][k] += m_validator.GetMAPE();
+						
+						k++;
+					}
+				}
+				for(int j = 0; j < folds[0].numInstances()/OurUtil.g_activeNumber; j++)
+				{
+					supervisedMAE[i][j] /= m_validationFolds*OurUtil.g_activeNumber;
+					supervisedMAPE[i][j] /= m_validationFolds*OurUtil.g_activeNumber;
+					
+					activeMAE[i][j] /= m_validationFolds*OurUtil.g_activeNumber;
+					activeMAPE[i][j] /= m_validationFolds*OurUtil.g_activeNumber;
+				}
+				
+			}
+			//Start at same labeled amount, ours actively choices ders chose by dice rooloing
+			break;
+		case 2:
+			//We start at N labeled and they start at M labeled
+			break;
+		case 3:
+			//We do nothing but return random values-.
+			break;
+		default:
+			break;
 		}
 		
 		
-		Instances[] smallerSet = SplitDataStructure(m_structure, m_DataSeizeOffset);
-		Instances[] test = SplitDataStructure(smallerSet[0], m_alSplitPercentage);
-		Random ran = new Random();
-		for(int i = 0; i < m_numTests; i++)
-		{
-			int seed = ran.nextInt();
-			double oob = 0.0;
-			if(m_testType == 2 || m_testType == 3)
-			{
-				Instances emptySet = new Instances(smallerSet[0], 0);
-				//m_supervisedForest = new ActiveForest();
-				m_supervisedForest = new RandomForest();
-				m_supervisedForest.setDebug(true);
-				m_supervisedForest.setPrintTrees(true);
-				m_supervisedForest.setNumTrees(m_trees);
-				m_supervisedForest.setMaxDepth(m_depth);
-				
-				
-				
-					try
-					{
-						
-						m_supervisedForest.setSeed(seed);
-						//m_supervisedForest.buildClassifier(test[0], emptySet);
-						m_supervisedForest.buildClassifier(test[0]);
-					}
-					catch(Exception E)
-					{
-						StackTraceElement[] dawdadwadsada = E.getStackTrace();
-						Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + dawdadwadsada.toString(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-					}
-					supervisedResults[i][1] = m_supervisedForest.toString();
-				
-				m_evaluator.Init(smallerSet[1], m_supervisedForest);
-				m_evaluator.ValidateModel();
-				System.out.println("superMAE: " + m_evaluator.GetMAE() + "\n");
-				System.out.println("superMAPE: " + m_evaluator.GetMAPE() + "\n");
-				System.out.println("superErrorVar: " + m_evaluator.GetErrorVar() + "\n");
-				System.out.println("superErrorDiv: " + m_evaluator.GetErrorDiv() + "\n");
-
-				oob = 0.01;
-			}
-			
-			if(m_testType == 1 || m_testType == 3)
-			{
-				m_evaluator = null;
-				m_evaluator = new Validator();
-				
-				
-				m_activeForest = new ActiveForest();
-				m_activeForest.setNumTrees(m_trees);
-				m_activeForest.setMaxDepth(m_depth);
-				//m_activeForest.setPrintTrees(true);
-				m_supervisedForest = null;
-	
-
-					try
-					{
-						m_oracle.Init(test[1]);
-						m_activeForest.setSeed(seed);
-						m_activeForest.buildClassifier(test[0], test[1]);
-						m_evaluator.Init(smallerSet[1], m_activeForest);
-						m_evaluator.ValidateModel();
-						
-						System.out.println("activeMAE: " + m_evaluator.GetMAE() + "\n");
-						System.out.println("activeMAPE: " + m_evaluator.GetMAPE() + "\n");
-						System.out.println("activeErrorVar: " + m_evaluator.GetErrorVar() + "\n");
-						System.out.println("activeErrorDiv: " + m_evaluator.GetErrorDiv() + "\n");
-
-						
-						Instances inst = new Instances(test[1],0);
-						m_comparer.setIncludeClass(false);
-						while(oob < m_evaluator.GetMAE())
-						{
-							m_evaluator = null;
-							m_evaluator = new Validator();
-							inst.clear();
-							inst = m_activeForest.GetOracleData();
-							inst.setClassIndex(-1);
-							  for(int j = 0; j < test[1].size(); j++)
-								  for(int k = 0; k < inst.size(); k++)
-									  if(m_comparer.compare(inst.instance(k), test[1].instance(j)) == 0)
-									  {
-										  test[1].remove(j);
-										  break;
-									  }
-							  
-							  
-							test[0].addAll(m_oracle.ConsultOracle(m_activeForest.GetOracleData()));
-							
-							m_activeForest = null;
-							m_activeForest = new ActiveForest();
-							m_activeForest.setNumTrees(m_trees);
-							m_activeForest.setMaxDepth(m_depth);
-							
-							m_activeForest.setSeed(seed);
-							m_activeForest.buildClassifier(test[0], test[1]);
-							
-							m_evaluator.Init(smallerSet[1], m_activeForest);
-							m_evaluator.ValidateModel();
-							
-							System.out.println("activeMAE: " + m_evaluator.GetMAE() + "\n");
-							System.out.println("activeMAPE: " + m_evaluator.GetMAPE() + "\n");
-							System.out.println("activeErrorVar: " + m_evaluator.GetErrorVar() + "\n");
-							System.out.println("activeErrorDiv: " + m_evaluator.GetErrorDiv() + "\n");
-
-						}	
-					}
-					catch(Exception E)
-					{
-						StackTraceElement[] dawdadwadsada = E.getStackTrace();
-						String superman ="";
-						for(int il = 0; il < dawdadwadsada.length; il++)
-							superman += dawdadwadsada[il] + "\n";
-						Debugger.DebugPrint("Exception caught in ProcessFile: " + E.toString() + "stacktrace: " + superman, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-					}
-					activeResults[i][1] = m_activeForest.toString();
-					if(OurUtil.g_clusterAnalysis)
-						activeResults[i][1] += ClusterAnalysisToString();
-	
-				
-			}
-		}
-		WriteResultFile(activeResults, supervisedResults);
 		
 		
 	}
@@ -237,7 +181,7 @@ public class TestEnvironment {
 			{
 			Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
 			w.write("Dataset: " + m_test + "\n");
-			w.write("Splitlevel for active learning: " + m_alSplitPercentage + "\n");
+			
 			for(int test = 0; test < m_numTests; test++)
 			{
 				if(m_testType == 1 || m_testType == 3)
@@ -311,16 +255,21 @@ public class TestEnvironment {
 				break;
 			case("Files"):
 				m_test = scanner.next();
-				scanner.useDelimiter("=");
 				break;
 			case("TestType"):
 				m_testType = scanner.nextInt();
 				break;
 			case("DataSize"):
-				m_DataSeizeOffset = Float.parseFloat(scanner.next());
+				m_trainingSize = Float.parseFloat(scanner.next());
 				break;
-			case("SplitLevel"):
-				m_alSplitPercentage = Float.parseFloat(scanner.next());
+			case("ValidationFolds"):
+				m_validationFolds = scanner.nextInt();
+				break;
+			case("ActiveLabeled"):
+				m_activeLabeled = Float.parseFloat(scanner.next());
+				break;
+			case("SupervisedLabeled"):
+				m_supervisedLabeled = Float.parseFloat(scanner.next());
 				break;
 			case("Plot"):
 				Debugger.g_plot = scanner.nextBoolean();
@@ -359,7 +308,7 @@ public class TestEnvironment {
 				else
 					OurUtil.g_activeTech = OurUtil.ActiveTechnique.NONE;
 				break;
-			case("ActiveNumber"):
+			case("NumberOfChoices"):
 				OurUtil.g_activeNumber = scanner.nextInt();
 				break;
 			default:
@@ -421,5 +370,49 @@ public class TestEnvironment {
 		return returnStructure;
 	}
 	
+	/**Splits the datastructure into a number of folds */
+	private Instances[] SplitDataStructure(Instances p_structure, int p_splitLevel) 
+	{
+		Instances tempStructure = new Instances(p_structure);
+		Instances[] returnStructure = new Instances[p_splitLevel];
+		for(int i = 0; i < p_splitLevel; i++)
+			returnStructure[i] = new Instances(p_structure, 0);
+		int instancesPerFold = p_structure.numInstances()/p_splitLevel;
+		Random ran = new Random();
+		for(int i = 0; i < p_splitLevel; i++)
+			for(int j = 0; j < instancesPerFold; j++)
+			{
+				int aRandomValueSelectedByUsingARandomMethodInJava = ran.nextInt(tempStructure.numInstances());
+				Instance selected = tempStructure.get(aRandomValueSelectedByUsingARandomMethodInJava);
+				returnStructure[0].add(selected);
+				tempStructure.delete(aRandomValueSelectedByUsingARandomMethodInJava);
+			}
+		
+		return returnStructure;
+	}
+	
+	private void RemovePredefined(Instances p_duplicates, Instances p_source)
+	{
+		for(int i = 0 ; i < p_duplicates.size(); i++)
+			  for(int j = 0 ; j < p_source.size(); j++)
+				  if(m_comparer.compare(p_duplicates.instance(i), p_source.instance(j)) == 0)
+				  {
+					  p_source.remove(j);
+					  continue;
+				  }
+	}
+	
+	private Instances RemoveAtRandom(int p_numToRemove, Instances p_source)
+	{
+		Random ran = new Random();
+		Instances retInsts = new Instances(p_source, 0);
+		for(int i = 0; i < p_numToRemove; i++)
+		{
+			int index = ran.nextInt();
+			retInsts.add(p_source.instance(index));
+			p_source.remove(index);
+		}
+		return retInsts;	
+	}
 
 }
