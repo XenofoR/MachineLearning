@@ -16,6 +16,7 @@ import weka.filters.unsupervised.instance.RemoveDuplicates;
 import weka.core.InstanceComparator;
 import weka.core.Instances;
 import weka.core.Instance;
+import weka.core.pmml.jaxbbindings.OUTLIERTREATMENTMETHOD;
 import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 public class TestEnvironment {
@@ -60,16 +61,19 @@ public class TestEnvironment {
 		double[][] activeMAPE;
 		
 		CreateDataStructure(m_inputPath + m_test);
-
 		
+		Instances[] spliData = SplitDataStructure(m_structure, m_trainingSize);
 		
-		
+		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
+		Calendar cal = Calendar.getInstance();
+		new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
+		m_outputPath += "/" + timeAndDate.format(cal.getTime()) + "/";
 		switch(m_testType)
 		{
 		case 1:
 			for(int i = 0; i < m_numTests; i++)
 			{
-				Instances[] folds = SplitDataStructure(m_structure, m_validationFolds);
+				Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
 				m_validator.Init(folds); 
 				
 				supervisedMAE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
@@ -81,14 +85,23 @@ public class TestEnvironment {
 				for(int j = 0; j < m_validationFolds; j++)
 				{
 					Instances currFold = m_validator.GetTrainingSet();
-					m_supervisedForest = new RandomForest();
-					m_activeForest = new ActiveForest();
 					Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
 					Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
-					
+					m_oracle.Init(active[1]);
 					int k = 0;
 					while(active[1].numInstances() >= OurUtil.g_activeNumber)
 					{
+						m_supervisedForest = null;
+						m_activeForest = null;
+						m_supervisedForest = new RandomForest();
+						m_activeForest = new ActiveForest();
+						m_supervisedForest.setNumTrees(m_trees);
+						m_supervisedForest.setMaxDepth(m_depth);
+						m_supervisedForest.setNumFeatures(m_features);
+						m_activeForest.setNumTrees(m_trees);
+						m_activeForest.setMaxDepth(m_depth);
+						m_activeForest.setNumFeatures(m_features);
+						
 						m_supervisedForest.buildClassifier(supervised[0]);
 						m_activeForest.buildClassifier(active[0], active[1]);
 						Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
@@ -117,6 +130,21 @@ public class TestEnvironment {
 					activeMAPE[i][j] /= m_validationFolds*OurUtil.g_activeNumber;
 				}
 				
+				String supervisedResults[] = new String[2];
+				String activeResults[] = new String[2];
+				for(int j = 0; j < supervisedMAE[0].length; j++)
+				{
+					supervisedResults[0] += supervisedMAE[i][j] + " ";
+					activeResults[0] += activeMAE[i][j] + " ";
+				}
+
+				for(int j = 0; j < supervisedMAE[0].length; j++)
+				{
+					supervisedResults[1] += supervisedMAPE[i][j] + " ";
+					activeResults[1] += activeMAPE[i][j] + " ";
+				}
+				
+				WriteResultFile(activeResults, supervisedResults, i);
 			}
 			//Start at same labeled amount, ours actively choices ders chose by dice rooloing
 			break;
@@ -129,9 +157,6 @@ public class TestEnvironment {
 		default:
 			break;
 		}
-		
-		
-		
 		
 	}
 	
@@ -171,36 +196,31 @@ public class TestEnvironment {
 	}
 	
 	
-	private void WriteResultFile(String[][] p_activeRes, String[][] p_supervisedRes) throws Exception
+	private void WriteResultFile(String p_activeRes[], String p_supervisedRes[], int p_testNumber) throws Exception
 	{
-		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
-		Calendar cal = Calendar.getInstance();
-		String target = m_outputPath +timeAndDate.format(cal.getTime())+ " "+ m_currentTest;
+
+		String target = m_outputPath + p_testNumber;
 		
 			try
 			{
 			Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
 			w.write("Dataset: " + m_test + "\n");
-			
-			for(int test = 0; test < m_numTests; test++)
-			{
-				if(m_testType == 1 || m_testType == 3)
-				{
-					w.write("TestType: Active Test: " + test  + "\n\n");
-					w.write("\t" +"====Crossvalidation results==== " + "\n\t" +p_activeRes[test][0] + "\n");
-					w.write("\t" +"====Training results====" + "\n\t"+ p_activeRes[test][1] + "\n");
+			w.write("Tree parameters(d/t/f): " + m_depth + " " + m_trees + " " + m_features + "\n");
+			w.write("Test parameters(t/s/f/sl/al: " + m_testType + " " + m_trainingSize + " " + m_validationFolds + " " + m_supervisedLabeled + " " + m_activeLabeled + "\n");
+
+					w.write("Supervised Results: \n");
+					w.write("\t" +"MAE: " + p_supervisedRes[0] + "\n");
+					w.write("\t" +"MAPE: " + p_supervisedRes[1] + "\n");
+					
+					w.write("Active choice parameters(t/at/nc): " + OurUtil.g_threshold + " " + ((OurUtil.g_activeTech == OurUtil.ActiveTechnique.Random) ? "Random" : 
+																								(OurUtil.g_activeTech == OurUtil.ActiveTechnique.Worst) ? "Worst" : 
+																								(OurUtil.g_activeTech == OurUtil.ActiveTechnique.AllWorst) ? "AllWorst" :
+																								(OurUtil.g_activeTech == OurUtil.ActiveTechnique.Ensemble) ? "Ensemble" : "NONE") + " " + OurUtil.g_activeNumber + "\n");
+					w.write("Active Results: \n");
+					w.write("\t" +"MAE: " + p_activeRes[0] + "\n");
+					w.write("\t" +"MAPE: " + p_activeRes[1] + "\n");
 					
 					
-					
-					w.write("\n");
-				}
-				if(m_testType == 2 || m_testType == 3)
-				{
-					w.write("TestType: Supervised" + "\n\n" );
-					w.write("\t" +"====Crossvalidation results==== " +p_supervisedRes[test][0] + "\n");
-					w.write("\t" +"====Training results====" + "\n"+ p_supervisedRes[test][1] + "\n");
-				}
-			}
 			w.close();
 			}
 			catch(Exception E)
@@ -382,9 +402,9 @@ public class TestEnvironment {
 		for(int i = 0; i < p_splitLevel; i++)
 			for(int j = 0; j < instancesPerFold; j++)
 			{
-				int aRandomValueSelectedByUsingARandomMethodInJava = ran.nextInt(tempStructure.numInstances());
+				int aRandomValueSelectedByUsingARandomMethodInJava = ran.nextInt(tempStructure.numInstances()-1);
 				Instance selected = tempStructure.get(aRandomValueSelectedByUsingARandomMethodInJava);
-				returnStructure[0].add(selected);
+				returnStructure[i].add(selected);
 				tempStructure.delete(aRandomValueSelectedByUsingARandomMethodInJava);
 			}
 		
@@ -408,7 +428,10 @@ public class TestEnvironment {
 		Instances retInsts = new Instances(p_source, 0);
 		for(int i = 0; i < p_numToRemove; i++)
 		{
-			int index = ran.nextInt();
+			if(p_source.numInstances() < p_numToRemove-i)
+				break;
+			
+			int index = ran.nextInt((p_source.numInstances() - 1) + 1 ) + 1 - 1;
 			retInsts.add(p_source.instance(index));
 			p_source.remove(index);
 		}
