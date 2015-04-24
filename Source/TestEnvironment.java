@@ -89,7 +89,7 @@ public class TestEnvironment {
 					Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
 					m_oracle.Init(active[1]);
 					int k = 0;
-					while(active[1].numInstances() >= OurUtil.g_activeNumber)
+					while(active[1].numInstances() > OurUtil.g_activeNumber)
 					{
 						m_supervisedForest = null;
 						m_activeForest = null;
@@ -101,7 +101,8 @@ public class TestEnvironment {
 						m_activeForest.setNumTrees(m_trees);
 						m_activeForest.setMaxDepth(m_depth);
 						m_activeForest.setNumFeatures(m_features);
-						
+						m_activeForest.setNumExecutionSlots(8);
+						m_supervisedForest.setNumExecutionSlots(8);
 						m_supervisedForest.buildClassifier(supervised[0]);
 						m_activeForest.buildClassifier(active[0], active[1]);
 						Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
@@ -117,9 +118,9 @@ public class TestEnvironment {
 						m_validator.ValidateModel(m_activeForest);
 						activeMAE[i][k] += m_validator.GetMAE();
 						activeMAPE[i][k] += m_validator.GetMAPE();
-						
 						k++;
 					}
+					System.out.println("fold: " + j + "complete\n");
 				}
 				for(int j = 0; j < folds[0].numInstances()/OurUtil.g_activeNumber; j++)
 				{
@@ -132,6 +133,8 @@ public class TestEnvironment {
 				
 				String supervisedResults[] = new String[2];
 				String activeResults[] = new String[2];
+				supervisedResults[0] = supervisedResults[1] = "";
+				activeResults[0] = activeResults[1] = "";
 				for(int j = 0; j < supervisedMAE[0].length; j++)
 				{
 					supervisedResults[0] += supervisedMAE[i][j] + " ";
@@ -330,6 +333,9 @@ public class TestEnvironment {
 				break;
 			case("NumberOfChoices"):
 				OurUtil.g_activeNumber = scanner.nextInt();
+				break;
+			case("UseMahalanobis"):
+				OurUtil.g_useMahalanobis = scanner.nextBoolean();
 				break;
 			default:
 				System.out.println("Bad line found in test file: " + id);

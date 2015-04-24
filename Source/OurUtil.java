@@ -11,11 +11,13 @@ public class OurUtil
 {
 	static boolean g_debug;
 	static boolean g_clusterAnalysis;
+	static boolean g_useMahalanobis;
 	static double g_machineEpsilion;
 	static int g_numTrees;
 	static double g_threshold;
     static int g_activeNumber;
     static ActiveTechnique g_activeTech;
+    
 	public enum ActiveTechnique
 	{
 		Random,
