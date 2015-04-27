@@ -326,7 +326,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    double[] dist = {0};
 	    m_worstInstance = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
 	    m_worstDistance = dist[0];
-	    System.out.println("GRAPH HAS BEEN GRAPHIFIED");
 	    System.out.println("Average error rate of transduction: " + m_graph.GetAverageErrorRate());
 	    
 	  }
@@ -1318,11 +1317,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		}
 	}
 	
-	 public double classifyInstance(Instance p_instance)
+	 /*public double classifyInstance(Instance p_instance)
 	{
 		
 		return m_Tree.classifyInstance(p_instance);
-	}
+	}*/
 	
 }
 	

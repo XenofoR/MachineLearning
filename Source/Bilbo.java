@@ -819,7 +819,6 @@ public class Bilbo
       if (outOfBagCount > 0) {
     	  retVal = errorSum / outOfBagCount;
       }
-      Debugger.DebugPrint("OOB value: " + retVal + "\n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 	  return retVal;
   }
   

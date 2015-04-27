@@ -89,10 +89,8 @@ public class TestEnvironment {
 					Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
 					m_oracle.Init(active[1]);
 					int k = 0;
-					while(active[1].numInstances() >= OurUtil.g_activeNumber)
-					{
-						m_supervisedForest = null;
-						m_activeForest = null;
+					while(active[1].numInstances() > OurUtil.g_activeNumber)
+					{						
 						m_supervisedForest = new RandomForest();
 						m_activeForest = new ActiveForest();
 						m_supervisedForest.setNumTrees(m_trees);
@@ -101,7 +99,7 @@ public class TestEnvironment {
 						m_activeForest.setNumTrees(m_trees);
 						m_activeForest.setMaxDepth(m_depth);
 						m_activeForest.setNumFeatures(m_features);
-						
+						m_activeForest.setNumExecutionSlots(8);
 						m_supervisedForest.buildClassifier(supervised[0]);
 						m_activeForest.buildClassifier(active[0], active[1]);
 						Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
@@ -119,7 +117,12 @@ public class TestEnvironment {
 						activeMAPE[i][k] += m_validator.GetMAPE();
 						
 						k++;
+						m_supervisedForest = null;
+						m_activeForest = null;
+						System.out.println("======= Current Fold: " + j + " k-value: " + k  + "number of unlabeled left: " + active[1].numInstances() + " ========\n");
 					}
+					active = null;
+					supervised = null;
 				}
 				for(int j = 0; j < folds[0].numInstances()/OurUtil.g_activeNumber; j++)
 				{
@@ -132,6 +135,7 @@ public class TestEnvironment {
 				
 				String supervisedResults[] = new String[2];
 				String activeResults[] = new String[2];
+				activeResults[0] = activeResults[1] = supervisedResults[0] = supervisedResults[1] = "";
 				for(int j = 0; j < supervisedMAE[0].length; j++)
 				{
 					supervisedResults[0] += supervisedMAE[i][j] + " ";
@@ -145,6 +149,8 @@ public class TestEnvironment {
 				}
 				
 				WriteResultFile(activeResults, supervisedResults, i);
+				
+				folds = null;
 			}
 			//Start at same labeled amount, ours actively choices ders chose by dice rooloing
 			break;
@@ -402,7 +408,7 @@ public class TestEnvironment {
 		for(int i = 0; i < p_splitLevel; i++)
 			for(int j = 0; j < instancesPerFold; j++)
 			{
-				int aRandomValueSelectedByUsingARandomMethodInJava = ran.nextInt(tempStructure.numInstances()-1);
+				int aRandomValueSelectedByUsingARandomMethodInJava = ran.nextInt(tempStructure.numInstances());
 				Instance selected = tempStructure.get(aRandomValueSelectedByUsingARandomMethodInJava);
 				returnStructure[i].add(selected);
 				tempStructure.delete(aRandomValueSelectedByUsingARandomMethodInJava);
