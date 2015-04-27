@@ -59,11 +59,11 @@ public class TestEnvironment {
 		double[][] activeMAE;
 		double[][] supervisedMAPE;
 		double[][] activeMAPE;
-		
+		Timer t = new Timer();
 		CreateDataStructure(m_inputPath + m_test);
-		
+
 		Instances[] spliData = SplitDataStructure(m_structure, m_trainingSize);
-		
+
 		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
 		Calendar cal = Calendar.getInstance();
 		new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
@@ -91,8 +91,7 @@ public class TestEnvironment {
 					int k = 0;
 					while(active[1].numInstances() > OurUtil.g_activeNumber)
 					{
-						m_supervisedForest = null;
-						m_activeForest = null;
+						int index = t.StartTimer();
 						m_supervisedForest = new RandomForest();
 						m_activeForest = new ActiveForest();
 						m_supervisedForest.setNumTrees(m_trees);
@@ -119,6 +118,10 @@ public class TestEnvironment {
 						activeMAE[i][k] += m_validator.GetMAE();
 						activeMAPE[i][k] += m_validator.GetMAPE();
 						k++;
+						m_supervisedForest = null;
+						m_activeForest = null;
+						System.out.println("Active loop time: " + t.GetTime(index));
+						t.StopTimer(index);
 					}
 					System.out.println("fold: " + j + "complete\n");
 				}
