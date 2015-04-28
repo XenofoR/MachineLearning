@@ -33,7 +33,11 @@ public class Graph implements Serializable
 		m_covarianeMatrices = new Vector<double[][]>();		
 		m_graphs = new Vector<InnerGraph>();
 		m_idToIndexMap = new Vector<OurUtil.Pair<Integer, Integer>>();
-		
+		if(OurUtil.g_useMahalanobis == false)
+		{
+			m_graphs.add(new InnerGraph(-1, 0, -1, -1));
+			m_graphs.elementAt(0).Init();
+		}
 	}
 	
 	public void GetInstances(Instances p_outInstances)
@@ -65,17 +69,25 @@ public class Graph implements Serializable
 	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
 	{
 		Debugger.DebugPrint("Added leaf node: " + p_id + " With parent: " + p_parentId, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
-		InnerGraph graph = new InnerGraph(p_parentId, p_id, -1 , -1);
-		graph.Init();
-		graph.AddCluster(p_labeled, p_unlabeled, p_covariance);
-		OurUtil.Pair<Integer, Integer> temp = new OurUtil.Pair<Integer, Integer>(p_id, m_graphs.size());
-		m_idToIndexMap.add(temp);
-		m_graphs.add(graph);
+		if(OurUtil.g_useMahalanobis)
+		{
+			InnerGraph graph = new InnerGraph(p_parentId, p_id, -1 , -1);
+			graph.Init();
+			graph.AddCluster(p_labeled, p_unlabeled, p_covariance);
+			OurUtil.Pair<Integer, Integer> temp = new OurUtil.Pair<Integer, Integer>(p_id, m_graphs.size());
+			m_idToIndexMap.add(temp);
+			m_graphs.add(graph);
+		}
+		else
+		{
+			m_graphs.elementAt(0).AddCluster(p_labeled, p_unlabeled, null);
+		}
 	}
 	public void AddParent(int p_id, int p_parentId, int p_childId1, int p_childId2)
 	{
+		if(OurUtil.g_useMahalanobis == false)
+			return;
 		Debugger.DebugPrint("Added split node: " + p_id + " With Parent: " + p_parentId + " And children: " + p_childId1 + " " + p_childId2, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
-
 		InnerGraph graph = new InnerGraph(p_parentId, p_id, p_childId1 , p_childId2);
 		graph.Init();
 		OurUtil.Pair<Integer, Integer> temp = new OurUtil.Pair<Integer, Integer>(p_id, m_graphs.size());
@@ -84,39 +96,46 @@ public class Graph implements Serializable
 	}
 	public Instance CalculateHighestUncertaintyAndPropagateLabels(double[] p_outVal) throws Exception
 	{
-		if(m_forceRootMerge)
-			return UncertaintyCompleteGraph(p_outVal);
 		Instance retInst = null;
 		double val = 0;
-		for(int i = 0; i < m_graphs.size(); i++)
+		if(OurUtil.g_useMahalanobis)
 		{
-			if(m_graphs.elementAt(i).GetChildren()[0] != -1) // Non-leaf
-				continue;
-			if(m_graphs.elementAt(i).HasBeenMerged())
-				continue;
-			Instance temp = null;
+			if(m_forceRootMerge)
+				return UncertaintyCompleteGraph(p_outVal);
 			
-			if(m_graphs.elementAt(i).HasLabeled())
-				temp = m_graphs.elementAt(i).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
-			else
+			for(int i = 0; i < m_graphs.size(); i++)
 			{
-				Debugger.DebugPrint("No labeled, going into merge mode", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-				int parent = m_graphs.elementAt(i).GetParentId();
-				int index = MergeChildren(parent, parent);
-				index = FindIndexFromId(index);
-				//parent = MergeChildren(index);
-				temp = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
+				if(m_graphs.elementAt(i).GetChildren()[0] != -1) // Non-leaf
+					continue;
+				if(m_graphs.elementAt(i).HasBeenMerged())
+					continue;
+				Instance temp = null;
+				
+				if(m_graphs.elementAt(i).HasLabeled())
+					temp = m_graphs.elementAt(i).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
+				else
+				{
+					Debugger.DebugPrint("No labeled, going into merge mode", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+					int parent = m_graphs.elementAt(i).GetParentId();
+					int index = MergeChildren(parent, parent);
+					index = FindIndexFromId(index);
+					//parent = MergeChildren(index);
+					temp = m_graphs.elementAt(index).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
+				}
+				if(val < p_outVal[0])
+				{
+					retInst = temp;
+					val = p_outVal[0];
+				}
+			
+				Debugger.DebugPrint("Checked graph: " + i + "of: " + m_graphs.size(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			}
-			if(val < p_outVal[0])
-			{
-				retInst = temp;
-				val = p_outVal[0];
-			}
-		
-			Debugger.DebugPrint("Checked graph: " + i + "of: " + m_graphs.size(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			System.gc();
+			p_outVal[0] = val;
+			
 		}
-		System.gc();
-		p_outVal[0] = val;
+		else
+			retInst = m_graphs.elementAt(0).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
 		return retInst;
 	}
 	
@@ -314,24 +333,22 @@ public class Graph implements Serializable
 				
 				if(OurUtil.g_useMahalanobis)
 				{
-				//calculate the mean of the mahalanobis distance using both covariance matrices. P.200 in Criminisi 2011
-				double mahalanobis = CalculateMahalanobisDistance(currPointArray, pointArray, p_currPoint.m_covarianceIndex);
-				mahalanobis +=  CalculateMahalanobisDistance(currPointArray, pointArray, m_Points.elementAt(i).m_covarianceIndex);
-				mahalanobis /= 2;
-				
-				if(mahalanobis > 10000)
-					Debugger.DebugPrint("Really high distance for edge detected: " + mahalanobis, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
-				
-				edge.m_weight = mahalanobis;
-				edge2.m_weight =  mahalanobis;
+					//calculate the mean of the mahalanobis distance using both covariance matrices. P.200 in Criminisi 2011
+					double mahalanobis = CalculateMahalanobisDistance(currPointArray, pointArray, p_currPoint.m_covarianceIndex);
+					mahalanobis +=  CalculateMahalanobisDistance(currPointArray, pointArray, m_Points.elementAt(i).m_covarianceIndex);
+					mahalanobis /= 2;
+					
+					if(mahalanobis > 10000)
+						Debugger.DebugPrint("Really high distance for edge detected: " + mahalanobis, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+					
+					edge.m_weight = mahalanobis;
+					edge2.m_weight =  mahalanobis;
 				}
 				else //Eucledian distance
 				{
 					double eucledian = CalculateEucledianDistance(currPointArray, pointArray);
 					edge.m_weight = 
 					edge2.m_weight =  eucledian;
-					 
-					
 				}
 				p_currPoint.m_edges.add(edge);
 				m_Points.elementAt(i).m_edges.add(edge2);
@@ -355,50 +372,103 @@ public class Graph implements Serializable
 				return null;
 			Instance retVal = null;;
 			double out = 0;
-			double[] totalDist = new double[m_Points.size()];
-			double[][] pointToLabeled = new double[m_Points.size()][m_labeledIndices.size()];
-			for(int i = 0; i < m_labeledIndices.size(); i++)
+			if(OurUtil.g_useMahalanobis)
 			{
-				int index = m_labeledIndices.elementAt(i);
-				//Calculate from label to each point
-				double[] distances = Dijkstra(index);
-				for(int j = 0; j < distances.length; j++)
+				double[] totalDist = new double[m_Points.size()];
+				double[][] pointToLabeled = new double[m_Points.size()][m_labeledIndices.size()];
+				for(int i = 0; i < m_labeledIndices.size(); i++)
 				{
-					if(m_labeledIndices.contains(j))
+					int index = m_labeledIndices.elementAt(i);
+					//Calculate from label to each point
+					double[] distances = Dijkstra(index);
+					for(int j = 0; j < distances.length; j++)
 					{
-						pointToLabeled[j][i] =  -1;
-						totalDist[j] = -1;
+						if(m_labeledIndices.contains(j))
+						{
+							pointToLabeled[j][i] =  -1;
+							totalDist[j] = -1;
+						}
+						else
+						{
+							pointToLabeled[j][i] =  distances[j];
+							totalDist[j] += distances[j];
+						}
 					}
-					else
+				}
+				for(int i = 0; i < pointToLabeled.length; i++)
+				{
+					if(m_labeledIndices.contains(i))
+						continue;
+					double label = 0;
+					for(int j = 0; j < m_labeledIndices.size(); j++)
 					{
-						pointToLabeled[j][i] =  distances[j];
-						totalDist[j] += distances[j];
+						if(pointToLabeled[i][j] > out)
+						{
+							retVal = m_Points.elementAt(i).m_instance;
+							out = pointToLabeled[i][j];
+							//TODO Working with java is like working with a lava flow, with your hand.					
+						}
+						double percentage =  Math.abs((pointToLabeled[i][j] / totalDist[i]) - 1)/(pointToLabeled[i].length-1);	
+						// if 0 we only have 1 labeled and then we will simply apply it directly
+						percentage = (percentage == 0  || (Double.isNaN(percentage)) || Double.isInfinite(percentage)) ? 1 : percentage; 
+						label +=  percentage * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
 					}
+					int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
+					double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
+					m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
+					m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
 				}
 			}
-			for(int i = 0; i < pointToLabeled.length; i++)
+			else
 			{
-				if(m_labeledIndices.contains(i))
-					continue;
-				double label = 0;
-				for(int j = 0; j < m_labeledIndices.size(); j++)
+				double[] temp1 = new double[m_Points.elementAt(0).m_instance.numAttributes()-1];
+				double[] temp2 = new double[m_Points.elementAt(0).m_instance.numAttributes()-1];
+				
+				
+				double[] shortest = new double[m_Points.size()];
+				for(int i = 0; i < m_Points.size(); i++)
 				{
-					if(pointToLabeled[i][j] > out)
+					if(m_Points.elementAt(i).m_labeled)
 					{
-						retVal = m_Points.elementAt(i).m_instance;
-						out = pointToLabeled[i][j];
-						//TODO Working with java is like working with a lava flow, with your hand.					
+						shortest[i] = -Double.MAX_VALUE;
+						continue;
 					}
-					double percentage =  Math.abs((pointToLabeled[i][j] / totalDist[i]) - 1)/(pointToLabeled[i].length-1);	
-					// if 0 we only have 1 labeled and then we will simply apply it directly
-					percentage = (percentage == 0  || (Double.isNaN(percentage)) || Double.isInfinite(percentage)) ? 1 : percentage; 
-					label +=  percentage * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
+					double[] distance = new double[m_labeledIndices.size()];
+					double totalDist = 0;
+					double localshort = Double.MAX_VALUE;
+					for(int j = 0; j < temp1.length; j++)
+						temp1[j] = m_Points.elementAt(i).m_instance.toDoubleArray()[j];
+					for(int j = 0 ; j < m_labeledIndices.size(); j++)
+					{
+						for(int k = 0; k < temp2.length; k++)
+							temp2[k] = m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.toDoubleArray()[k];
+						double dist = CalculateEucledianDistance(temp1, temp2);
+						distance[j] = dist;
+						totalDist += dist;
+						if(dist < localshort)
+							localshort = dist;				
+					}
+					shortest[i] = localshort;
+					double label = 0;
+					for(int j = 0; j < m_labeledIndices.size(); j++)
+					{
+						double percentage = Math.abs((distance[j] / totalDist) -1 ) /(distance.length -1);
+						percentage = (percentage == 0  || (Double.isNaN(percentage)) || Double.isInfinite(percentage)) ? 1 : percentage;
+						label += percentage* m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
+					}
+					int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
+					double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
+					m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
+					m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
+					
 				}
-				int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
-				double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
-				m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
-				m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
-			}			
+				for(int i = 0; i < shortest.length; i++)
+					if(shortest[i] > out)
+					{
+						out = shortest[i];
+						retVal = m_Points.elementAt(i).m_instance;
+					}
+			} 
 			p_outVal[0] = out;
 			Debugger.DebugPrint("Path Finding Complete", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			return retVal;
