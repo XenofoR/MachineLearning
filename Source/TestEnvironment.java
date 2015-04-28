@@ -59,11 +59,11 @@ public class TestEnvironment {
 		double[][] activeMAE;
 		double[][] supervisedMAPE;
 		double[][] activeMAPE;
-		
+		Timer t = new Timer();
 		CreateDataStructure(m_inputPath + m_test);
-		
+
 		Instances[] spliData = SplitDataStructure(m_structure, m_trainingSize);
-		
+
 		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
 		Calendar cal = Calendar.getInstance();
 		new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
@@ -91,6 +91,8 @@ public class TestEnvironment {
 					int k = 0;
 					while(active[1].numInstances() > OurUtil.g_activeNumber)
 					{						
+
+						int index = t.StartTimer();
 						m_supervisedForest = new RandomForest();
 						m_activeForest = new ActiveForest();
 						m_supervisedForest.setNumTrees(m_trees);
@@ -99,7 +101,8 @@ public class TestEnvironment {
 						m_activeForest.setNumTrees(m_trees);
 						m_activeForest.setMaxDepth(m_depth);
 						m_activeForest.setNumFeatures(m_features);
-						m_activeForest.setNumExecutionSlots(8);
+						//m_activeForest.setNumExecutionSlots(8);
+						//m_supervisedForest.setNumExecutionSlots(8);
 						m_supervisedForest.buildClassifier(supervised[0]);
 						m_activeForest.buildClassifier(active[0], active[1]);
 						Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
@@ -115,14 +118,17 @@ public class TestEnvironment {
 						m_validator.ValidateModel(m_activeForest);
 						activeMAE[i][k] += m_validator.GetMAE();
 						activeMAPE[i][k] += m_validator.GetMAPE();
-						
 						k++;
 						m_supervisedForest = null;
 						m_activeForest = null;
-						System.out.println("======= Current Fold: " + j + " k-value: " + k  + "number of unlabeled left: " + active[1].numInstances() + " ========\n");
+						System.out.println("======= Current Fold: " + j + " k-value: " + k  + " number of unlabeled left: " + active[1].numInstances() + " ========\n");
+						
+						System.out.println("Active loop time: " + t.GetTime(index));
+						t.StopTimer(index);
 					}
 					active = null;
 					supervised = null;
+						
 				}
 				for(int j = 0; j < folds[0].numInstances()/OurUtil.g_activeNumber; j++)
 				{
@@ -136,6 +142,7 @@ public class TestEnvironment {
 				String supervisedResults[] = new String[2];
 				String activeResults[] = new String[2];
 				activeResults[0] = activeResults[1] = supervisedResults[0] = supervisedResults[1] = "";
+
 				for(int j = 0; j < supervisedMAE[0].length; j++)
 				{
 					supervisedResults[0] += supervisedMAE[i][j] + " ";
@@ -336,6 +343,9 @@ public class TestEnvironment {
 				break;
 			case("NumberOfChoices"):
 				OurUtil.g_activeNumber = scanner.nextInt();
+				break;
+			case("UseMahalanobis"):
+				OurUtil.g_useMahalanobis = scanner.nextBoolean();
 				break;
 			default:
 				System.out.println("Bad line found in test file: " + id);

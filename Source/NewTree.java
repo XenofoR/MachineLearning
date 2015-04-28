@@ -1190,16 +1190,16 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 						S[i][j] += rowA[j]*(rowA[j]*meanLine[j])*(cov[i][j]*meanLine[j]);
 			}
 			
-			Matrix conditionalCov = null;
+			Matrix pointCovariance = null;
 			Matrix matrixJ = Matrix.constructWithCopy(J);
 			Matrix matrixS = Matrix.constructWithCopy(S);
 
-			conditionalCov = matrixJ.times(matrixS).times(matrixJ);
+			pointCovariance = matrixJ.times(matrixS).times(matrixJ);
 
-			double[][] nablaF = new double[n][n];
+			double[][] nablaF = new double[n-1][n];
 			
-			for(int i = 0; i < n; i++)
-				for(int j = 0; j < n; j++)
+			for(int i = 0; i < nablaF.length; i++)
+				for(int j = 0; j < nablaF[0].length; j++)
 				{
 					if(i == j)
 					{
@@ -1218,21 +1218,23 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			Matrix nablaFmatrix = Matrix.constructWithCopy(nablaF);
 			
-			conditionalCov = nablaFmatrix.times(conditionalCov).times(nablaFmatrix.transpose());
-			m_conditionalMatrix = conditionalCov.getArray();
+			Matrix lineCovariance = nablaFmatrix.times(pointCovariance).times(nablaFmatrix.transpose());
+			m_conditionalMatrix = lineCovariance.getArray();
 			m_center = meanLine;
 			
 			double infogain = 0.0;
+			
+			double[][] conditionalY = new double[n-1][n-1];
+
+			int[] currentPoint = new int[1];
+			double ret = 0.0;
 			for(int i = 0; i < m; i++)
 			{
-				int[] currentPoint = new int[1];
 				currentPoint[0] = i;
-				double ret = Math.sqrt(Amatrix.getMatrix(currentPoint, 0, n-1).times(conditionalCov).times(Amatrix.getMatrix(currentPoint, 0, n-1).transpose()).norm2());
+				ret = Amatrix.getMatrix(currentPoint, 0, n-2).times(lineCovariance).times(Amatrix.getMatrix(currentPoint, 0, n-2).transpose()).norm2();
 				ret = Math.log(ret)/Math.log(2);
 				infogain += ret;
 			}
-			
-			
 			return infogain;
 		}
 		
@@ -1317,11 +1319,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		}
 	}
 	
-	 /*public double classifyInstance(Instance p_instance)
+	 public double classifyInstance(Instance p_instance)
 	{
 		
 		return m_Tree.classifyInstance(p_instance);
-	}*/
+	}
 	
 }
 	

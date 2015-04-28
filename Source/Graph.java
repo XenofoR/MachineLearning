@@ -306,11 +306,14 @@ public class Graph implements Serializable
 				
 				
 				Edge edge = new Edge();
-				
+				Edge edge2 = new Edge();
 				edge.m_pointIndex1 = myIndex;
-				
 				edge.m_pointIndex2 = i;
+				edge2.m_pointIndex1 = i;
+				edge2.m_pointIndex2 = myIndex;
 				
+				if(OurUtil.g_useMahalanobis)
+				{
 				//calculate the mean of the mahalanobis distance using both covariance matrices. P.200 in Criminisi 2011
 				double mahalanobis = CalculateMahalanobisDistance(currPointArray, pointArray, p_currPoint.m_covarianceIndex);
 				mahalanobis +=  CalculateMahalanobisDistance(currPointArray, pointArray, m_Points.elementAt(i).m_covarianceIndex);
@@ -320,17 +323,30 @@ public class Graph implements Serializable
 					Debugger.DebugPrint("Really high distance for edge detected: " + mahalanobis, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 				
 				edge.m_weight = mahalanobis;
-				
+				edge2.m_weight =  mahalanobis;
+				}
+				else //Eucledian distance
+				{
+					double eucledian = CalculateEucledianDistance(currPointArray, pointArray);
+					edge.m_weight = 
+					edge2.m_weight =  eucledian;
+					 
+					
+				}
 				p_currPoint.m_edges.add(edge);
-				Edge edge2 = new Edge();
-				edge2.m_pointIndex1 = i;
-				edge2.m_pointIndex2 = myIndex;
-				edge2.m_weight = mahalanobis;
 				m_Points.elementAt(i).m_edges.add(edge2);
 			}
 		}
 		
 		
+		private double CalculateEucledianDistance(double[] p_point1, double[] p_point2) 
+		{
+			double retVal = 0;
+			double[] distVec = new double[p_point1.length];
+			for(int i = 0; i < distVec.length; i++)
+				retVal += Math.pow(p_point1[i] - p_point2[i], 2);
+			return Math.sqrt(retVal);
+		}
 		//TODO SWAPARONI THE DJISKTRARONTI TESTS
 		public Instance CalculateHighestUncertaintyAndPropagateLabels(double[] p_outVal)
 		{
