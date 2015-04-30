@@ -91,9 +91,10 @@ public class TestEnvironment {
 					int k = 0;
 					while(active[1].numInstances() > OurUtil.g_activeNumber)
 					{
-						if(active[0].numInstances() >= 10)
+						if(k >= 10)
 							break;
 						int index = t.StartTimer();
+
 						m_supervisedForest = new RandomForest();
 						m_activeForest = new ActiveForest();
 						m_supervisedForest.setNumTrees(m_trees);
@@ -103,7 +104,8 @@ public class TestEnvironment {
 						m_activeForest.setMaxDepth(m_depth);
 						m_activeForest.setNumFeatures(m_features);
 						m_activeForest.setNumExecutionSlots(8);
-												m_supervisedForest.setNumExecutionSlots(8);
+						m_supervisedForest.setNumExecutionSlots(8);
+
 						m_supervisedForest.buildClassifier(supervised[0]);
 						m_activeForest.buildClassifier(active[0], active[1]);
 						Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
@@ -122,12 +124,14 @@ public class TestEnvironment {
 						k++;
 						m_supervisedForest = null;
 						m_activeForest = null;
+
 						System.out.println("Active loop time: " + t.GetTime(index));
 						t.StopTimer(index);
 					}
 					supervised = null;
 					active = null;
-					System.out.println("fold: " + j + "complete\n");
+					System.out.println("======= Current Fold: " + j + " k-value: " + k  + "number of unlabeled left: " + active[1].numInstances() + " ========\n");
+					
 				}
 				for(int j = 0; j < folds[0].numInstances()/OurUtil.g_activeNumber; j++)
 				{
@@ -140,8 +144,8 @@ public class TestEnvironment {
 				
 				String supervisedResults[] = new String[2];
 				String activeResults[] = new String[2];
-				supervisedResults[0] = supervisedResults[1] = "";
-				activeResults[0] = activeResults[1] = "";
+
+				activeResults[0] = activeResults[1] = supervisedResults[0] = supervisedResults[1] = "";
 				for(int j = 0; j < supervisedMAE[0].length; j++)
 				{
 					supervisedResults[0] += supervisedMAE[i][j] + " ";
@@ -155,6 +159,8 @@ public class TestEnvironment {
 				}
 				
 				WriteResultFile(activeResults, supervisedResults, i);
+				
+				folds = null;
 			}
 			//Start at same labeled amount, ours actively choices ders chose by dice rooloing
 			break;
