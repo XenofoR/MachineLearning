@@ -91,6 +91,8 @@ public class TestEnvironment {
 					int k = 0;
 					while(active[1].numInstances() > OurUtil.g_activeNumber)
 					{
+						if(active[0].numInstances() >= 10)
+							break;
 						int index = t.StartTimer();
 						m_supervisedForest = new RandomForest();
 						m_activeForest = new ActiveForest();
@@ -101,7 +103,7 @@ public class TestEnvironment {
 						m_activeForest.setMaxDepth(m_depth);
 						m_activeForest.setNumFeatures(m_features);
 						m_activeForest.setNumExecutionSlots(8);
-						m_supervisedForest.setNumExecutionSlots(8);
+												m_supervisedForest.setNumExecutionSlots(8);
 						m_supervisedForest.buildClassifier(supervised[0]);
 						m_activeForest.buildClassifier(active[0], active[1]);
 						Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
@@ -123,6 +125,8 @@ public class TestEnvironment {
 						System.out.println("Active loop time: " + t.GetTime(index));
 						t.StopTimer(index);
 					}
+					supervised = null;
+					active = null;
 					System.out.println("fold: " + j + "complete\n");
 				}
 				for(int j = 0; j < folds[0].numInstances()/OurUtil.g_activeNumber; j++)
@@ -411,7 +415,7 @@ public class TestEnvironment {
 		for(int i = 0; i < p_splitLevel; i++)
 			for(int j = 0; j < instancesPerFold; j++)
 			{
-				int aRandomValueSelectedByUsingARandomMethodInJava = ran.nextInt(tempStructure.numInstances()-1);
+				int aRandomValueSelectedByUsingARandomMethodInJava = ran.nextInt(tempStructure.numInstances());
 				Instance selected = tempStructure.get(aRandomValueSelectedByUsingARandomMethodInJava);
 				returnStructure[i].add(selected);
 				tempStructure.delete(aRandomValueSelectedByUsingARandomMethodInJava);

@@ -1318,12 +1318,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			}
 		}
 	}
-/*	
+	
 	 public double classifyInstance(Instance p_instance)
 	{
 		
 		return m_Tree.classifyInstance(p_instance);
 	}
-	*/
+	
 }
 	
