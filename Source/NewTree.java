@@ -1043,8 +1043,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				          currSumSquared[1] -= classValSquared;
 				          currSumOfWeights[1] -= inst.weight();
 			          }
-			          if(i % 100 == 0)
-			        	  System.gc();
+			        //  if(i % 100 == 0)
+			        //	  System.gc();
 			        }
 
 			      // Compute weights
@@ -1122,6 +1122,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				Debugger.DebugPrint("Covariance value= " + hejhoppiklingonskogen, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			}
 			Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			p_instances = null;
 			return hejhoppiklingonskogen;
 		}
 		

@@ -63,7 +63,7 @@ public class TestEnvironment {
 		CreateDataStructure(m_inputPath + m_test);
 
 		Instances[] spliData = SplitDataStructure(m_structure, m_trainingSize);
-
+		m_oracle.Init(spliData[0]);
 		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
 		Calendar cal = Calendar.getInstance();
 		new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
@@ -87,7 +87,7 @@ public class TestEnvironment {
 					Instances currFold = m_validator.GetTrainingSet();
 					Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
 					Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
-					m_oracle.Init(active[1]);
+					
 					int k = 0;
 					while(active[1].numInstances() > OurUtil.g_activeNumber)
 					{						
@@ -125,6 +125,7 @@ public class TestEnvironment {
 						
 						System.out.println("Active loop time: " + t.GetTime(index));
 						t.StopTimer(index);
+						System.gc();
 					}
 					active = null;
 					supervised = null;

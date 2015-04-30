@@ -115,7 +115,6 @@ public class Graph implements Serializable
 		
 			Debugger.DebugPrint("Checked graph: " + i + "of: " + m_graphs.size(), Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		}
-		System.gc();
 		p_outVal[0] = val;
 		return retInst;
 	}

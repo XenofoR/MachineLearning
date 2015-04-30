@@ -659,6 +659,7 @@ public class Bilbo
     }
     // save memory
     m_data = null;
+    m_unlabeledData = null;
   }
   
   

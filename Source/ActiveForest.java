@@ -78,6 +78,7 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	    m_bagger.setCalcOutOfBag(!getDontCalculateOutOfBagError());
 	    m_bagger.setNumExecutionSlots(m_numExecutionSlots);
 	    m_bagger.buildClassifier(p_labeledData, p_unlabeledData);
+	    
 	}
 	
 	public String toString() {
