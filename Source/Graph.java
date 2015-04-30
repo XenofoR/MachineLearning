@@ -136,6 +136,7 @@ public class Graph implements Serializable
 		}
 		else
 			retInst = m_graphs.elementAt(0).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
+
 		return retInst;
 	}
 	

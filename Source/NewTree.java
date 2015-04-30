@@ -221,7 +221,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
 		m_graph.Init();
-		System.gc();
 		m_counter = 0;
 	    // Make sure K value is in range
 	    if (m_KValue > p_labeledData.numAttributes() - 1) {
@@ -1007,8 +1006,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        		inst = p_unlabeledData.instance(i - indexOfFirstMissingValue);
 			        	
 			          if (inst.value(att) > currSplit) {
-			        	double m = ConditionalCovariance(splitData(p_labeledData, inst.value(att), att));
-			        	double c = (m_alpha * Covariance(clusterData.numInstances(), splitData(clusterData, inst.value(att), att)));
+			        	Instances[] LabeledsplitSet = splitData(p_labeledData, inst.value(att), att);
+			        	Instances[] ClustersplitSet = splitData(clusterData, inst.value(att), att);
+			        	double m = ConditionalCovariance(LabeledsplitSet);
+			        	double c = (m_alpha * Covariance(clusterData.numInstances(), ClustersplitSet));
 			            currVal = m + c;
 			            if(currVal == Double.NaN)
 			            	continue;
@@ -1027,8 +1028,16 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			                sumOfWeights[j] = currSumOfWeights[j];
 			              }
 			            }
+			            
+			            LabeledsplitSet[0] = null;
+			            LabeledsplitSet[1] = null;
+			            ClustersplitSet[0] = null;
+			            ClustersplitSet[1] = null;
+			            LabeledsplitSet = null;
+			            ClustersplitSet = null;
 			          }
-
+			          
+			          
 			          currSplit = inst.value(att);
 			          
 			          if(inst.classIndex() != -1)
@@ -1044,10 +1053,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				          currSumSquared[1] -= classValSquared;
 				          currSumOfWeights[1] -= inst.weight();
 			          }
-			          if(i % 100 == 0)
-			        	  System.gc();
+			         // if(i % 200 == 0)
+			        //	  System.gc();
 			        }
-
 			      // Compute weights
 			      
 			      props[0] = new double[sums.length];
@@ -1123,6 +1131,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				Debugger.DebugPrint("Covariance value= " + hejhoppiklingonskogen, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			}
 			Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			//p_instances = null;
 			return hejhoppiklingonskogen;
 		}
 		
@@ -1138,6 +1147,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			if(det == 0)
 				return Double.NaN;
 			double ret = (Math.log(det)/Math.log(2));
+			covarianceMatrix = null;
 			return ret;
 		}
 		
@@ -1191,16 +1201,16 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 						S[i][j] += rowA[j]*(rowA[j]*meanLine[j])*(cov[i][j]*meanLine[j]);
 			}
 			
-			Matrix conditionalCov = null;
+			Matrix pointCovariance = null;
 			Matrix matrixJ = Matrix.constructWithCopy(J);
 			Matrix matrixS = Matrix.constructWithCopy(S);
 
-			conditionalCov = matrixJ.times(matrixS).times(matrixJ);
+			pointCovariance = matrixJ.times(matrixS).times(matrixJ);
 
-			double[][] nablaF = new double[n][n];
+			double[][] nablaF = new double[n-1][n];
 			
-			for(int i = 0; i < n; i++)
-				for(int j = 0; j < n; j++)
+			for(int i = 0; i < nablaF.length; i++)
+				for(int j = 0; j < nablaF[0].length; j++)
 				{
 					if(i == j)
 					{
@@ -1219,20 +1229,40 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			Matrix nablaFmatrix = Matrix.constructWithCopy(nablaF);
 			
-			conditionalCov = nablaFmatrix.times(conditionalCov).times(nablaFmatrix.transpose());
-			m_conditionalMatrix = conditionalCov.getArray();
+			Matrix lineCovariance = nablaFmatrix.times(pointCovariance).times(nablaFmatrix.transpose());
+			m_conditionalMatrix = lineCovariance.getArray();
 			m_center = meanLine;
 			
 			double infogain = 0.0;
+			
+			double[][] conditionalY = new double[n-1][n-1];
+
+			int[] currentPoint = new int[1];
+			double ret = 0.0;
 			for(int i = 0; i < m; i++)
 			{
-				int[] currentPoint = new int[1];
 				currentPoint[0] = i;
-				double ret = Math.sqrt(Amatrix.getMatrix(currentPoint, 0, n-1).times(conditionalCov).times(Amatrix.getMatrix(currentPoint, 0, n-1).transpose()).norm2());
+				ret = Amatrix.getMatrix(currentPoint, 0, n-2).times(lineCovariance).times(Amatrix.getMatrix(currentPoint, 0, n-2).transpose()).norm2();
 				ret = Math.log(ret)/Math.log(2);
 				infogain += ret;
 			}
 			
+			A = null;
+			Amatrix = null;
+			eigValue = null;
+			V = null;
+			meanLine = null;
+			J = null;
+			cov = null;
+			S = null;
+			rowA = null;
+			matrixJ = null;
+			matrixS = null;
+			pointCovariance = null;
+			nablaF = null;
+			nablaFmatrix = null;
+			lineCovariance = null;
+			conditionalY = null;
 			
 			return infogain;
 		}
@@ -1247,6 +1277,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				Debugger.DebugPrint("Covariance value= " + hejhoppiklingonskogen, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			}
 			Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+			//p_instances = null;
 			return hejhoppiklingonskogen;
 		}
 		
@@ -1318,11 +1349,11 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		}
 	}
 	
-	 /*public double classifyInstance(Instance p_instance)
+	 public double classifyInstance(Instance p_instance)
 	{
 		
 		return m_Tree.classifyInstance(p_instance);
-	}*/
+	}
 	
 }
 	
