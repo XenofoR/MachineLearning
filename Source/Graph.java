@@ -396,28 +396,53 @@ public class Graph implements Serializable
 						}
 					}
 				}
+				double[] shortest = new double[pointToLabeled.length];
 				for(int i = 0; i < pointToLabeled.length; i++)
 				{
 					if(m_labeledIndices.contains(i))
 						continue;
+					double localShortest = Double.MAX_VALUE;
 					double label = 0;
+					for(int j = 0; j < pointToLabeled[i].length; j++)
+					{
+						localShortest = (pointToLabeled[i][j] < localShortest) ? pointToLabeled[i][j] : localShortest;
+						label = m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
+					}
+					shortest[i] = localShortest;
+					
+					int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
+					double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
+					m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
+					m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
+					
+				}
+				
+				
+				for(int i = 0; i < pointToLabeled.length; i++)
+				{
+					if(m_labeledIndices.contains(i))
+						continue;
+					//double label = 0;
+					if(shortest[i] > out)
+					{
+						retVal = m_Points.elementAt(i).m_instance;
+						out = shortest[i];
+						//TODO Working with java is like working with a lava flow, with your hand.					
+					}
+					/*
 					for(int j = 0; j < m_labeledIndices.size(); j++)
 					{
-						if(pointToLabeled[i][j] > out)
-						{
-							retVal = m_Points.elementAt(i).m_instance;
-							out = pointToLabeled[i][j];
-							//TODO Working with java is like working with a lava flow, with your hand.					
-						}
+						
 						double percentage =  Math.abs((pointToLabeled[i][j] / totalDist[i]) - 1)/(pointToLabeled[i].length-1);	
 						// if 0 we only have 1 labeled and then we will simply apply it directly
 						percentage = (percentage == 0  || (Double.isNaN(percentage)) || Double.isInfinite(percentage)) ? 1 : percentage; 
 						label +=  percentage * m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
 					}
+					
 					int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
 					double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
 					m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
-					m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
+					m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label); */
 				}
 			}
 			else

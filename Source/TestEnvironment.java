@@ -59,6 +59,7 @@ public class TestEnvironment {
 		double[][] activeMAE;
 		double[][] supervisedMAPE;
 		double[][] activeMAPE;
+		double[][] transductionError;
 		Timer t = new Timer();
 		CreateDataStructure(m_inputPath + m_test);
 
@@ -68,20 +69,23 @@ public class TestEnvironment {
 		Calendar cal = Calendar.getInstance();
 		new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
 		m_outputPath += "/" + timeAndDate.format(cal.getTime()) + "/";
+		
+		Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
+		m_validator.Init(folds); 
+		
+		supervisedMAE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
+		supervisedMAPE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
+		
+		activeMAE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
+		activeMAPE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
+		
+		transductionError = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
 		switch(m_testType)
 		{
 		case 1:
 			for(int i = 0; i < m_numTests; i++)
 			{
-				Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
-				m_validator.Init(folds); 
-				
-				supervisedMAE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
-				supervisedMAPE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
-				
-				activeMAE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
-				activeMAPE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
-				
+				String clusterString = "";
 				for(int j = 0; j < m_validationFolds; j++)
 				{
 					Instances currFold = m_validator.GetTrainingSet();
@@ -120,6 +124,10 @@ public class TestEnvironment {
 						m_validator.ValidateModel(m_activeForest);
 						activeMAE[i][k] += m_validator.GetMAE();
 						activeMAPE[i][k] += m_validator.GetMAPE();
+						
+						transductionError[i][k] = m_activeForest.GetAverageTransductionError();
+						if(OurUtil.g_clusterAnalysis)
+							clusterString += ClusterAnalysisToString();
 						k++;
 						m_supervisedForest = null;
 						m_activeForest = null;
@@ -146,9 +154,8 @@ public class TestEnvironment {
 				}
 				
 				String supervisedResults[] = new String[2];
-				String activeResults[] = new String[2];
-
-				activeResults[0] = activeResults[1] = supervisedResults[0] = supervisedResults[1] = "";
+				String activeResults[] = new String[4];
+				activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = "";
 
 				for(int j = 0; j < supervisedMAE[0].length; j++)
 				{
@@ -161,6 +168,10 @@ public class TestEnvironment {
 					supervisedResults[1] += supervisedMAPE[i][j] + " ";
 					activeResults[1] += activeMAPE[i][j] + " ";
 				}
+				for(int j = 0; j < transductionError[0].length; j++)
+					activeResults[2] += transductionError[i][j] + " ";
+				if(OurUtil.g_clusterAnalysis)
+					activeResults[3] = clusterString;
 				
 				WriteResultFile(activeResults, supervisedResults, i);
 				
@@ -239,7 +250,9 @@ public class TestEnvironment {
 					w.write("Active Results: \n");
 					w.write("\t" +"MAE: " + p_activeRes[0] + "\n");
 					w.write("\t" +"MAPE: " + p_activeRes[1] + "\n");
-					
+					w.write("\t" + "Trans: " + p_activeRes[2] +"\n");
+					if(OurUtil.g_clusterAnalysis)
+						w.write(p_activeRes[3]);
 					
 			w.close();
 			}
