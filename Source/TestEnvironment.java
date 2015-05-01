@@ -70,21 +70,26 @@ public class TestEnvironment {
 		new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
 		m_outputPath += "/" + timeAndDate.format(cal.getTime()) + "/";
 		
-		Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
-		m_validator.Init(folds); 
+		supervisedMAE = new double[m_numTests][];
+		supervisedMAPE = new double[m_numTests][];
+		activeMAE = new double[m_numTests][];
+		activeMAPE = new double[m_numTests][];
+		transductionError = new double[m_numTests][];
 		
-		supervisedMAE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
-		supervisedMAPE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
-		
-		activeMAE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
-		activeMAPE = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
-		
-		transductionError = new double[m_numTests][folds[0].numInstances()/OurUtil.g_activeNumber];
 		switch(m_testType)
 		{
 		case 1:
 			for(int i = 0; i < m_numTests; i++)
 			{
+				Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
+				m_validator.Init(folds); 
+				
+				supervisedMAE[i] = new double[folds[0].numInstances()/OurUtil.g_activeNumber];
+				supervisedMAPE[i] = new double[folds[0].numInstances()/OurUtil.g_activeNumber];
+				activeMAE[i] = new double[folds[0].numInstances()/OurUtil.g_activeNumber];
+				activeMAPE[i] = new double[folds[0].numInstances()/OurUtil.g_activeNumber];
+				transductionError[i] = new double[folds[0].numInstances()/OurUtil.g_activeNumber];
+				
 				String clusterString = "";
 				for(int j = 0; j < m_validationFolds; j++)
 				{
@@ -174,7 +179,6 @@ public class TestEnvironment {
 					activeResults[3] = clusterString;
 				
 				WriteResultFile(activeResults, supervisedResults, i);
-				
 				folds = null;
 			}
 			//Start at same labeled amount, ours actively choices ders chose by dice rooloing

@@ -1017,7 +1017,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	double m = ConditionalCovariance(LabeledsplitSet);
 			        	double c = (m_alpha * Covariance(clusterData.numInstances(), ClustersplitSet));
 			            currVal = m + c;
-			            Debugger.DebugPrint("regression entropy: " + m + " cluster entropy: " + c + " \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			            Debugger.DebugPrint("regression entropy: " + m + " cluster entropy: " + c + " \n", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			            if(currVal == Double.NaN)
 			            	continue;
 			            if (currVal < bestVal) {
