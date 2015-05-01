@@ -367,6 +367,12 @@ public class TestEnvironment {
 			case("UseMahalanobis"):
 				OurUtil.g_useMahalanobis = scanner.nextBoolean();
 				break;
+			case("UseWeightedTransduction"):
+				OurUtil.g_useWeightedTransduction = scanner.nextBoolean();
+				break;
+			case("ForceCompleteGraph"):
+				OurUtil.g_forceCompleteGraph = scanner.nextBoolean();
+				break;
 			default:
 				System.out.println("Bad line found in test file: " + id);
 				break;
