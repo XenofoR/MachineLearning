@@ -324,7 +324,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    //Will become the worst instance, aka the instance that should be sent to active learning
 	    //Instance ins = null;
 	    double[] dist = {0};
-	   // m_graph.ForceRootMerge(true);
+	    m_graph.ForceRootMerge(OurUtil.g_forceCompleteGraph);
 	    m_worstInstance = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
 	    m_worstDistance = dist[0];
 	    m_transductionError = m_graph.GetAverageErrorRate();

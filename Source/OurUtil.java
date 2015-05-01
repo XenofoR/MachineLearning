@@ -12,6 +12,8 @@ public class OurUtil
 	static boolean g_debug;
 	static boolean g_clusterAnalysis;
 	static boolean g_useMahalanobis;
+	static boolean g_useWeightedTransduction;
+	static boolean g_forceCompleteGraph;
 	static double g_machineEpsilion;
 	static int g_numTrees;
 	static double g_threshold;
