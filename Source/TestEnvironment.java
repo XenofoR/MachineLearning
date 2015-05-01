@@ -124,7 +124,7 @@ public class TestEnvironment {
 						m_supervisedForest = null;
 						m_activeForest = null;
 
-						System.out.println("======= Current Fold: " + j + " k-value: " + k  + "number of unlabeled left: " + active[1].numInstances() + " ========\n");
+						System.out.println("======= Current Fold: " + j + " k-value: " + k  + " number of unlabeled left: " + active[1].numInstances() + " ========\n");
 
 						System.out.println("Active loop time: " + t.GetTime(index));
 						t.StopTimer(index);
@@ -225,8 +225,8 @@ public class TestEnvironment {
 			{
 			Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
 			w.write("Dataset: " + m_test + "\n");
-			w.write("Tree parameters(d/t/f): " + m_depth + " " + m_trees + " " + m_features + "\n");
-			w.write("Test parameters(t/s/f/sl/al: " + m_testType + " " + m_trainingSize + " " + m_validationFolds + " " + m_supervisedLabeled + " " + m_activeLabeled + "\n");
+			w.write("Tree parameters(max depth/num trees/feature split): " + m_depth + " " + m_trees + " " + m_features + "\n");
+			w.write("Test parameters(test type/training size/num folds/supervised labeled/active learning labeled): " + m_testType + " " + m_trainingSize + " " + m_validationFolds + " " + m_supervisedLabeled + " " + m_activeLabeled + "\n");
 
 					w.write("Supervised Results: \n");
 					w.write("\t" +"MAE: " + p_supervisedRes[0] + "\n");

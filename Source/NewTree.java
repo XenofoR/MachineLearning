@@ -323,7 +323,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    //Will become the worst instance, aka the instance that should be sent to active learning
 	    //Instance ins = null;
 	    double[] dist = {0};
-	    m_graph.ForceRootMerge(true);
+	   // m_graph.ForceRootMerge(true);
 	    m_worstInstance = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
 	    m_worstDistance = dist[0];
 	    System.out.println("Average error rate of transduction: " + m_graph.GetAverageErrorRate());
@@ -1011,6 +1011,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			        	double m = ConditionalCovariance(LabeledsplitSet);
 			        	double c = (m_alpha * Covariance(clusterData.numInstances(), ClustersplitSet));
 			            currVal = m + c;
+			            Debugger.DebugPrint("regression entropy: " + m + " cluster entropy: " + c + " \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 			            if(currVal == Double.NaN)
 			            	continue;
 			            if (currVal < bestVal) {
@@ -1235,18 +1236,19 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			double infogain = 0.0;
 			
-			double[][] conditionalY = new double[n-1][n-1];
-
 			int[] currentPoint = new int[1];
 			double ret = 0.0;
-			for(int i = 0; i < m; i++)
+			/*for(int i = 0; i < m; i++)
 			{
 				currentPoint[0] = i;
 				ret = Amatrix.getMatrix(currentPoint, 0, n-2).times(lineCovariance).times(Amatrix.getMatrix(currentPoint, 0, n-2).transpose()).norm2();
 				ret = Math.log(ret)/Math.log(2);
 				infogain += ret;
-			}
-			
+			}*/
+			ret = Math.abs(OurUtil.CalculateDeterminant(lineCovariance.getArray()));
+			if(ret == 0 || !Double.isFinite(ret))
+				return 0.0;
+			infogain = Math.log(ret)/Math.log(2);
 			A = null;
 			Amatrix = null;
 			eigValue = null;
@@ -1262,7 +1264,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			nablaF = null;
 			nablaFmatrix = null;
 			lineCovariance = null;
-			conditionalY = null;
 			
 			return infogain;
 		}

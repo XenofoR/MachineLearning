@@ -716,6 +716,8 @@ public class Bilbo
 	  Arrays.fill(topChoices, -1);
 	  for(int i = 0; i < p_number; i++)
 	  {
+		  if(i == worst.numInstances())
+			  break;
 		  int highestVote = -1;
 		  for(int j = 0; j < counter.length; j++)
 		  {
