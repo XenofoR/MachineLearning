@@ -218,6 +218,17 @@ public class Bilbo
 	  return index;
   }
   
+  public double GetAverageTransductionError()
+  {
+	  double retVal = 0;
+	  for(int i = 0; i < m_Classifiers.length; i++)
+	  {
+		  retVal += ((NewTree)m_Classifiers[i]).GetTransductionError();
+	  }
+	  retVal /= m_Classifiers.length;
+	  return retVal;
+  }
+  
   public Instances getOracleData()
   {
 	  return toOracle;

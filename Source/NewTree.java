@@ -61,6 +61,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	private Instance m_worstInstance;
 	private double m_worstDistance;
 	private InstanceComparator m_instanceComp;
+	private double m_transductionError;
 	int m_counter = 0;
 	InnerTree m_Tree;
 	double m_treeVariance = 0.0;
@@ -326,10 +327,15 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_graph.ForceRootMerge(true);
 	    m_worstInstance = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
 	    m_worstDistance = dist[0];
-	    System.out.println("Average error rate of transduction: " + m_graph.GetAverageErrorRate());
+	    m_transductionError = m_graph.GetAverageErrorRate();
+	    System.out.println("Average error rate of transduction: " + m_transductionError);
 	    
 	  }
 	
+	public double GetTransductionError()
+	{
+		return m_transductionError;
+	}
 	public void DoInduction(Instances p_instances) throws Exception
 	{
 		m_Tree.DoInduction(p_instances);
