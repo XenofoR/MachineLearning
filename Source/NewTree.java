@@ -221,6 +221,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception {
 
+		Debugger.DebugPrint("Starting construction of a Random Tree", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		m_graph.Init();
 		m_counter = 0;
 	    // Make sure K value is in range
@@ -319,7 +320,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_plotter.Display2dPlot();
 	    
 	    OurUtil.g_numTrees++;
-	    System.out.println("Tree: " + OurUtil.g_numTrees  + " Finished!\n");
+	    Debugger.DebugPrint("Tree: " + OurUtil.g_numTrees  + " Finished!\n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 
 	    //Will become the worst instance, aka the instance that should be sent to active learning
 	    //Instance ins = null;
@@ -689,7 +690,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      double minVariance, int p_parentId, int p_myId) throws Exception {
 			m_id = p_myId;
 
-			
 			m_alpha = (double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances());
 
 			m_center = new double[p_unlabeledData.numAttributes()];
@@ -784,7 +784,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      double[] tempNumericVals = new double[p_labeledData.numAttributes()];
 		      while ((windowSize > 0) && (k-- > 0 || !gainFound)) 
 		      {
-
+		    	Debugger.DebugPrint("Leaf: " + m_id + " Starting new split check with k: " + k + " and windowSize: " + windowSize + "\n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		        int chosenIndex = p_random.nextInt(windowSize);
 		        attIndex = p_attIndicesWindow[chosenIndex];
 
@@ -830,7 +830,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        int[] child = new int[2];
 		        child[0] = -1;
 		        child[1] = -1;
-		        Debugger.DebugPrint("=====ID: " + m_id + " ======", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+		        Debugger.DebugPrint("=====ID: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		        for (int i = 0; i < bestDists.length; i++) 
 		        {
 		        	child[i] = ++m_counter;
@@ -839,7 +839,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		            p_labeledData.classAttribute().isNominal() ? 0 : attTotalSubsetWeights[i],
 		            p_random, p_depth + 1, minVariance, m_id, child[i]);		          	 
 		        }
-		        Debugger.DebugPrint("=====END: " + m_id + " ======", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
+		        Debugger.DebugPrint("=====END: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		        m_graph.AddParent(m_id, p_parentId, child[0], child[1]);
 		        // If all successors are non-empty, we don't need to store the class
 		        // distribution

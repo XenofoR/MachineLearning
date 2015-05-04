@@ -120,12 +120,11 @@ public class TestEnvironment {
 						
 						RemovePredefined(temp, active[1]);
 						active[0].addAll(temp);
-						supervised[0].addAll(RemoveAtRandom(OurUtil.g_activeNumber, supervised[1]));
+						supervised[0].addAll(RemoveAtRandom(temp.numInstances(), supervised[1]));
 						
 						m_validator.ValidateModel(m_supervisedForest);
 						supervisedMAE[i][k] += m_validator.GetMAE();
 						supervisedMAPE[i][k] += m_validator.GetMAPE();
-						
 						m_validator.ValidateModel(m_activeForest);
 						activeMAE[i][k] += m_validator.GetMAE();
 						activeMAPE[i][k] += m_validator.GetMAPE();
