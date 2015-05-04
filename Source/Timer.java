@@ -31,8 +31,21 @@ class Timer
 		m_freeIndex.add(p_index);
 		m_timers.set(p_index, Long.MIN_VALUE);
 	}
-	Long GetTime(int p_index)
+	Long GetRawTime(int p_index)
 	{
 		return (System.currentTimeMillis()) - m_timers.elementAt(p_index);
+	}
+	
+	String GetFormatedTime(int p_index)
+	{
+		return ConvertRawToFormated((System.currentTimeMillis()) - m_timers.elementAt(p_index));
+	}
+	String ConvertRawToFormated(Long p_rawTime)
+	{
+		Long seconds = (p_rawTime / 1000) % 60;
+		Long minutes = (p_rawTime / (1000 * 60)) % 60;
+		Long hours=	(p_rawTime / (1000 * 60 * 60)) % 24;
+		String retString = "" + hours + ":" + minutes + ":" + seconds + ":" + (p_rawTime - (seconds * 1000) -( minutes * 60000) - (hours *1000 * 60 * 60));
+		return retString;
 	}
 }

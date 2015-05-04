@@ -139,7 +139,8 @@ public class TestEnvironment {
 
 						System.out.println("======= Current Fold: " + j + " k-value: " + k  + " number of unlabeled left: " + active[1].numInstances() + " ========\n");
 
-						System.out.println("Active loop time: " + t.GetTime(index));
+						System.out.println("Active loop time: " + t.GetRawTime(index));
+						System.out.println("Active loop time formated: " + t.GetFormatedTime(index));
 						t.StopTimer(index);
 						System.gc();
 						
