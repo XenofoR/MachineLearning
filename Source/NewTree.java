@@ -55,7 +55,6 @@ import weka.core.matrix.SingularValueDecomposition;
 public class NewTree extends weka.classifiers.trees.RandomTree
 {
 	
-	private Plotter m_plotter;
 	private Graph m_graph;
 	private double[][] m_leafDistanceMatrix;
 	private Instance m_worstInstance;
@@ -77,9 +76,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	public NewTree()
 	{
 		super();
-		m_plotter = new Plotter();
-		m_plotter.Init("IAM A TREE");
-		m_plotter.SetPlot(Debugger.g_plot);
 		m_instanceComp = new InstanceComparator();
 		m_graph = new Graph();
 	}
@@ -317,7 +313,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    if (labeledBackfit != null) {
 	      m_Tree.backfitData(labeledBackfit); //TODO change to handle two instances
 	    }
-	    m_plotter.Display2dPlot();
 	    
 	    OurUtil.g_numTrees++;
 	    Debugger.DebugPrint("Tree: " + OurUtil.g_numTrees  + " Finished!\n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
@@ -665,14 +660,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				SingleConditionalCovariance(p_instances);
 				m_meanRegressionValue = p_instances.meanOrMode(p_instances.classAttribute());
 				
-				double totalSum = 0, totalSumSquared = 0, totalSumOfWeights = 0;
-		        for (int i = 0; i < p_instances.numInstances(); i++) {
-		          Instance inst = p_instances.instance(i);
-		          totalSum += inst.classValue() * inst.weight();
-		          totalSumSquared += inst.classValue() * inst.classValue()
-		            * inst.weight();
-		          totalSumOfWeights += inst.weight();
-		        }
 		        m_ClassDistribution[0] = m_meanRegressionValue;
 		        
 		        m_Distribution[1] = p_instances.numInstances();
@@ -702,7 +689,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        if (p_labeledData.classAttribute().isNumeric()) {
 		          m_Distribution = new double[2];
 		        }
-		        return;
+		        throw new Exception("OH NOES BATMAN!\n");
 		      }
 
 		      double priorVar = 0;
@@ -717,8 +704,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		            * inst.weight();
 		          totalSumOfWeights += inst.weight();
 		        }
-		        Instances instance = new Instances(p_labeledData);
-		        instance.addAll(p_unlabeledData);
 		        priorVar = NewTree.singleVariance(totalSum, totalSumSquared,
 		          totalSumOfWeights);
 		      }
@@ -757,8 +742,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        
 		        if(OurUtil.g_clusterAnalysis)
 		        	PerformLeafAnalysis(p_labeledData, p_unlabeledData);
-		        
-			    m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
+
 
 		        m_Prop = null;
 		        return;
@@ -784,7 +768,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      double[] tempNumericVals = new double[p_labeledData.numAttributes()];
 		      while ((windowSize > 0) && (k-- > 0 || !gainFound)) 
 		      {
-		    	Debugger.DebugPrint("Leaf: " + m_id + " Starting new split check with k: " + k + " and windowSize: " + windowSize + "\n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 		        int chosenIndex = p_random.nextInt(windowSize);
 		        attIndex = p_attIndicesWindow[chosenIndex];
 
@@ -830,7 +813,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		        int[] child = new int[2];
 		        child[0] = -1;
 		        child[1] = -1;
-		        Debugger.DebugPrint("=====ID: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+		        Debugger.DebugPrint("=====ID: " + m_id + " ======", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		        for (int i = 0; i < bestDists.length; i++) 
 		        {
 		        	child[i] = ++m_counter;
@@ -839,7 +822,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		            p_labeledData.classAttribute().isNominal() ? 0 : attTotalSubsetWeights[i],
 		            p_random, p_depth + 1, minVariance, m_id, child[i]);		          	 
 		        }
-		        Debugger.DebugPrint("=====END: " + m_id + " ======", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+		        Debugger.DebugPrint("=====END: " + m_id + " ======", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		        m_graph.AddParent(m_id, p_parentId, child[0], child[1]);
 		        // If all successors are non-empty, we don't need to store the class
 		        // distribution
@@ -866,7 +849,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      //We are a leaf, so we save the covariance matrix
 		      if(m_Attribute == -1)
 		      {
-		    	  m_Attribute = -1;
 		    	  Instances instances = new Instances(p_labeledData);
 			      instances.addAll(p_unlabeledData);
 			      m_covarianceMatrix = new double[instances.numAttributes()-1][instances.numAttributes()-1];
@@ -878,10 +860,8 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 
 			      m_graph.AddLeaf(p_labeledData, p_unlabeledData, m_covarianceMatrix, p_parentId, m_id);
 
-			      
-				  m_plotter.Set2dPlotValues(p_unlabeledData, p_labeledData);
 
-
+			      instances = null;
 		      }
 		    }
 
@@ -1103,23 +1083,34 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			          dist[j][0] = totalSum / totalSumOfWeights;
 			        }
 			      }
-			      // Compute variance gain
-			      
+			      // Compute regression entropy gain
+			      Instances[] LabeledsplitSet = splitData(p_labeledData, splitPoint, att);
 			      double priorVar = SingleConditionalCovariance(p_labeledData);
-			      double var = ConditionalCovariance(splitData(p_labeledData, splitPoint, att));
+			      double var = ConditionalCovariance(LabeledsplitSet);
 			      
-			      //Add cluster gain over the parent to the final gain calculations.
+			      //Compute the cluster entropy
 			      Instances clusterInstances = new Instances(p_labeledData);
 			      clusterInstances.addAll(p_unlabeledData);
 			      clusterInstances.setClassIndex(-1);
+			      Instances[] ClustersplitSet = splitData(clusterInstances, splitPoint, att);
 			      double clusterPrior = SingleCovariance(clusterInstances);
-			      double clusterVar = Covariance(clusterInstances.numInstances(), splitData(clusterInstances, splitPoint, att));
+			      double clusterVar = Covariance(clusterInstances.numInstances(), ClustersplitSet);
+			      
+			      //Add the two entropies together to form the final gain of the split
 			      double gain = (priorVar - var) + m_alpha *(clusterPrior - clusterVar);
 
 			      // Return distribution and split point
 			      subsetWeights[att] = sumOfWeights;
 			      dists[0] = dist;
 			      vals[att] = gain;
+			      
+			      clusterData = null;
+			      LabeledsplitSet[0] = null;
+			      LabeledsplitSet[1] = null;
+			      LabeledsplitSet = null;
+			      ClustersplitSet[0] = null;
+			      ClustersplitSet[1] = null;
+			      ClustersplitSet = null;
 
 			      return splitPoint;
 			    }

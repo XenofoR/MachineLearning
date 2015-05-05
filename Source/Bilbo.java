@@ -634,10 +634,13 @@ public class Bilbo
 	for(int i = 0 ; i < m_Classifiers.length; i++)
 	{
 		inst.clear();
+		Debugger.DebugPrint("Forest done! starting Induction \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
     	((NewTree)m_Classifiers[i]).GetTransductedInstances(inst);
     	((NewTree)m_Classifiers[i]).DoInduction(inst);
+    	Debugger.DebugPrint("Induction finished! \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
     	// Ehm, do something boyski TODO: Remove this comment
 	}
+
     // calc OOB error?
     if (getCalcOutOfBag()) {
       m_OutOfBagError = CalculateOutOfBagError();
@@ -671,6 +674,7 @@ public class Bilbo
     // save memory
     m_data = null;
     m_unlabeledData = null;
+    inst = null;
   }
   
   
