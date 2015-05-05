@@ -267,7 +267,7 @@ public class Graph implements Serializable
 			}
 			
 		}
-		//TODO: FIX THE ISSUE WITH EDGE POINTS BEING THE SAME SINCE IN MERGES GRAPH 1's edges _WILL_ have the same indices as graph 2's
+		
 		public void MergeClusters(InnerGraph p_graph1, InnerGraph p_graph2) throws Exception
 		{	
 			
@@ -365,7 +365,7 @@ public class Graph implements Serializable
 				retVal += Math.pow(p_point1[i] - p_point2[i], 2);
 			return Math.sqrt(retVal);
 		}
-		//TODO SWAPARONI THE DJISKTRARONTI TESTS
+		
 		public Instance CalculateHighestUncertaintyAndPropagateLabels(double[] p_outVal)
 		{
 			Debugger.DebugPrint("Starting path finding with " + (m_Points.size() - m_labeledIndices.size()) +" unlabeled and " + m_labeledIndices.size() + " lableled instance(s)", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
@@ -401,17 +401,10 @@ public class Graph implements Serializable
 				{
 					if(m_labeledIndices.contains(i))
 						continue;
-					double localShortest = Double.MAX_VALUE;
-					double label = 0;
+					double localShortest = Double.MAX_VALUE;					
 					for(int j = 0; j < pointToLabeled[i].length; j++)
-					{
-						localShortest = (pointToLabeled[i][j] < localShortest) ? pointToLabeled[i][j] : localShortest;
-						label = m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
-					}
-					shortest[i] = localShortest;
-					
-					
-					
+						localShortest = (pointToLabeled[i][j] < localShortest) ? pointToLabeled[i][j] : localShortest;						
+					shortest[i] = localShortest;	
 				}
 				
 				
@@ -439,7 +432,7 @@ public class Graph implements Serializable
 						}
 					
 							int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
-							double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
+							double error = Math.abs( label - m_Points.elementAt(i).m_instance.value(labelIndex))/ (m_Points.elementAt(i).m_instance.value(labelIndex) + label);
 							m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
 							m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label); 
 					}
@@ -467,7 +460,7 @@ public class Graph implements Serializable
 			{
 				double[] temp1 = new double[m_Points.elementAt(0).m_instance.numAttributes()-1];
 				double[] temp2 = new double[m_Points.elementAt(0).m_instance.numAttributes()-1];
-				
+				//TODO: ADD unweighted label
 				
 				double[] shortest = new double[m_Points.size()];
 				for(int i = 0; i < m_Points.size(); i++)

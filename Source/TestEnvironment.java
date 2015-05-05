@@ -81,6 +81,9 @@ public class TestEnvironment {
 		case 1:
 			for(int i = 0; i < m_numTests; i++)
 			{
+				int testTimeIndex = t.StartTimer();
+				Long averageActive = 0L;
+				Long averageFoldTime = 0L;
 				Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
 				m_validator.Init(folds); 
 				
@@ -93,6 +96,7 @@ public class TestEnvironment {
 				String clusterString = "";
 				for(int j = 0; j < m_validationFolds; j++)
 				{
+					int foldTimeIndex = t.StartTimer();
 					Instances currFold = m_validator.GetTrainingSet();
 					Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
 					Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
@@ -138,18 +142,24 @@ public class TestEnvironment {
 						m_activeForest = null;
 
 						System.out.println("======= Current Fold: " + j + " k-value: " + k  + " number of unlabeled left: " + active[1].numInstances() + " ========\n");
-
-						System.out.println("Active loop time: " + t.GetRawTime(index));
-						System.out.println("Active loop time formated: " + t.GetFormatedTime(index));
-						t.StopTimer(index);
+						
 						System.gc();
 						
+						Long activeTime = t.GetRawTime(index);
+						averageActive += (activeTime / (10 * m_validationFolds));
+						System.out.println("Active loop time: " + activeTime);
+						t.StopTimer(index);
 					}
+					Long foldTime = t.GetRawTime(foldTimeIndex);
+					t.StopTimer(foldTimeIndex);
+					averageFoldTime += (foldTime / (m_validationFolds));
+					Debugger.DebugPrint("Fold loop Time: " + foldTime, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 					supervised = null;
 					active = null;
 					
 				}
-
+				String testTime = t.GetFormatedTime(testTimeIndex);
+				t.StopTimer(testTimeIndex);
 				for(int j = 0; j < folds[0].numInstances()/OurUtil.g_activeNumber; j++)
 				{
 					supervisedMAE[i][j] /= m_validationFolds*OurUtil.g_activeNumber;
@@ -161,8 +171,14 @@ public class TestEnvironment {
 				
 				String supervisedResults[] = new String[2];
 				String activeResults[] = new String[4];
-				activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = "";
+				String metaData[] = new String[3];
+				activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = 
+						metaData[0] = metaData[1]= metaData[2] = "";
 
+				metaData[0] = "Average active loop time: " + t.ConvertRawToFormated(averageActive) + "\n";
+				metaData[1] = "Average Fold loop time: " + t.ConvertRawToFormated(averageFoldTime) + "\n";
+				metaData[2] = "Total test time: " + testTime + "\n";
+				
 				for(int j = 0; j < supervisedMAE[0].length; j++)
 				{
 					supervisedResults[0] += supervisedMAE[i][j] + " ";
@@ -179,7 +195,7 @@ public class TestEnvironment {
 				if(OurUtil.g_clusterAnalysis)
 					activeResults[3] = clusterString;
 				
-				WriteResultFile(activeResults, supervisedResults, i);
+				WriteResultFile(activeResults, supervisedResults, metaData, i);
 				folds = null;
 			}
 			//Start at same labeled amount, ours actively choices ders chose by dice rooloing
@@ -232,7 +248,7 @@ public class TestEnvironment {
 	}
 	
 	
-	private void WriteResultFile(String p_activeRes[], String p_supervisedRes[], int p_testNumber) throws Exception
+	private void WriteResultFile(String p_activeRes[], String p_supervisedRes[], String p_metaData[], int p_testNumber) throws Exception
 	{
 
 		String target = m_outputPath + p_testNumber;
@@ -258,7 +274,9 @@ public class TestEnvironment {
 					w.write("\t" + "Trans: " + p_activeRes[2] +"\n");
 					if(OurUtil.g_clusterAnalysis)
 						w.write(p_activeRes[3]);
-					
+					w.write("Performance: \n");
+					for(int i = 0; i < p_metaData.length; i++)
+						w.write("\t" + p_metaData[i]);
 			w.close();
 			}
 			catch(Exception E)
