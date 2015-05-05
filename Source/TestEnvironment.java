@@ -36,6 +36,7 @@ public class TestEnvironment {
 	float m_supervisedLabeled = 1;
 	float m_activeUnlabeled = 1;
 	float m_trainingSize = 1;
+	boolean m_folderInPlace = false;
 	public TestEnvironment()
 	{
 		
@@ -65,10 +66,6 @@ public class TestEnvironment {
 
 		Instances[] spliData = SplitDataStructure(m_structure, m_trainingSize);
 		m_oracle.Init(spliData[0]);
-		SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
-		Calendar cal = Calendar.getInstance();
-		new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
-		m_outputPath += "/" + timeAndDate.format(cal.getTime()) + "/";
 		
 		supervisedMAE = new double[m_numTests][];
 		supervisedMAPE = new double[m_numTests][];
@@ -196,6 +193,14 @@ public class TestEnvironment {
 					activeResults[2] += transductionError[i][j] + " ";
 				if(OurUtil.g_clusterAnalysis)
 					activeResults[3] = clusterString;
+				if(!m_folderInPlace)
+				{
+					SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
+					Calendar cal = Calendar.getInstance();
+					new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
+					m_outputPath += "/" + timeAndDate.format(cal.getTime()) + "/";
+					m_folderInPlace = true;
+				}
 				
 				WriteResultFile(activeResults, supervisedResults, metaData, i);
 				folds = null;
@@ -203,7 +208,74 @@ public class TestEnvironment {
 			//Start at same labeled amount, ours actively choices ders chose by dice rooloing
 			break;
 		case 2:
-			//We start at N labeled and they start at M labeled
+			//Stop a test run after the transduction stage
+			String clusterString = "";
+			Long averageFoldTime = 0L;
+			Long averageTestTime = 0L;
+			int seed = ran.nextInt();
+			for(int i = 0; i < m_numTests; i++)
+			{
+				int testTimeIndex = t.StartTimer();
+				Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
+				m_validator.Init(folds); 
+				
+				transductionError[i] = new double[m_numTests];
+				
+				for(int j = 0; j < m_validationFolds; j++)
+				{
+					int foldTimeIndex = t.StartTimer();
+					Instances currFold = m_validator.GetTrainingSet();
+					Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
+					
+					m_activeForest = new ActiveForest();
+						
+					m_activeForest.setNumTrees(m_trees);
+					m_activeForest.setMaxDepth(m_depth);
+					m_activeForest.setNumFeatures(m_features);
+					m_activeForest.setSeed(seed);
+					m_activeForest.setNumExecutionSlots(8);
+
+					m_activeForest.buildClassifier(active[0], active[1]);
+						
+					transductionError[i][j] = m_activeForest.GetAverageTransductionError();
+					if(OurUtil.g_clusterAnalysis)
+						clusterString += ClusterAnalysisToString();
+					m_activeForest = null;
+						
+					System.gc();
+						
+					Long foldTime = t.GetRawTime(foldTimeIndex);
+					t.StopTimer(foldTimeIndex);
+					averageFoldTime += (foldTime / (m_validationFolds));
+					Debugger.DebugPrint("Fold loop Time: " + foldTime, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+					active = null;
+				}
+				folds = null;
+				Long testTime = t.GetRawTime(testTimeIndex);
+				t.StopTimer(testTimeIndex);
+				averageTestTime += (testTime / m_numTests);
+				t.StopTimer(testTimeIndex);
+			}
+
+			
+			String supervisedResults[] = new String[2];
+			String activeResults[] = new String[4];
+			String metaData[] = new String[3];
+			activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = 
+					metaData[0] = metaData[1]= metaData[2] = "";
+
+			metaData[1] = "Average Fold time: " + t.ConvertRawToFormated(averageFoldTime) + "\n";
+			metaData[2] = "Average Test time: " + t.ConvertRawToFormated(averageTestTime) + "\n";
+			
+			for(int i = 0; i < m_numTests; i++)
+				for(int j = 0; j < transductionError[0].length; j++)
+					activeResults[2] += transductionError[i][j] + " ";
+			
+			if(OurUtil.g_clusterAnalysis)
+				activeResults[3] = clusterString;
+			
+			WriteResultFile(activeResults, supervisedResults, metaData, 0);
+			
 			break;
 		case 3:
 			//We do nothing but return random values-.
@@ -253,7 +325,7 @@ public class TestEnvironment {
 	private void WriteResultFile(String p_activeRes[], String p_supervisedRes[], String p_metaData[], int p_testNumber) throws Exception
 	{
 
-		String target = m_outputPath + p_testNumber;
+		String target = m_outputPath + p_testNumber + ".result";
 		
 			try
 			{
@@ -279,6 +351,8 @@ public class TestEnvironment {
 					w.write("Performance: \n");
 					for(int i = 0; i < p_metaData.length; i++)
 						w.write("\t" + p_metaData[i]);
+					
+			w.write("END");
 			w.close();
 			}
 			catch(Exception E)
