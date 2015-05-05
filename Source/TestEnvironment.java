@@ -37,6 +37,7 @@ public class TestEnvironment {
 	float m_activeUnlabeled = 1;
 	float m_trainingSize = 1;
 	boolean m_folderInPlace = false;
+	int m_threshold;
 	public TestEnvironment()
 	{
 		
@@ -102,7 +103,7 @@ public class TestEnvironment {
 					int k = 0;
 					while(active[1].numInstances() > OurUtil.g_activeNumber)
 					{
-						if(k >= 10)
+						if(k >= m_threshold)
 							break;
 						int index = t.StartTimer();
 						m_supervisedForest = new RandomForest();
@@ -338,7 +339,7 @@ public class TestEnvironment {
 					w.write("\t" +"MAE: " + p_supervisedRes[0] + "\n");
 					w.write("\t" +"MAPE: " + p_supervisedRes[1] + "\n");
 					
-					w.write("Active choice parameters(t/at/nc): " + OurUtil.g_threshold + " " + ((OurUtil.g_activeTech == OurUtil.ActiveTechnique.Random) ? "Random" : 
+					w.write("Active choice parameters(t/at/nc): " + m_threshold + " " + ((OurUtil.g_activeTech == OurUtil.ActiveTechnique.Random) ? "Random" : 
 																								(OurUtil.g_activeTech == OurUtil.ActiveTechnique.Worst) ? "Worst" : 
 																								(OurUtil.g_activeTech == OurUtil.ActiveTechnique.AllWorst) ? "AllWorst" :
 																								(OurUtil.g_activeTech == OurUtil.ActiveTechnique.Ensemble) ? "Ensemble" : "NONE") + " " + OurUtil.g_activeNumber + "\n");
@@ -445,7 +446,7 @@ public class TestEnvironment {
 					Debugger.Init(Debugger.g_debug_HIGH, null);
 				break;
 			case("Threshold"):
-				OurUtil.g_threshold = Float.parseFloat(scanner.next());
+				m_threshold = scanner.nextInt();
 				break;
 			case("ActiveTech"):
 				temp = scanner.next();
