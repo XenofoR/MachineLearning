@@ -75,7 +75,7 @@ public class TestEnvironment {
 		activeMAE = new double[m_numTests][];
 		activeMAPE = new double[m_numTests][];
 		transductionError = new double[m_numTests][];
-		
+		Random ran = new Random();
 		switch(m_testType)
 		{
 		case 1:
@@ -94,6 +94,7 @@ public class TestEnvironment {
 				transductionError[i] = new double[folds[0].numInstances()/OurUtil.g_activeNumber];
 				
 				String clusterString = "";
+				int seed = ran.nextInt();
 				for(int j = 0; j < m_validationFolds; j++)
 				{
 					int foldTimeIndex = t.StartTimer();
@@ -112,9 +113,11 @@ public class TestEnvironment {
 						m_supervisedForest.setNumTrees(m_trees);
 						m_supervisedForest.setMaxDepth(m_depth);
 						m_supervisedForest.setNumFeatures(m_features);
+						m_supervisedForest.setSeed(seed);
 						m_activeForest.setNumTrees(m_trees);
 						m_activeForest.setMaxDepth(m_depth);
 						m_activeForest.setNumFeatures(m_features);
+						m_activeForest.setSeed(seed);
 						m_activeForest.setNumExecutionSlots(8);
 						m_supervisedForest.setNumExecutionSlots(8);
 
@@ -124,12 +127,11 @@ public class TestEnvironment {
 						
 						RemovePredefined(temp, active[1]);
 						active[0].addAll(temp);
-						supervised[0].addAll(RemoveAtRandom(OurUtil.g_activeNumber, supervised[1]));
+						supervised[0].addAll(RemoveAtRandom(temp.numInstances(), supervised[1]));
 						
 						m_validator.ValidateModel(m_supervisedForest);
 						supervisedMAE[i][k] += m_validator.GetMAE();
 						supervisedMAPE[i][k] += m_validator.GetMAPE();
-						
 						m_validator.ValidateModel(m_activeForest);
 						activeMAE[i][k] += m_validator.GetMAE();
 						activeMAPE[i][k] += m_validator.GetMAPE();
