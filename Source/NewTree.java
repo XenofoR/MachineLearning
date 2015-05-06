@@ -41,6 +41,7 @@ import weka.core.WeightedInstancesHandler;
 import weka.core.matrix.EigenvalueDecomposition;
 import weka.core.matrix.Matrix;
 import weka.core.matrix.SingularValueDecomposition;
+import weka.attributeSelection.PrincipalComponents;
 //https://svn.cms.waikato.ac.nz/svn/weka/trunk/weka/src/main/java/weka/classifiers/trees/RandomTree.java
 /*
  Changes made:
@@ -660,8 +661,14 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				SingleConditionalCovariance(p_instances);
 				m_meanRegressionValue = p_instances.meanOrMode(p_instances.classAttribute());
 				
-		        m_ClassDistribution[0] = m_meanRegressionValue;
-		        
+				if(m_ClassDistribution != null)
+					m_ClassDistribution[0] = m_meanRegressionValue;
+				else
+				{
+					m_ClassDistribution = new double[2];
+					m_ClassDistribution[0] = m_meanRegressionValue;
+				}
+
 		        m_Distribution[1] = p_instances.numInstances();
 			}
 			else
@@ -1154,7 +1161,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			int m = p_instances.numInstances();
 			int n = p_instances.numAttributes();
 			
-			if(m == 0) //No gain if no instances
+			if(m < 2) //No gain if no instances
 				return 0.0;
 			
 			double[][] A = new double[m][n];
@@ -1185,7 +1192,6 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			for(int i = 1; i < J.length; i++)
 				for(int j = 0; j < J[0].length; j++)
 					J[i][j] = -1 * V[i][j]*V[i][j] / eigValue[j];
-			
 			
 			double[][] cov = new double[n][n];
 			OurUtil.CalculateCovarianceMatrix(p_instances, cov, null, false);
@@ -1235,17 +1241,17 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			
 			int[] currentPoint = new int[1];
 			double ret = 0.0;
-			/*for(int i = 0; i < m; i++)
+			for(int i = 0; i < m; i++)
 			{
 				currentPoint[0] = i;
 				ret = Amatrix.getMatrix(currentPoint, 0, n-2).times(lineCovariance).times(Amatrix.getMatrix(currentPoint, 0, n-2).transpose()).norm2();
-				ret = Math.log(ret)/Math.log(2);
+				ret = Math.log(Math.sqrt(ret))/Math.log(2);
 				infogain += ret;
-			}*/
-			ret = Math.abs(OurUtil.CalculateDeterminant(lineCovariance.getArray()));
-			if(ret == 0 || !Double.isFinite(ret))
-				return 0.0;
-			infogain = Math.log(ret)/Math.log(2);
+			}
+			//ret = Math.abs(OurUtil.CalculateDeterminant(lineCovariance.getArray()));
+			//if(ret == 0 || !Double.isFinite(ret))
+			//	return 0.0;
+			//infogain = Math.log(ret)/Math.log(2);
 			A = null;
 			Amatrix = null;
 			eigValue = null;

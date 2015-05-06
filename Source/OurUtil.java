@@ -16,7 +16,6 @@ public class OurUtil
 	static boolean g_forceCompleteGraph;
 	static double g_machineEpsilion;
 	static int g_numTrees;
-	static double g_threshold;
     static int g_activeNumber;
     static ActiveTechnique g_activeTech;
     

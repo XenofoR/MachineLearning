@@ -100,12 +100,11 @@ public class TestEnvironment {
 					Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
 					Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
 					int k = 0;
-					while(active[1].numInstances() > OurUtil.g_activeNumber)
+					while(k <= m_threshold)
 					{
-						if(k >= m_threshold)
-							break;
+
 						int index = t.StartTimer();
-						
+
 						m_supervisedForest = new RandomForest();
 						m_activeForest = new ActiveForest();
 						m_supervisedForest.setNumTrees(m_trees);
