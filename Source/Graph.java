@@ -450,7 +450,7 @@ public class Graph implements Serializable
 						}
 						label = m_Points.elementAt(m_labeledIndices.elementAt(shortestLabelIndex)).m_instance.classValue();
 						int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
-						double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
+						double error = Math.abs( label - m_Points.elementAt(i).m_instance.value(labelIndex))/ (m_Points.elementAt(i).m_instance.value(labelIndex) + label);
 						m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
 						m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label); 	
 					}
