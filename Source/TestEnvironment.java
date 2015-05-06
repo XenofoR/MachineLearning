@@ -99,13 +99,13 @@ public class TestEnvironment {
 					Instances currFold = m_validator.GetTrainingSet();
 					Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
 					Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
-					
 					int k = 0;
 					while(active[1].numInstances() > OurUtil.g_activeNumber)
 					{
 						if(k >= m_threshold)
 							break;
 						int index = t.StartTimer();
+						
 						m_supervisedForest = new RandomForest();
 						m_activeForest = new ActiveForest();
 						m_supervisedForest.setNumTrees(m_trees);
@@ -255,7 +255,6 @@ public class TestEnvironment {
 				Long testTime = t.GetRawTime(testTimeIndex);
 				t.StopTimer(testTimeIndex);
 				averageTestTime += (testTime / m_numTests);
-				t.StopTimer(testTimeIndex);
 			}
 
 			
