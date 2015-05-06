@@ -46,7 +46,7 @@ public class TestEnvironment {
 	public void Init(String p_testFile) throws IOException
 	{
 		Path path = FileSystems.getDefault().getPath(p_testFile);
-		m_currentTest = path.getFileName().toString();
+		m_currentTest = "";
 		ProcessFile(path);
 		m_loader = new Loader();
 		m_oracle = new Philadelphiaost();
@@ -329,9 +329,7 @@ public class TestEnvironment {
 			try
 			{
 			Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
-			w.write("Dataset: " + m_test + "\n");
-			w.write("Tree parameters(max depth/num trees/feature split): " + m_depth + " " + m_trees + " " + m_features + "\n");
-			w.write("Test parameters(test type/training size/num folds/supervised labeled/active learning labeled): " + m_testType + " " + m_trainingSize + " " + m_validationFolds + " " + m_supervisedLabeled + " " + m_activeLabeled + "\n");
+			w.write(m_currentTest);
 
 					w.write("Supervised Results: \n");
 					w.write("\t" +"MAE: " + p_supervisedRes[0] + "\n");
@@ -379,6 +377,7 @@ public class TestEnvironment {
 	{
 
 		//http://www.javapractices.com/topic/TopicAction.do?Id=42s
+		m_currentTest += p_line +"\n";
 		Scanner scanner  = new Scanner(p_line);
 		scanner.useDelimiter("=");
 		if(scanner.hasNext())

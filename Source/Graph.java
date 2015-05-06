@@ -487,16 +487,37 @@ public class Graph implements Serializable
 					}
 					shortest[i] = localshort;
 					double label = 0;
-					for(int j = 0; j < m_labeledIndices.size(); j++)
+					if(OurUtil.g_useWeightedTransduction)
 					{
-						double percentage = Math.abs((distance[j] / totalDist) -1 ) /(distance.length -1);
-						percentage = (percentage == 0  || (Double.isNaN(percentage)) || Double.isInfinite(percentage)) ? 1 : percentage;
-						label += percentage* m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
+						for(int j = 0; j < m_labeledIndices.size(); j++)
+						{
+							double percentage = Math.abs((distance[j] / totalDist) -1 ) /(distance.length -1);
+							percentage = (percentage == 0  || (Double.isNaN(percentage)) || Double.isInfinite(percentage)) ? 1 : percentage;
+							label += percentage* m_Points.elementAt(m_labeledIndices.elementAt(j)).m_instance.classValue();
+						}
+						int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
+						double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
+						m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
+						m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
 					}
-					int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
-					double error = Math.abs((m_Points.elementAt(i).m_instance.value(labelIndex) - label)/ (m_Points.elementAt(i).m_instance.value(labelIndex)));
-					m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
-					m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label);
+					else
+					{
+						double dist = Double.MAX_VALUE;
+						int shortestLabelIndex = -3123;
+						for(int j = 0; j < shortest.length; j++)
+						{
+							if(shortest[j] < dist)
+							{
+								dist = shortest[j];
+								shortestLabelIndex = j;
+							}
+						}
+						label = m_Points.elementAt(m_labeledIndices.elementAt(shortestLabelIndex)).m_instance.classValue();
+						int labelIndex = m_Points.elementAt(i).m_instance.numAttributes()-1;
+						double error = Math.abs( label - m_Points.elementAt(i).m_instance.value(labelIndex))/ (m_Points.elementAt(i).m_instance.value(labelIndex) + label);
+						m_Points.elementAt(i).m_errorPercentage = (m_Points.elementAt(i).m_errorPercentage ==Double.MAX_VALUE ) ? error : m_Points.elementAt(i).m_errorPercentage;
+						m_Points.elementAt(i).m_instance.setValue(m_Points.elementAt(i).m_instance.numAttributes()-1, label); 
+					}
 					
 				}
 				for(int i = 0; i < shortest.length; i++)

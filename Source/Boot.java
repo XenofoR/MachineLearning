@@ -1,17 +1,27 @@
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.util.Scanner;
+
 public class Boot
 {
 	public static void main(String[] p_args) throws Exception
 	{
-		TestEnvironment environment = new TestEnvironment();
+		
 		try
 		{
 			double temp = 1.0;
 			while(1 + 0.5*temp != 1)
 				temp *= 0.5;
 			OurUtil.g_machineEpsilion = temp;
-		environment.Init("J:/master_thesis_work/MachineLearning/test.file");
-		
-		environment.Run();
+			Scanner scanner = new Scanner(FileSystems.getDefault().getPath("J:/master_thesis_work/MachineLearning/Meta.test"));
+			while(scanner.hasNextLine())	
+			{
+				TestEnvironment environment = new TestEnvironment();
+				environment.Init("J:/master_thesis_work/MachineLearning/Tests/" + scanner.nextLine());
+				environment.Run();
+				environment = null;
+			}
+			scanner.close();
 		}
 		catch(Exception E)
 		{

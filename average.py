@@ -10,7 +10,7 @@ def CreateFile(p_path):
         aaMAPE =[]
         aaTRANS = []
         filterzerozandtext = ['\tMAE:', '\tMAPE:', '0.0', '\n', '\tTrans:']
-        for filename in fnmatch.filter(filenames, '*'):
+        for filename in fnmatch.filter(filenames, '*.result'):
             numFiles+=1
             inputFile = open(root + "\\" + filename, 'r')
             while(1):
