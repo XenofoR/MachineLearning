@@ -18,7 +18,8 @@ public class Philadelphiaost
 		InstanceComparator comp = new InstanceComparator();
 		comp.setIncludeClass(false);
 		int breakCounter = 0;
-		for(int i =0; i < p_instances.size(); i++)
+		if(p_instances != null)
+		for(int i = 0; i < p_instances.size(); i++)
 		{
 			for(int j = 0; j < m_instances.size(); j++)
 				if(comp.compare(p_instances.instance(i), m_instances.instance(j)) == 0)
