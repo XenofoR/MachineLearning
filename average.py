@@ -3,13 +3,14 @@ import fnmatch
 def CreateFile(p_path):
     numFiles = 0
     for root, dirnames, filenames in os.walk(p_path):
-        outputFile = open(root + "Average.ave", 'w+')
+        outputFile = open(root + "\\" + "Average.ave", 'w+')
+        numFiles = 0
         asMAE = []
         asMAPE = []
         aaMAE = []
         aaMAPE =[]
         aaTRANS = []
-        filterzerozandtext = ['\tMAE:', '\tMAPE:', '0.0', '\n', '\tTrans:']
+        filterzerozandtext = ['\tMAE:', '\tMAPE:', '0.0', '\n', '\tTrans:' , 'null\n']
         for filename in fnmatch.filter(filenames, '*.result'):
             numFiles+=1
             inputFile = open(root + "\\" + filename, 'r')
