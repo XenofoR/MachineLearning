@@ -753,6 +753,8 @@ public class Bilbo
   {
 	  for(int i = 0; i < m_Classifiers.length; i++)
 	  {
+		  if(m_Classifiers[i] == null)
+			  continue;
 		  p_retInst.add(((NewTree) m_Classifiers[i]).GetWorstInstance());
 	  }
 	  InstanceComparator comp = new InstanceComparator();

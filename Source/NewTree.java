@@ -674,8 +674,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			else
 			{
 				Instances[] dataSplit = splitData(p_instances);
-				m_Successors[0].DoInduction(dataSplit[0]);
-				m_Successors[1].DoInduction(dataSplit[1]);
+				if(m_Successors[0] != null)
+					m_Successors[0].DoInduction(dataSplit[0]);
+				if(m_Successors[1] != null)
+					m_Successors[1].DoInduction(dataSplit[1]);
 			}
 		}
 		
@@ -684,7 +686,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      double minVariance, int p_parentId, int p_myId) throws Exception {
 			m_id = p_myId;
 
-			m_alpha = (double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances());
+			m_alpha = Double.isNaN(OurUtil.g_alphaValue) ? (double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances()) : OurUtil.g_alphaValue;
 
 			m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
@@ -1352,12 +1354,12 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			}
 		}
 	}
-	
+	/*
 	 public double classifyInstance(Instance p_instance)
 	{
 		
 		return m_Tree.classifyInstance(p_instance);
 	}
-	
+	*/
 }
 	

@@ -15,6 +15,7 @@ public class OurUtil
 	static boolean g_useWeightedTransduction;
 	static boolean g_forceCompleteGraph;
 	static double g_machineEpsilion;
+	static double g_alphaValue;
 	static int g_numTrees;
     static int g_activeNumber;
     static ActiveTechnique g_activeTech;
