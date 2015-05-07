@@ -27,7 +27,7 @@ public class TestEnvironment {
 	int m_depth, m_trees, m_features, m_testType, m_numTests;
 	Validator m_validator;
 	String m_test;
-	String m_inputPath, m_outputPath, m_currentTest;
+	String m_inputPath, m_outputPath, m_originOutputPath, m_currentTest;
 	Philadelphiaost m_oracle;
 	InstanceComparator m_comparer;
 	int m_validationFolds = 1;
@@ -85,114 +85,124 @@ public class TestEnvironment {
 	}
 
 	private void AlphaValueTest(Instances[] spliData) throws Exception {
-		double[][] activeMAE;
-		double[][] activeMAPE;
-		double[][] transductionError;
-		Timer t = new Timer();
-		activeMAE = new double[(int) Math.ceil(((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))][];
-		activeMAPE = new double[(int) Math.ceil(((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))][];
-		transductionError = new double[(int) Math.ceil(((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))][];
-		Random ran = new Random();
-		OurUtil.g_alphaValue = m_alphavalueStart;
-		int i = 0;
-		//for(int i= m_alphavalueStart; i < ((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer); i += m_alphavalueIncrementer)
-		while(OurUtil.g_alphaValue <= ((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))
-		{
-			int testTimeIndex = t.StartTimer();
-			Long averageActive = 0L;
-			Long averageFoldTime = 0L;
-			Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
-			m_validator.Init(folds); 
-			activeMAE[i] = new double[m_threshold];
-			activeMAPE[i] = new double[m_threshold];
-			transductionError[i] = new double[m_threshold];
+		
+			double[][] activeMAE;
+			double[][] activeMAPE;
+			double[][] transductionError;
+			SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
+			Calendar cal = Calendar.getInstance();
+			new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
+			m_outputPath += "/" + timeAndDate.format(cal.getTime()) + "/";
+			m_originOutputPath = m_outputPath;
 			
-			String clusterString = "";
-			int seed = ran.nextInt();
-			for(int j = 0; j < m_validationFolds; j++)
+			timeAndDate = null;
+			cal = null;
+			Timer t = new Timer();
+			activeMAE = new double[(int) Math.ceil(((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))+1][];
+			activeMAPE = new double[(int) Math.ceil(((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))+1][];
+			transductionError = new double[(int) Math.ceil(((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))+1][];
+			Random ran = new Random();
+			OurUtil.g_alphaValue = m_alphavalueStart;
+			//for(int i= m_alphavalueStart; i < ((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer); i += m_alphavalueIncrementer)
+			while(OurUtil.g_alphaValue <= m_alphavalueEnd)
 			{
-				int foldTimeIndex = t.StartTimer();
-				Instances currFold = m_validator.GetTrainingSet();
-				Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
-				int k = 0;
-				while(k <= m_threshold)
+				for(int i = 0; i < m_numTests; i++)
 				{
-					int index = t.StartTimer();
-					m_activeForest = new ActiveForest();
-					m_activeForest.setNumTrees(m_trees);
-					m_activeForest.setMaxDepth(m_depth);
-					m_activeForest.setNumFeatures(m_features);
-					m_activeForest.setSeed(seed);
-					m_activeForest.setNumExecutionSlots(8);
-					m_activeForest.buildClassifier(active[0], active[1]);
-					Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());			
-					RemovePredefined(temp, active[1]);
-					active[0].addAll(temp);
-					m_validator.ValidateModel(m_supervisedForest);
-					m_validator.ValidateModel(m_activeForest);
-					activeMAE[i][k] += m_validator.GetMAE();
-					activeMAPE[i][k] += m_validator.GetMAPE();				
-					transductionError[i][k] += m_activeForest.GetAverageTransductionError();
+					int testTimeIndex = t.StartTimer();
+					Long averageActive = 0L;
+					Long averageFoldTime = 0L;
+					Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
+					m_validator.Init(folds); 
+					activeMAE[i] = new double[m_threshold];
+					activeMAPE[i] = new double[m_threshold];
+					transductionError[i] = new double[m_threshold];
+					
+					String clusterString = "";
+					int seed = ran.nextInt();
+					for(int j = 0; j < m_validationFolds; j++)
+					{
+						int foldTimeIndex = t.StartTimer();
+						Instances currFold = m_validator.GetTrainingSet();
+						Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
+						int k = 0;
+						while(k < m_threshold)
+						{
+							int index = t.StartTimer();
+							m_activeForest = new ActiveForest();
+							m_activeForest.setNumTrees(m_trees);
+							m_activeForest.setMaxDepth(m_depth);
+							m_activeForest.setNumFeatures(m_features);
+							m_activeForest.setSeed(seed);
+							m_activeForest.setNumExecutionSlots(8);
+							m_activeForest.buildClassifier(active[0], active[1]);
+							Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());			
+							RemovePredefined(temp, active[1]);
+							active[0].addAll(temp);
+							m_validator.ValidateModel(m_activeForest);
+							activeMAE[i][k] += m_validator.GetMAE();
+							activeMAPE[i][k] += m_validator.GetMAPE();				
+							transductionError[i][k] += m_activeForest.GetAverageTransductionError();
+							if(OurUtil.g_clusterAnalysis)
+								clusterString += ClusterAnalysisToString();
+							k++;
+							m_activeForest = null;
+							System.out.println("======= Current Fold: " + j + " k-value: " + k  + " number of unlabeled left: " + active[1].numInstances() + " ========\n");					
+							System.gc();	
+							Long activeTime = t.GetRawTime(index);
+							averageActive += (activeTime / (10 * m_validationFolds));
+							System.out.println("Active loop time: " + activeTime);
+							t.StopTimer(index);
+						}
+						Long foldTime = t.GetRawTime(foldTimeIndex);
+						t.StopTimer(foldTimeIndex);
+						averageFoldTime += (foldTime / (m_validationFolds));
+						Debugger.DebugPrint("Fold loop Time: " + foldTime, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+						active = null;
+						
+					}
+					String testTime = t.GetFormatedTime(testTimeIndex);
+					t.StopTimer(testTimeIndex);
+					for(int j = 0; j < m_threshold; j++)
+					{	
+						activeMAE[i][j] /= m_validationFolds*m_threshold;
+						activeMAPE[i][j] /= m_validationFolds*m_threshold;
+						transductionError[i][j] /= m_validationFolds*m_threshold;
+					}
+					
+					String supervisedResults[] = new String[2];
+					String activeResults[] = new String[4];
+					String metaData[] = new String[3];
+					activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = 
+							metaData[0] = metaData[1]= metaData[2] = "";
+		
+					metaData[0] = "Average active loop time: " + t.ConvertRawToFormated(averageActive) + "\n";
+					metaData[1] = "Average Fold loop time: " + t.ConvertRawToFormated(averageFoldTime) + "\n";
+					metaData[2] = "Total test time: " + testTime + "\n";
+					
+					for(int j = 0; j < activeMAPE[0].length; j++)
+						activeResults[0] += activeMAE[i][j] + " ";
+		
+					for(int j = 0; j < activeMAPE[0].length; j++)
+						activeResults[1] += activeMAPE[i][j] + " ";
+					for(int j = 0; j < transductionError[0].length; j++)
+						activeResults[2] += transductionError[i][j] + " ";
+					activeResults[2] += "\n Alphavalue: " + OurUtil.g_alphaValue;
 					if(OurUtil.g_clusterAnalysis)
-						clusterString += ClusterAnalysisToString();
-					k++;
-					m_activeForest = null;
-					System.out.println("======= Current Fold: " + j + " k-value: " + k  + " number of unlabeled left: " + active[1].numInstances() + " ========\n");					
-					System.gc();	
-					Long activeTime = t.GetRawTime(index);
-					averageActive += (activeTime / (10 * m_validationFolds));
-					System.out.println("Active loop time: " + activeTime);
-					t.StopTimer(index);
+						activeResults[3] = clusterString;
+					if(!m_folderInPlace)
+					{
+						new File(m_outputPath + "/" + Double.toString(OurUtil.g_alphaValue)).mkdir();
+						m_outputPath += "/" + Double.toString(OurUtil.g_alphaValue) + "/";
+						m_folderInPlace = true;
+					}
+					
+					WriteResultFile(activeResults, supervisedResults, metaData, i);
+					folds = null;
 				}
-				Long foldTime = t.GetRawTime(foldTimeIndex);
-				t.StopTimer(foldTimeIndex);
-				averageFoldTime += (foldTime / (m_validationFolds));
-				Debugger.DebugPrint("Fold loop Time: " + foldTime, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-				active = null;
-				
+				m_outputPath = m_originOutputPath;
+				OurUtil.g_alphaValue += m_alphavalueIncrementer;
+				m_folderInPlace = false;
 			}
-			String testTime = t.GetFormatedTime(testTimeIndex);
-			t.StopTimer(testTimeIndex);
-			for(int j = 0; j < m_threshold; j++)
-			{	
-				activeMAE[i][j] /= m_validationFolds*m_threshold;
-				activeMAPE[i][j] /= m_validationFolds*m_threshold;
-				transductionError[i][j] /= m_validationFolds*m_threshold;
-			}
-			
-			String supervisedResults[] = new String[2];
-			String activeResults[] = new String[4];
-			String metaData[] = new String[3];
-			activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = 
-					metaData[0] = metaData[1]= metaData[2] = "";
-
-			metaData[0] = "Average active loop time: " + t.ConvertRawToFormated(averageActive) + "\n";
-			metaData[1] = "Average Fold loop time: " + t.ConvertRawToFormated(averageFoldTime) + "\n";
-			metaData[2] = "Total test time: " + testTime + "\n";
-			
-			for(int j = 0; j < activeMAPE[0].length; j++)
-				activeResults[0] += activeMAE[i][j] + " ";
-
-			for(int j = 0; j < activeMAPE[0].length; j++)
-				activeResults[1] += activeMAPE[i][j] + " ";
-			for(int j = 0; j < transductionError[0].length; j++)
-				activeResults[2] += transductionError[i][j] + " ";
-			if(OurUtil.g_clusterAnalysis)
-				activeResults[3] = clusterString;
-			if(!m_folderInPlace)
-			{
-				SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
-				Calendar cal = Calendar.getInstance();
-				new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
-				m_outputPath += "/" + timeAndDate.format(cal.getTime()) + "/";
-				m_folderInPlace = true;
-			}
-			
-			WriteResultFile(activeResults, supervisedResults, metaData, i);
-			folds = null;
-			OurUtil.g_alphaValue += m_alphavalueIncrementer;
-			i++;
-		}
 		
 	}
 
@@ -307,7 +317,7 @@ public class TestEnvironment {
 				Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
 				Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
 				int k = 0;
-				while(k <= m_threshold)
+				while(k < m_threshold)
 				{
 
 					int index = t.StartTimer();
@@ -530,7 +540,7 @@ public class TestEnvironment {
 				m_inputPath = scanner.next();
 				break;
 			case("OutputPath"):
-				m_outputPath = scanner.next();
+				m_originOutputPath = m_outputPath = scanner.next();
 				break;
 			case("Files"):
 				m_test = scanner.next();
@@ -607,10 +617,12 @@ public class TestEnvironment {
 					m_alphavalueStart =  Double.parseDouble(temp);
 				break;
 			case("AlphavalueIncrementer"):
-				m_alphavalueIncrementer = scanner.nextDouble();
+				temp = scanner.next();
+				m_alphavalueIncrementer = Double.parseDouble(temp);
 				break;
 			case("AlphavalueEnd"):
-				m_alphavalueEnd = scanner.nextDouble();
+				temp = scanner.next();
+				m_alphavalueEnd = Double.parseDouble(temp);
 				break;
 			default:
 				System.out.println("Bad line found in test file: " + id);
