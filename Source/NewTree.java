@@ -687,7 +687,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			m_id = p_myId;
 
 			m_alpha = Double.isNaN(OurUtil.g_alphaValue) ? (double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances()) : OurUtil.g_alphaValue;
-
+			
 			m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
 		      if (p_labeledData.numInstances() == 0 && p_unlabeledData.numInstances() == 0) {
