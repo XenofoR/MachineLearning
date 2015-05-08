@@ -307,7 +307,7 @@ public class TestEnvironment {
 				Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
 				Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
 				int k = 0;
-				while(k <= m_threshold)
+				while(k < m_threshold)
 				{
 
 					int index = t.StartTimer();
