@@ -20,13 +20,12 @@ def fileReader(p_path):
                 print("Found area")
                 line = inputfile.readline()
                 yData = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
-                yData.append(filename.split('.',1)[0] + "-MAPE")
+                yData.append(filename.split('.',1)[0] + "-Induction")
                 trans = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
-                print(trans)
-                trans.append(filename.split('.',1)[0] + "-Trans")
+                trans.append(filename.split('.',1)[0] + "-Transduction")
                 print("Built y-data")
                 allData.append(yData[:])
-                allData.append(trans[:])
+                #allData.append(trans[:])
                 print("Appended y-data")
                 break;
 
