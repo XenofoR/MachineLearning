@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import os
 allData = []
-mapeFilter = ['MAPE:']
+mapeFilter = ['MAPE:', 'Trans:', '\n']
 def fileReader(p_path):
     print("entered func")
     files = [f for f in os.listdir(p_path) if os.path.isfile(os.path.join(p_path,f))]
@@ -12,6 +12,7 @@ def fileReader(p_path):
         print("found file")
         while(1):
             yData = []
+            trans = []
             line=inputfile.readline()
             print("reading lines")
             #So hardcoded it ain't even funny
@@ -19,9 +20,12 @@ def fileReader(p_path):
                 print("Found area")
                 line = inputfile.readline()
                 yData = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
-                yData.append(filename.split('.',1)[0])
+                yData.append(filename.split('.',1)[0] + "-Induction")
+                trans = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
+                trans.append(filename.split('.',1)[0] + "-Transduction")
                 print("Built y-data")
                 allData.append(yData[:])
+                #allData.append(trans[:])
                 print("Appended y-data")
                 break;
 
@@ -40,6 +44,7 @@ for sublist in allData:
 print("showing")
 fontP = FontProperties()
 fontP.set_size('small')
+plt.ylim(-1, 1)
 box = ax.get_position()
 ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5) ,prop=fontP)
