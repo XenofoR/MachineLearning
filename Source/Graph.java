@@ -245,8 +245,29 @@ public class Graph implements Serializable
 		}
 		public void AddCluster(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance)
 		{
+			Matrix matrix = Matrix.constructWithCopy(p_covariance);
+			SingularValueDecomposition SVD = new SingularValueDecomposition(matrix);
+			Matrix S,V,U;
+			S = SVD.getS();
+			V = SVD.getV();
+			U = SVD.getU();
+			//calculate tolerance
+			double tolerance = OurUtil.g_machineEpsilion * Math.max(S.getColumnDimension(), S.getRowDimension()) * S.norm2();
+			//Pseudo invert S
+			for(int i = 0; i < S.getColumnDimension(); i++)
+				if(S.get(i, i) >= tolerance) //tolerance should remove floating point errors on variables smaller than a really small value
+					S.set(i, i, 1/S.get(i, i));
+				else
+					S.set(i, i, 0);
+			S = S.transpose();
+			//m^+ = V * S^+ * U'
+			matrix = V.times(S);
+			matrix = matrix.times(U.transpose());
+					
+	    	double[][] inverseMat = matrix.getArray();
+			
 			int index = m_covarianeMatrices.size();
-			m_covarianeMatrices.add(p_covariance);
+			m_covarianeMatrices.add(inverseMat);
 			Instances tempL = new Instances(p_labeled);
 			Instances tempU = new Instances(p_unlabeled);
 			for(int i = 0; i < tempL.size(); i++)
@@ -574,29 +595,9 @@ public class Graph implements Serializable
 			//retval = D^T * M^-1 * D
 			double[] distanceVec = new double[p_first.length];
 			OurUtil.Subtract(p_first, p_second, distanceVec);
-			//double[][] matrix = new double[m_covarianeMatrices.elementAt(p_covMatIndex).length][];
-			//Deep copy matrix
-			Matrix matrix = Matrix.constructWithCopy(m_covarianeMatrices.elementAt(p_covMatIndex));
-			SingularValueDecomposition SVD = new SingularValueDecomposition(matrix);
-			Matrix S,V,U;
-			S = SVD.getS();
-			V = SVD.getV();
-			U = SVD.getU();
-			//calculate tolerance
-			double tolerance = OurUtil.g_machineEpsilion * Math.max(S.getColumnDimension(), S.getRowDimension()) * S.norm2();
-			//Pseudo invert S
-			for(int i = 0; i < S.getColumnDimension(); i++)
-				if(S.get(i, i) >= tolerance) //tolerance should remove floating point errors on variables smaller than a really small value
-					S.set(i, i, 1/S.get(i, i));
-				else
-					S.set(i, i, 0);
-			S = S.transpose();
-			//m^+ = V * S^+ * U'
-			matrix = V.times(S);
-			matrix = matrix.times(U.transpose());
-					
+			
 	    	double[] tempVec = new double[distanceVec.length];
-	    	double[][] inverseMat = matrix.getArray();
+	    	double[][] inverseMat = m_covarianeMatrices.elementAt(p_covMatIndex);
 			//D^T * M^-1
 	    	//double[][] inverse = GaussJordan(matrix);
 			for(int i = 0; i < inverseMat.length; i++)
@@ -613,6 +614,11 @@ public class Graph implements Serializable
 			}
 			if(retVal < 0 || Double.isInfinite(retVal) || Double.isNaN(retVal))
 				System.out.println("Edge distance is infinite, negative or NaN, most likely caused by zero covariance matrix");
+			
+			distanceVec = null;
+			tempVec = null;
+			inverseMat = null;
+			
 			return retVal;
 		}
 		//==================INTERNAL STRUCTS=======================================
