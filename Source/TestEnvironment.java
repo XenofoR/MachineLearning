@@ -207,9 +207,9 @@ public class TestEnvironment {
 	}
 
 	private void TransductionTest(Instances[] spliData) throws Exception {
-		double[][] transductionError;
+		double[] transductionError;
 		Timer t = new Timer();
-		transductionError = new double[m_numTests][];
+		transductionError = new double[m_numTests];
 		Random ran = new Random();
 		//Stop a test run after the transduction stage
 		String clusterString = "";
@@ -222,7 +222,7 @@ public class TestEnvironment {
 			Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
 			m_validator.Init(folds); 
 			
-			transductionError[i] = new double[m_numTests];
+			transductionError[i] = 0.0;
 			
 			for(int j = 0; j < m_validationFolds; j++)
 			{
@@ -240,7 +240,7 @@ public class TestEnvironment {
 
 				m_activeForest.buildClassifier(active[0], active[1]);
 					
-				transductionError[i][j] = m_activeForest.GetAverageTransductionError();
+				transductionError[i] += m_activeForest.GetAverageTransductionError();
 				if(OurUtil.g_clusterAnalysis)
 					clusterString += ClusterAnalysisToString();
 				m_activeForest = null;
@@ -257,8 +257,9 @@ public class TestEnvironment {
 			Long testTime = t.GetRawTime(testTimeIndex);
 			t.StopTimer(testTimeIndex);
 			averageTestTime += (testTime / m_numTests);
+			transductionError[i] /= m_validationFolds;
 		}
-
+	
 		
 		String supervisedResults[] = new String[2];
 		String activeResults[] = new String[4];
@@ -271,10 +272,7 @@ public class TestEnvironment {
 		
 		
 		for(int i = 0; i < m_numTests; i++)
-			for(int j = 0; j < transductionError[0].length; j++)
-			{
-				activeResults[2] += transductionError[i][j] + " ";
-			}
+				activeResults[2] += transductionError[i] + " ";
 		
 		if(OurUtil.g_clusterAnalysis)
 			activeResults[3] = clusterString;
