@@ -164,9 +164,9 @@ public class TestEnvironment {
 					t.StopTimer(testTimeIndex);
 					for(int j = 0; j < m_threshold; j++)
 					{	
-						activeMAE[i][j] /= m_validationFolds*m_threshold;
-						activeMAPE[i][j] /= m_validationFolds*m_threshold;
-						transductionError[i][j] /= m_validationFolds*m_threshold;
+						activeMAE[i][j] /= m_validationFolds;
+						activeMAPE[i][j] /= m_validationFolds;
+						transductionError[i][j] /= m_validationFolds;
 					}
 					
 					String supervisedResults[] = new String[2];
@@ -378,11 +378,11 @@ public class TestEnvironment {
 			t.StopTimer(testTimeIndex);
 			for(int j = 0; j < m_threshold; j++)
 			{
-				supervisedMAE[i][j] /= m_validationFolds*m_threshold;
-				supervisedMAPE[i][j] /= m_validationFolds*m_threshold;
+				supervisedMAE[i][j] /= m_validationFolds;
+				supervisedMAPE[i][j] /= m_validationFolds;
 				
-				activeMAE[i][j] /= m_validationFolds*m_threshold;
-				activeMAPE[i][j] /= m_validationFolds*m_threshold;
+				activeMAE[i][j] /= m_validationFolds;
+				activeMAPE[i][j] /= m_validationFolds;
 			}
 			
 			String supervisedResults[] = new String[2];
