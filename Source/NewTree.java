@@ -1350,7 +1350,14 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			}
 			else
 			{
-				return m_Successors[p_instance.toDoubleArray()[m_Attribute] < m_SplitPoint ? 0 : 1].classifyInstance(p_instance);
+				try 
+				{
+					return m_Successors[p_instance.toDoubleArray()[m_Attribute] < m_SplitPoint ? 0 : 1].classifyInstance(p_instance);
+				}
+				catch(Exception e)
+				{
+					return Utils.missingValue();
+				}
 			}
 		}
 	}

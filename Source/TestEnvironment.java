@@ -98,9 +98,9 @@ public class TestEnvironment {
 			timeAndDate = null;
 			cal = null;
 			Timer t = new Timer();
-			activeMAE = new double[(int) Math.ceil(((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))+1][];
-			activeMAPE = new double[(int) Math.ceil(((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))+1][];
-			transductionError = new double[(int) Math.ceil(((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer))+1][];
+			activeMAE = new double[m_numTests][];
+			activeMAPE = new double[m_numTests][];
+			transductionError = new double[m_numTests][];
 			Random ran = new Random();
 			OurUtil.g_alphaValue = m_alphavalueStart;
 			//for(int i= m_alphavalueStart; i < ((m_alphavalueEnd- m_alphavalueStart)/m_alphavalueIncrementer); i += m_alphavalueIncrementer)
