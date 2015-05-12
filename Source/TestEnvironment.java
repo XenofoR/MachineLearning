@@ -81,8 +81,155 @@ public class TestEnvironment {
 			AlphaValueTest(spliData);
 			//We do nothing but return random values-.
 			break;
+		case 4:
+			ActiveVSSupervised(spliData);
+			break;
 		default:
 			break;
+		}
+		
+	}
+
+	private void ActiveVSSupervised(Instances[] spliData) throws Exception {
+		double[][] supervisedMAE;
+		double[][] activeMAE;
+		double[][] supervisedMAPE;
+		double[][] activeMAPE;
+		double[][] transductionError;
+		Timer t = new Timer();
+		supervisedMAE = new double[m_numTests][];
+		supervisedMAPE = new double[m_numTests][];
+		activeMAE = new double[m_numTests][];
+		activeMAPE = new double[m_numTests][];
+		transductionError = new double[m_numTests][];
+		Random ran = new Random();
+		ActiveForest supervisedForest = null;
+		for(int i = 0; i < m_numTests; i++)
+		{
+			int testTimeIndex = t.StartTimer();
+			Long averageActive = 0L;
+			Long averageFoldTime = 0L;
+			Instances[] folds = SplitDataStructure(spliData[0], m_validationFolds);
+			m_validator.Init(folds); 
+			supervisedMAE[i] = new double[m_threshold];
+			supervisedMAPE[i] = new double[m_threshold];
+			activeMAE[i] = new double[m_threshold];
+			activeMAPE[i] = new double[m_threshold];
+			transductionError[i] = new double[m_threshold];
+			
+			String clusterString = "";
+			int seed = ran.nextInt();
+			for(int j = 0; j < m_validationFolds; j++)
+			{
+				int foldTimeIndex = t.StartTimer();
+				Instances currFold = m_validator.GetTrainingSet();
+				Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
+				Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
+				int k = 0;
+				while(k < m_threshold)
+				{
+
+					int index = t.StartTimer();
+
+					supervisedForest = new ActiveForest();
+					m_activeForest = new ActiveForest();
+					supervisedForest.setNumTrees(m_trees);
+					supervisedForest.setMaxDepth(m_depth);
+					supervisedForest.setNumFeatures(m_features);
+					supervisedForest.setSeed(seed);
+					m_activeForest.setNumTrees(m_trees);
+					m_activeForest.setMaxDepth(m_depth);
+					m_activeForest.setNumFeatures(m_features);
+					m_activeForest.setSeed(seed);
+					m_activeForest.setNumExecutionSlots(8);
+					supervisedForest.setNumExecutionSlots(8);
+					Instances inst = new Instances(supervised[1], 0);
+					supervisedForest.buildClassifier(supervised[0], inst);
+					m_activeForest.buildClassifier(active[0], active[1]);
+					Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
+					
+					RemovePredefined(temp, active[1]);
+					active[0].addAll(temp);
+					supervised[0].addAll(RemoveAtRandom(temp.numInstances(), supervised[1]));
+					
+					m_validator.ValidateModel(supervisedForest);
+					supervisedMAE[i][k] += m_validator.GetMAE();
+					supervisedMAPE[i][k] += m_validator.GetMAPE();
+					m_validator.ValidateModel(m_activeForest);
+					activeMAE[i][k] += m_validator.GetMAE();
+					activeMAPE[i][k] += m_validator.GetMAPE();
+					
+					transductionError[i][k] = m_activeForest.GetAverageTransductionError();
+					if(OurUtil.g_clusterAnalysis)
+						clusterString += ClusterAnalysisToString();
+					k++;
+					supervisedForest = null;
+					m_activeForest = null;
+
+					System.out.println("======= Current Fold: " + j + " k-value: " + k  + " number of unlabeled left: " + active[1].numInstances() + " ========\n");
+					
+					System.gc();
+					
+					Long activeTime = t.GetRawTime(index);
+					averageActive += (activeTime / (m_threshold * m_validationFolds));
+					System.out.println("Active loop time: " + activeTime);
+					t.StopTimer(index);
+				}
+				Long foldTime = t.GetRawTime(foldTimeIndex);
+				t.StopTimer(foldTimeIndex);
+				averageFoldTime += (foldTime / (m_validationFolds));
+				Debugger.DebugPrint("Fold loop Time: " + foldTime, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+				supervised = null;
+				active = null;
+				
+			}
+			String testTime = t.GetFormatedTime(testTimeIndex);
+			t.StopTimer(testTimeIndex);
+			for(int j = 0; j < m_threshold; j++)
+			{
+				supervisedMAE[i][j] /= m_validationFolds;
+				supervisedMAPE[i][j] /= m_validationFolds;
+				
+				activeMAE[i][j] /= m_validationFolds;
+				activeMAPE[i][j] /= m_validationFolds;
+			}
+			
+			String supervisedResults[] = new String[2];
+			String activeResults[] = new String[4];
+			String metaData[] = new String[3];
+			activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = 
+					metaData[0] = metaData[1]= metaData[2] = "";
+
+			metaData[0] = "Average active loop time: " + t.ConvertRawToFormated(averageActive) + "\n";
+			metaData[1] = "Average Fold loop time: " + t.ConvertRawToFormated(averageFoldTime) + "\n";
+			metaData[2] = "Total test time: " + testTime + "\n";
+			
+			for(int j = 0; j < supervisedMAE[0].length; j++)
+			{
+				supervisedResults[0] += supervisedMAE[i][j] + " ";
+				activeResults[0] += activeMAE[i][j] + " ";
+			}
+
+			for(int j = 0; j < supervisedMAE[0].length; j++)
+			{
+				supervisedResults[1] += supervisedMAPE[i][j] + " ";
+				activeResults[1] += activeMAPE[i][j] + " ";
+			}
+			for(int j = 0; j < transductionError[0].length; j++)
+				activeResults[2] += transductionError[i][j] + " ";
+			if(OurUtil.g_clusterAnalysis)
+				activeResults[3] = clusterString;
+			if(!m_folderInPlace)
+			{
+				SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
+				Calendar cal = Calendar.getInstance();
+				new File(m_outputPath + "/" + timeAndDate.format(cal.getTime())).mkdir();
+				m_outputPath += "/" + timeAndDate.format(cal.getTime()) + "/";
+				m_folderInPlace = true;
+			}
+			
+			WriteResultFile(activeResults, supervisedResults, metaData, i);
+			folds = null;
 		}
 		
 	}
@@ -297,6 +444,7 @@ public class TestEnvironment {
 		activeMAPE = new double[m_numTests][];
 		transductionError = new double[m_numTests][];
 		Random ran = new Random();
+		
 		for(int i = 0; i < m_numTests; i++)
 		{
 			int testTimeIndex = t.StartTimer();

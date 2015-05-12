@@ -21,6 +21,7 @@ public class Boot
 				environment.Init("J:/master_thesis_work/MachineLearning/Tests/" + scanner.nextLine(),i++ );
 				environment.Run();
 				environment = null;
+				System.gc();
 			}
 			scanner.close();
 		}
