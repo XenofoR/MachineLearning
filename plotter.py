@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import os
+import itertools
 allData = []
 mapeFilter = ['MAPE:', 'Trans:', '\n']
 def fileReader(p_path):
@@ -38,9 +39,9 @@ while not os.path.isdir(path):
 fileReader(path)
 print("reading done")
 ax = plt.subplot(111)
-for sublist in allData:
+for sublist, skit in zip(allData, itertools.cycle((',', '+', '.' , 'o', '*'))):
     myLabel = sublist.pop()
-    ax.plot(range(0,len(allData[0])), sublist, label=myLabel)
+    ax.plot(range(0,len(allData[0])), sublist, marker=skit, label=myLabel)
 print("showing")
 fontP = FontProperties()
 fontP.set_size('small')

@@ -27,7 +27,7 @@ public class TestEnvironment {
 	int m_depth, m_trees, m_features, m_testType, m_numTests;
 	Validator m_validator;
 	String m_test;
-	String m_inputPath, m_outputPath, m_originOutputPath, m_currentTest;
+	String m_inputPath, m_outputPath, m_originOutputPath, m_currentTest,  m_TESTNAMEFORTRANSDUCTIONBECAUSEREASONS;
 	Philadelphiaost m_oracle;
 	InstanceComparator m_comparer;
 	int m_validationFolds = 1;
@@ -40,13 +40,16 @@ public class TestEnvironment {
 	double m_alphavalueStart = 0;
 	boolean m_folderInPlace = false;
 	int m_threshold;
+	int m_IDFORTRANSDUCTIONBECAUSEREASONS = 0;
 	public TestEnvironment()
 	{
 		
 	}
 	
-	public void Init(String p_testFile) throws IOException
+	public void Init(String p_testFile, int p_THISISCRAP) throws IOException
 	{
+		m_IDFORTRANSDUCTIONBECAUSEREASONS = p_THISISCRAP;
+		
 		Path path = FileSystems.getDefault().getPath(p_testFile);
 		m_currentTest = "";
 		ProcessFile(path);
@@ -209,6 +212,7 @@ public class TestEnvironment {
 	private void TransductionTest(Instances[] spliData) throws Exception {
 		double[] transductionError;
 		Timer t = new Timer();
+
 		transductionError = new double[m_numTests];
 		Random ran = new Random();
 		//Stop a test run after the transduction stage
@@ -277,7 +281,7 @@ public class TestEnvironment {
 		if(OurUtil.g_clusterAnalysis)
 			activeResults[3] = clusterString;
 		
-		WriteResultFile(activeResults, supervisedResults, metaData, 0);
+		WriteResultFile(activeResults, supervisedResults, metaData, m_IDFORTRANSDUCTIONBECAUSEREASONS);
 	}
 
 	private void ActiveVsWeka(Instances[] spliData) throws Exception {
