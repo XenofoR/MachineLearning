@@ -13,7 +13,7 @@ public class Boot
 			while(1 + 0.5*temp != 1)
 				temp *= 0.5;
 			OurUtil.g_machineEpsilion = temp;
-			int i = 0;
+			int i = 5;
 			Scanner scanner = new Scanner(FileSystems.getDefault().getPath("J:/master_thesis_work/MachineLearning/Meta.test"));
 			while(scanner.hasNextLine())	
 			{
