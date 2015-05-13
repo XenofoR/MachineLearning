@@ -691,8 +691,9 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			}
 			else
 				m_alpha = 0;
-			
-			m_center = new double[p_unlabeledData.numAttributes()];
+
+		
+	m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
 		      if (p_labeledData.numInstances() == 0 && p_unlabeledData.numInstances() == 0) {
 		        m_Attribute = -1;
