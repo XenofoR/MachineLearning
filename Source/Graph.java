@@ -59,7 +59,9 @@ public class Graph implements Serializable
 				{
 					if(m_graphs.elementAt(i).m_Points.elementAt(j).m_labeled == false)
 					{
-						retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
+						double NaNcheck = m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
+						if(Double.isFinite(NaNcheck))
+							retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
 						total++;
 					}
 				}
