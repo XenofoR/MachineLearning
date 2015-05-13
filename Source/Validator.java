@@ -6,7 +6,7 @@ import java.math.*;
 public class Validator
 {
 	Instances[] m_validationSet = null;
-	int m_trainingIndex, m_validationIndex;
+	int m_validationIndex;
 	double m_MAE = 0.0;
 	double m_MAPE = 0.0;
 	double m_errorVariance = 0.0;
@@ -23,14 +23,19 @@ public class Validator
 			m_validationSet[i] = p_validationSet[i];
 			m_validationSet[i].setClassIndex(m_validationSet[i].numAttributes()-1);
 		}
-		m_trainingIndex = 0;
-		m_validationIndex = 1;
+		m_validationIndex = -1;
 
 	}
 	
-	Instances GetTrainingSet()
+	void GetTrainingSet(Instances p_trainingSet)
 	{
-		return m_validationSet[m_trainingIndex];
+		m_validationIndex++;
+		m_validationIndex = (m_validationIndex == m_validationSet.length) ? 0 : m_validationIndex;
+		for(int i = 0; i < m_validationSet.length; i++)
+		{
+			if(i != m_validationIndex)
+				p_trainingSet.addAll(m_validationSet[i]);
+		}
 	}
 	
 	void ValidateModel(RandomForest p_model) throws Exception
@@ -59,9 +64,7 @@ public class Validator
 		m_errorVariance /= m_validationSet[m_validationIndex].numInstances();
 		m_errorDiviation = Math.sqrt(m_errorVariance);
 		
-		m_trainingIndex = m_validationIndex;
-		m_validationIndex++;
-		m_validationIndex = (m_validationIndex == m_validationSet.length) ? 0 : m_validationIndex;
+		
 
 	}
 	

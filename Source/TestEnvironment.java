@@ -119,10 +119,12 @@ public class TestEnvironment {
 			
 			String clusterString = "";
 			int seed = ran.nextInt();
+			Instances currFold;
 			for(int j = 0; j < m_validationFolds; j++)
 			{
+				currFold = new Instances(folds[0],0);
 				int foldTimeIndex = t.StartTimer();
-				Instances currFold = m_validator.GetTrainingSet();
+				m_validator.GetTrainingSet(currFold);
 				Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
 				Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
 				int k = 0;
@@ -181,7 +183,7 @@ public class TestEnvironment {
 				Debugger.DebugPrint("Fold loop Time: " + foldTime, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				supervised = null;
 				active = null;
-				
+				currFold = null;
 			}
 			String testTime = t.GetFormatedTime(testTimeIndex);
 			t.StopTimer(testTimeIndex);
@@ -269,10 +271,12 @@ public class TestEnvironment {
 					
 					String clusterString = "";
 					int seed = ran.nextInt();
+					Instances currFold;
 					for(int j = 0; j < m_validationFolds; j++)
 					{
+						currFold = new Instances(folds[0],0);
 						int foldTimeIndex = t.StartTimer();
-						Instances currFold = m_validator.GetTrainingSet();
+						m_validator.GetTrainingSet(currFold);
 						Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
 						int k = 0;
 						while(k < m_threshold)
@@ -308,6 +312,7 @@ public class TestEnvironment {
 						averageFoldTime += (foldTime / (m_validationFolds));
 						Debugger.DebugPrint("Fold loop Time: " + foldTime, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 						active = null;
+						currFold = null;
 						
 					}
 					String testTime = t.GetFormatedTime(testTimeIndex);
@@ -375,10 +380,12 @@ public class TestEnvironment {
 			
 			transductionError[i] = 0.0;
 			
+			Instances currFold;
 			for(int j = 0; j < m_validationFolds; j++)
 			{
+				currFold = new Instances(folds[0],0);
 				int foldTimeIndex = t.StartTimer();
-				Instances currFold = m_validator.GetTrainingSet();
+				m_validator.GetTrainingSet(currFold);
 				Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
 				
 				m_activeForest = new ActiveForest();
@@ -403,6 +410,7 @@ public class TestEnvironment {
 				averageFoldTime += (foldTime / (m_validationFolds));
 				Debugger.DebugPrint("Fold loop Time: " + foldTime, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				active = null;
+				currFold = null;
 			}
 			folds = null;
 			Long testTime = t.GetRawTime(testTimeIndex);
@@ -460,10 +468,12 @@ public class TestEnvironment {
 			
 			String clusterString = "";
 			int seed = ran.nextInt();
+			Instances currFold;
 			for(int j = 0; j < m_validationFolds; j++)
 			{
+				currFold = new Instances(folds[0],0);
 				int foldTimeIndex = t.StartTimer();
-				Instances currFold = m_validator.GetTrainingSet();
+				m_validator.GetTrainingSet(currFold);
 				Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
 				Instances[] active = SplitDataStructure(currFold, m_activeLabeled);
 				int k = 0;
@@ -522,6 +532,7 @@ public class TestEnvironment {
 				Debugger.DebugPrint("Fold loop Time: " + foldTime, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
 				supervised = null;
 				active = null;
+				currFold = null;
 				
 			}
 			String testTime = t.GetFormatedTime(testTimeIndex);
