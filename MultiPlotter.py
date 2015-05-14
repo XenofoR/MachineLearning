@@ -47,6 +47,7 @@ def fileReader(p_path):
 #Take directory
 path = input("Path to target folder: ")
 Xdimension = input("x dimension: ")
+Ydimension = input("y dimension?==!?!?!?!:")
 
 while not os.path.isdir(path):
     print("Path not found")
@@ -56,34 +57,31 @@ xPos = 1
 yPos = 1
 curr = 0
 FUCKOFF = fileReader(path)
-h = plt.subplot(2,2,1)
 print("reading done")
 for sublist in allData:
     myLabel = sublist.pop()
-    if xPos == Xdimension:
-        print("chagne")
-        xPos = 1
-        
-    plt.subplot(2,2, yPos)
-    
+    plt.subplot(Xdimension,Ydimension, yPos)
+    if yPos % 2 == 1:
+        plt.ylabel("SMAPE")
+    plt.xlabel("Iterations")
+    plt.ylim(0,0.5)
     plt.plot(range(0,len(allData[0])), sublist, marker=',', label=myLabel)
     yPos+=1
-    plt.ylabel("SKOJ")
+   
 xPos = 1
 yPos = 1
 curr =0
 for sublist in supData:
     myLabel = sublist.pop()
-    if xPos == Xdimension:
-        xPos = 1
-    plt.subplot(2,2, yPos)
+    plt.subplot(Xdimension,Ydimension, yPos)
+    plt.ylim(0,0.5)
     yPos+=1
-    plt.ylabel("WHADAYP")
     plt.plot(range(0,len(supData[0])), sublist, marker='+', label=myLabel)
     
 print("showing")
+
 fontP = FontProperties()
 fontP.set_size('small')
-plt.ylim(-1, 1)
+
 
 plt.show()
