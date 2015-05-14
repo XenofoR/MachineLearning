@@ -34,7 +34,7 @@ def fileReader(p_path):
                 print("Found area")
                 line = inputfile.readline()
                 yData = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
-                yData.append("Active")#filename.split('.',1)[0] + "-Active")
+                yData.append(filename.split('.',1)[0])
                 trans = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
                 trans.append(filename.split('.',1)[0] + "-Transduction")
                 print("Built y-data")
@@ -46,8 +46,6 @@ def fileReader(p_path):
 
 #Take directory
 path = input("Path to target folder: ")
-Xdimension = input("x dimension: ")
-Ydimension = input("y dimension?==!?!?!?!:")
 
 while not os.path.isdir(path):
     print("Path not found")
@@ -57,31 +55,29 @@ xPos = 1
 yPos = 1
 FUCKOFF = fileReader(path)
 print("reading done")
-for sublist in allData:
-    myLabel = sublist.pop()
-    plt.subplot(Xdimension,Ydimension, yPos)
-    if yPos % 2 == 1:
-        plt.ylabel("SMAPE")
-    if yPos > 2:
-        plt.xlabel("Iterations")
-    plt.ylim(0,1)
-    plt.plot(range(0,len(allData[0])), sublist, marker=',', label=myLabel)
-    yPos+=1
-   
-xPos = 1
-yPos = 1
-for sublist in supData:
-    myLabel = sublist.pop()
-    plt.subplot(Xdimension,Ydimension, yPos)
-    plt.ylim(0,1)
-    yPos+=1
-    plt.plot(range(0,len(supData[0])), sublist, marker='+', label=myLabel)
-    
-print("showing")
 
-fontP = FontProperties()
-fontP.set_size('small')
-#plt.legend( loc='lower center', bbox_to_anchor=(0.5,-0.1))
-plt.subplots_adjust(bottom = 0.2)
-plt.legend(bbox_to_anchor=(-0.1, -0.20), loc='upper center', borderaxespad=0., fontsize=8)
+fig, ax = plt.subplots()
+firstVal = []
+midVal = []
+lastVal = []
+nameinfo = []
+numfiles = 0
+for sublist in allData:
+    numfiles+=1
+    nameinfo.append(sublist.pop())
+    firstVal.append(float(sublist[0]))
+    midVal.append(float(sublist[math.floor(len(sublist)/2)]))
+    lastVal.append(float(sublist[-1]))
+print("hi")
+N = numfiles
+width = 0.25
+ind = np.arange(N)
+ax.set_xticks(ind+width*1.5)
+ax.set_xticklabels( nameinfo )
+ax.set_ylabel("SMAPE")
+ax.set_xlabel("Alphavalue")
+rect1 = ax.bar(ind, firstVal,width, color='r')
+rect2 = ax.bar(ind + width, midVal,width, color='y')
+rect3 = ax.bar(ind + width * 2, lastVal,width, color='g')
+
 plt.show()
