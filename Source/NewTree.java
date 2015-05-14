@@ -686,12 +686,14 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 		      double minVariance, int p_parentId, int p_myId) throws Exception {
 			m_id = p_myId;
 
-			if(p_unlabeledData.numInstances() > 0)
+			if(p_unlabeledData.numInstances() > 0){
 				m_alpha = Double.isNaN(OurUtil.g_alphaValue) ? (double)p_unlabeledData.numInstances() / (p_labeledData.numInstances() + p_unlabeledData.numInstances()) : OurUtil.g_alphaValue;
+			}
 			else
-				m_alpha = 0;	
-			
-			m_center = new double[p_unlabeledData.numAttributes()];
+				m_alpha = 0;
+
+		
+	m_center = new double[p_unlabeledData.numAttributes()];
 		      // Make leaf if there are no training instances
 		      if (p_labeledData.numInstances() == 0 && p_unlabeledData.numInstances() == 0) {
 		        m_Attribute = -1;
