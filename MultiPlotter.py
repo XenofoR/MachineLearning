@@ -24,7 +24,8 @@ def fileReader(p_path):
             line=inputfile.readline()
             print("reading lines")
             #So hardcoded it ain't even funny
-            if line == "Supervised Results:\n":
+            if line == "Supervised results:\n":
+                 print("super")
                  line = inputfile.readline()
                  yData = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
                  yData.append(filename.split('.',1)[0] + "-Supervised")
@@ -55,14 +56,18 @@ xPos = 1
 yPos = 1
 curr = 0
 FUCKOFF = fileReader(path)
+h = plt.subplot(2,2,1)
 print("reading done")
 for sublist in allData:
     myLabel = sublist.pop()
     if xPos == Xdimension:
+        print("chagne")
         xPos = 1
-        yPos+=1
-    plt.subplot(FUCKOFF, xPos, yPos)
+        
+    plt.subplot(2,2, yPos)
+    
     plt.plot(range(0,len(allData[0])), sublist, marker=',', label=myLabel)
+    yPos+=1
     plt.ylabel("SKOJ")
 xPos = 1
 yPos = 1
@@ -71,10 +76,10 @@ for sublist in supData:
     myLabel = sublist.pop()
     if xPos == Xdimension:
         xPos = 1
-        yPos+=1
-    plt.subplot(FUCKOFF, xPos, yPos)
+    plt.subplot(2,2, yPos)
+    yPos+=1
     plt.ylabel("WHADAYP")
-    plt.plot(range(0,len(allData[0])), sublist, marker='+', label=myLabel)
+    plt.plot(range(0,len(supData[0])), sublist, marker='+', label=myLabel)
     
 print("showing")
 fontP = FontProperties()
