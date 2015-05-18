@@ -637,7 +637,6 @@ public class Bilbo
 		Debugger.DebugPrint("Forest done! starting Induction \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
     	((NewTree)m_Classifiers[i]).GetTransductedInstances(inst);
     	((NewTree)m_Classifiers[i]).DoInduction(inst);
-    	//((NewTree)m_Classifiers[i]).CleanUp();
     	Debugger.DebugPrint("Induction finished! \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
     	// Ehm, do something boyski TODO: Remove this comment
 	}

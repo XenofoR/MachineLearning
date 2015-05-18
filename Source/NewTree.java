@@ -329,13 +329,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    System.out.println("Average error rate of transduction: " + m_transductionError);
 	    
 	  }
-	
-	public void CleanUp()
-	{
-		m_graph.Cleanup();
-		m_graph = null;
-	}
-	
+
 	public double GetTransductionError()
 	{
 		return m_transductionError;

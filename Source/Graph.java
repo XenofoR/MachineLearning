@@ -645,8 +645,10 @@ public class Graph implements Serializable
 			}
 			public void Cleanup() 
 			{
-				m_edges.clear();
-				m_edges = null;
+				if(m_edges != null){
+					m_edges.clear();
+					m_edges = null;
+				}
 			}
 			Point(Instance p_instance, boolean p_labeled, int p_covarianceIndex)
 			{
