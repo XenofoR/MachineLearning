@@ -39,7 +39,13 @@ public class Graph implements Serializable
 			m_graphs.elementAt(0).Init();
 		}
 	}
-	
+	void Cleanup()
+	{
+		for(int i = 0; i < m_graphs.size(); i++)
+		{
+			m_graphs.elementAt(i).Cleanup();
+		}
+	}
 	public void GetInstances(Instances p_outInstances)
 	{
 		for(int i = 0; i < m_graphs.size(); i++)
@@ -208,6 +214,12 @@ public class Graph implements Serializable
 			m_child[0] = p_child1;
 			m_child[1] = p_child2;
 			m_hasBeenMerged = false;
+		}
+		public void Cleanup() 
+		{
+			for(int i =0; i < m_Points.size(); i++)
+				m_Points.elementAt(i).Cleanup();
+			
 		}
 		int GetId()
 		{
@@ -613,7 +625,10 @@ public class Graph implements Serializable
 				retVal += tempVec[i] * distanceVec[i]; 
 			}
 			if(retVal < 0 || Double.isInfinite(retVal) || Double.isNaN(retVal))
+			{
 				System.out.println("Edge distance is infinite, negative or NaN, most likely caused by zero covariance matrix");
+				retVal = Double.MAX_VALUE;
+			}
 			
 			distanceVec = null;
 			tempVec = null;
@@ -627,6 +642,11 @@ public class Graph implements Serializable
 			Point()
 			{
 				m_edges = new Vector<Edge>();
+			}
+			public void Cleanup() 
+			{
+				m_edges.clear();
+				m_edges = null;
 			}
 			Point(Instance p_instance, boolean p_labeled, int p_covarianceIndex)
 			{

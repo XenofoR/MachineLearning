@@ -325,9 +325,16 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_worstInstance = m_graph.CalculateHighestUncertaintyAndPropagateLabels(dist);
 	    m_worstDistance = dist[0];
 	    m_transductionError = m_graph.GetAverageErrorRate();
+	    m_graph.Cleanup();
 	    System.out.println("Average error rate of transduction: " + m_transductionError);
 	    
 	  }
+	
+	public void CleanUp()
+	{
+		m_graph.Cleanup();
+		m_graph = null;
+	}
 	
 	public double GetTransductionError()
 	{
@@ -1049,7 +1056,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 				          currSumSquared[1] -= classValSquared;
 				          currSumOfWeights[1] -= inst.weight();
 			          }
-			         // if(i % 200 == 0)
+			         // if(i % 200 == 0 )
 			        //	  System.gc();
 			        }
 			      // Compute weights

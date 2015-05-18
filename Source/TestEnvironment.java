@@ -352,6 +352,8 @@ public class TestEnvironment {
 					}
 					
 					WriteResultFile(activeResults, supervisedResults, metaData, i);
+					for(int j = 0; j < folds.length; j++)
+						folds[j] = null;
 					folds = null;
 				}
 				m_outputPath = m_originOutputPath;
