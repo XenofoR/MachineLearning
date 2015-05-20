@@ -25,13 +25,14 @@ def fileReader(p_path):
                 trans = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
                 trans.append(filename.split('.',1)[0] + "-Transduction")
                 print("Built y-data")
-               # allData.append(yData[:])
+                #allData.append(yData[:])
                 allData.append(trans[:])
                 print("Appended y-data")
                 break;
 
 #Take directory
 path = input("Path to target folder: ")
+
 while not os.path.isdir(path):
     print("Path not found")
     path = input("path to target folder: ")
@@ -40,6 +41,7 @@ fileReader(path)
 print("reading done")
 ax = plt.subplot(111)
 for sublist, skit in zip(allData, itertools.cycle((',', '+', '.' , 'o', '*'))):
+    print(sublist)
     myLabel = sublist.pop()
     ax.plot(range(0,len(allData[0])), sublist, marker=skit, label=myLabel)
 print("showing")

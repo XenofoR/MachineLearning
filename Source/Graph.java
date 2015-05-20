@@ -65,7 +65,9 @@ public class Graph implements Serializable
 				{
 					if(m_graphs.elementAt(i).m_Points.elementAt(j).m_labeled == false)
 					{
-						retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
+						double NaNcheck = m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
+						if(Double.isFinite(NaNcheck))
+							retVal += m_graphs.elementAt(i).m_Points.elementAt(j).m_errorPercentage;
 						total++;
 					}
 				}
@@ -86,7 +88,7 @@ public class Graph implements Serializable
 		}
 		else
 		{
-			m_graphs.elementAt(0).AddCluster(p_labeled, p_unlabeled, null);
+			m_graphs.elementAt(0).AddCluster(p_labeled, p_unlabeled, p_covariance);
 		}
 	}
 	public void AddParent(int p_id, int p_parentId, int p_childId1, int p_childId2)
@@ -257,6 +259,7 @@ public class Graph implements Serializable
 		}
 		public void AddCluster(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance)
 		{
+			
 			Matrix matrix = Matrix.constructWithCopy(p_covariance);
 			SingularValueDecomposition SVD = new SingularValueDecomposition(matrix);
 			Matrix S,V,U;
@@ -489,7 +492,7 @@ public class Graph implements Serializable
 					}
 				}
 			}
-			else
+			else //Eucledian stuff
 			{
 				double[] temp1 = new double[m_Points.elementAt(0).m_instance.numAttributes()-1];
 				double[] temp2 = new double[m_Points.elementAt(0).m_instance.numAttributes()-1];

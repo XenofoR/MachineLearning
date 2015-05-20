@@ -50,8 +50,9 @@ public class Validator
 			
 			predictions[i] = Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
 			tempMAE += Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
-			;//tempSMAPE += prediction + m_validationSet[m_validationIndex].instance(i).classValue();
-			tempMAPE += Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue()) / (m_validationSet[m_validationIndex].instance(i).classValue() + prediction);
+			double NaNcheck = Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue()) / (m_validationSet[m_validationIndex].instance(i).classValue() + prediction);
+			if(Double.isFinite(NaNcheck))
+				tempMAPE += NaNcheck;
 		}
 		
 		

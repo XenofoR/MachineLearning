@@ -49,7 +49,7 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	      return Double.NaN;
 	    }
 	  }
-	
+	  
 	public void buildClassifier(Instances p_labeledData, Instances p_unlabeledData) throws Exception
 	{	
 		OurUtil.g_numTrees = 0;
