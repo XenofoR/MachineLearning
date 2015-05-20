@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math as math
 from matplotlib.font_manager import FontProperties
+from operator import itemgetter
 import os
 import itertools
 allData = []
@@ -34,7 +35,7 @@ def fileReader(p_path):
                 print("Found area")
                 line = inputfile.readline()
                 yData = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
-                yData.append(filename.split('.',1)[0])
+                yData.append(filename.split('.')[0])
                 trans = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
                 trans.append(filename.split('.',1)[0] + "-Transduction")
                 print("Built y-data")
@@ -62,9 +63,14 @@ midVal = []
 lastVal = []
 nameinfo = []
 numfiles = 0
+allData.sort( key=lambda x : float(x[-1]))
 for sublist in allData:
     numfiles+=1
-    nameinfo.append(sublist.pop())
+    fulkod = sublist.pop()
+    if fulkod != '0':
+        nameinfo.append(fulkod)
+    else:
+        nameinfo.append('0.1')
     firstVal.append(float(sublist[0]))
     midVal.append(float(sublist[math.floor(len(sublist)/2)]))
     lastVal.append(float(sublist[-1]))

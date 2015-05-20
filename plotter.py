@@ -25,8 +25,8 @@ def fileReader(p_path):
                 trans = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
                 trans.append(filename.split('.',1)[0] + "-Transduction")
                 print("Built y-data")
-                allData.append(yData[:])
-              #  allData.append(trans[:])
+                #allData.append(yData[:])
+                allData.append(trans[:])
                 print("Appended y-data")
                 break;
 
