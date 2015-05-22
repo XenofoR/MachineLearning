@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Scanner;
 import java.util.Vector;
@@ -117,6 +118,7 @@ public class TestEnvironment {
 			activeMAPE[i] = new double[m_threshold];
 			transductionError[i] = new double[m_threshold];
 			Long[] graphTime = new Long[3];
+			Arrays.fill(graphTime, 0L);
 			String clusterString = "";
 			int seed = ran.nextInt();
 			Instances currFold;
