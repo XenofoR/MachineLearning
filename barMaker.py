@@ -35,7 +35,7 @@ def fileReader(p_path):
                 print("Found area")
                 line = inputfile.readline()
                 yData = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
-                yData.append(filename.split('.')[0])
+                yData.append(filename.split('.a')[0])
                 trans = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
                 trans.append(filename.split('.',1)[0] + "-Transduction")
                 print("Built y-data")
@@ -67,23 +67,24 @@ allData.sort( key=lambda x : float(x[-1]))
 for sublist in allData:
     numfiles+=1
     fulkod = sublist.pop()
-    if fulkod != '0':
-        nameinfo.append(fulkod)
-    else:
-        nameinfo.append('0.1')
+    #if fulkod != '0':
+    #    nameinfo.append(fulkod)
+    #else:
+    #   nameinfo.append('0.1')
+    nameinfo.append(fulkod)
     firstVal.append(float(sublist[0]))
     midVal.append(float(sublist[math.floor(len(sublist)/2)]))
     lastVal.append(float(sublist[-1]))
 print("hi")
 N = numfiles
-width = 0.25
+width = 0.2
 ind = np.arange(N)
 ax.set_xticks(ind+width*1.5)
 ax.set_xticklabels( nameinfo )
 ax.set_ylabel("SMAPE")
 ax.set_xlabel("Alphavalue")
-rect1 = ax.bar(ind, firstVal,width, color='r')
-rect2 = ax.bar(ind + width, midVal,width, color='y')
-rect3 = ax.bar(ind + width * 2, lastVal,width, color='g')
+rect1 = ax.bar(ind, firstVal,width, color=[1,0,0])
+rect2 = ax.bar(ind + width, midVal,width, color=[0.73,0.75,1])
+rect3 = ax.bar(ind + width * 2, lastVal,width, color=[0.0,1,0.0])
 
 plt.show()

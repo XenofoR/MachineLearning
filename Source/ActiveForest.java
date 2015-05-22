@@ -31,6 +31,10 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	{
 		return m_bagger.GetAverageTransductionError();
 	}
+	public Long[] GetAndAverageGraphTime()
+	{
+		return m_bagger.GetAndAverageGraphTime();
+	}
 	public double[] CalculateCorrelationPercentage()
 	{
 		return m_bagger.CalculateCorrelationPercentage();
