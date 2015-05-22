@@ -557,6 +557,24 @@ public class Bilbo
   protected Random m_random;
   protected boolean[][] m_inBag;
 
+  public Long[] GetAndAverageGraphTime()
+  {
+	  Long[] retVal = new Long[3];
+	  Long tT, lT, tlT;
+	  tT = lT = tlT = 0L;
+	  Long[] cont; 	  
+	  for(int i = 0; i < m_Classifiers.length; i++)
+	  {
+		  cont = ((NewTree)m_Classifiers[i]).GetGraphTime();
+		  lT += cont[0];
+		  tlT += cont[1];
+		  tT += cont[2];
+	  }
+	  retVal[0] = lT / m_Classifiers.length;
+	  retVal[1] = tlT / m_Classifiers.length;
+	  retVal[2] = tT / m_Classifiers.length;
+	  return retVal;
+  }
   
   /**
    * Returns a training set for a particular iteration.

@@ -19,7 +19,10 @@ import weka.core.matrix.SingularValueDecomposition;
 
 public class Graph implements Serializable
 {
-	
+	Long m_totalLeafTime = 0L;
+	Long m_transductionTime  = 0L;
+	int m_numLeafs = 0;
+	Timer m_timer;
 	Vector<InnerGraph> m_graphs;
 	Vector<double[][]> m_covarianeMatrices;
 	Vector<OurUtil.Pair<Integer, Integer>> m_idToIndexMap;
@@ -30,6 +33,7 @@ public class Graph implements Serializable
 	}
 	void Init()
 	{
+		m_timer = new Timer();
 		m_covarianeMatrices = new Vector<double[][]>();		
 		m_graphs = new Vector<InnerGraph>();
 		m_idToIndexMap = new Vector<OurUtil.Pair<Integer, Integer>>();
@@ -45,6 +49,15 @@ public class Graph implements Serializable
 		{
 			m_graphs.elementAt(i).Cleanup();
 		}
+		m_timer = null;
+	}
+	public Long[] GetTime()
+	{
+		Long[] retVal = new Long[3];
+		retVal[0] = m_totalLeafTime / m_numLeafs;
+		retVal[1] = m_totalLeafTime;
+		retVal[2] = m_transductionTime;
+		return retVal;	
 	}
 	public void GetInstances(Instances p_outInstances)
 	{
@@ -76,6 +89,7 @@ public class Graph implements Serializable
 	}
 	public void AddLeaf(Instances p_labeled, Instances p_unlabeled, double[][] p_covariance, int p_parentId, int p_id)
 	{
+		int id = m_timer.StartTimer(); 
 		Debugger.DebugPrint("Added leaf node: " + p_id + " With parent: " + p_parentId, Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 		if(OurUtil.g_useMahalanobis)
 		{
@@ -90,6 +104,9 @@ public class Graph implements Serializable
 		{
 			m_graphs.elementAt(0).AddCluster(p_labeled, p_unlabeled, p_covariance);
 		}
+		m_totalLeafTime += m_timer.GetRawTime(id);
+		m_timer.StopTimer(id);
+		m_numLeafs += 1;
 	}
 	public void AddParent(int p_id, int p_parentId, int p_childId1, int p_childId2)
 	{
@@ -104,6 +121,7 @@ public class Graph implements Serializable
 	}
 	public Instance CalculateHighestUncertaintyAndPropagateLabels(double[] p_outVal) throws Exception
 	{
+		int tId = m_timer.StartTimer();
 		Instance retInst = null;
 		double val = 0;
 		if(OurUtil.g_useMahalanobis)
@@ -144,7 +162,8 @@ public class Graph implements Serializable
 		}
 		else
 			retInst = m_graphs.elementAt(0).CalculateHighestUncertaintyAndPropagateLabels(p_outVal);
-
+		m_transductionTime += m_timer.GetRawTime(tId);
+		m_timer.StopTimer(tId);
 		return retInst;
 	}
 	

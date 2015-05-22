@@ -116,7 +116,7 @@ public class TestEnvironment {
 			activeMAE[i] = new double[m_threshold];
 			activeMAPE[i] = new double[m_threshold];
 			transductionError[i] = new double[m_threshold];
-			
+			Long[] graphTime = new Long[3];
 			String clusterString = "";
 			int seed = ran.nextInt();
 			Instances currFold;
@@ -148,6 +148,11 @@ public class TestEnvironment {
 					Instances inst = new Instances(supervised[1], 0);
 					supervisedForest.buildClassifier(supervised[0], inst);
 					m_activeForest.buildClassifier(active[0], active[1]);
+					Long[] timeTemp = m_activeForest.GetAndAverageGraphTime();
+					for(int c = 0; c < graphTime.length; c++)
+						graphTime[c] += timeTemp[c];
+
+					
 					Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
 					
 					RemovePredefined(temp, active[1]);
@@ -177,6 +182,8 @@ public class TestEnvironment {
 					System.out.println("Active loop time: " + activeTime);
 					t.StopTimer(index);
 				}
+				for(int c = 0; c < graphTime.length; c++)
+					graphTime[c] /= m_threshold;
 				Long foldTime = t.GetRawTime(foldTimeIndex);
 				t.StopTimer(foldTimeIndex);
 				averageFoldTime += (foldTime / (m_validationFolds));
@@ -187,6 +194,8 @@ public class TestEnvironment {
 			}
 			String testTime = t.GetFormatedTime(testTimeIndex);
 			t.StopTimer(testTimeIndex);
+			for(int c = 0; c < graphTime.length; c++)
+				graphTime[c] /= m_validationFolds;
 			for(int j = 0; j < m_threshold; j++)
 			{
 				supervisedMAE[i][j] /= m_validationFolds;
@@ -198,13 +207,15 @@ public class TestEnvironment {
 			
 			String supervisedResults[] = new String[2];
 			String activeResults[] = new String[4];
-			String metaData[] = new String[3];
+			String metaData[] = new String[6];
 			activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = 
-					metaData[0] = metaData[1]= metaData[2] = "";
-
-			metaData[0] = "Average active loop time: " + t.ConvertRawToFormated(averageActive) + "\n";
-			metaData[1] = "Average Fold loop time: " + t.ConvertRawToFormated(averageFoldTime) + "\n";
-			metaData[2] = "Total test time: " + testTime + "\n";
+					metaData[0] = metaData[1]= metaData[2] = metaData[3] = metaData[4]= metaData[5] = "";
+			metaData[0] = "Average Average leaf time: " + t.ConvertRawToFormated(graphTime[0]) + "\n";
+			metaData[1] = "Average Total Leaf time: " + t.ConvertRawToFormated(graphTime[1]) + "\n";
+			metaData[2] = "Average Transduction time: " + t.ConvertRawToFormated(graphTime[2]) + "\n";
+			metaData[3] = "Average active loop time: " + t.ConvertRawToFormated(averageActive) + "\n";
+			metaData[4] = "Average Fold loop time: " + t.ConvertRawToFormated(averageFoldTime) + "\n";
+			metaData[5] = "Total test time: " + testTime + "\n";
 			
 			for(int j = 0; j < supervisedMAE[0].length; j++)
 			{

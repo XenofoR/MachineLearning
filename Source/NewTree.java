@@ -330,6 +330,10 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    
 	  }
 
+	public Long[] GetGraphTime()
+	{
+		return m_graph.GetTime();
+	}
 	public double GetTransductionError()
 	{
 		return m_transductionError;
