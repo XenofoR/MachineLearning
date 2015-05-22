@@ -42,6 +42,7 @@ public class Validator
 	{
 		double tempMAE = 0.0;
 		double tempMAPE = 0.0;
+		double tempMAPEdiv = 0.0;
 		//double tempSMAPE = 0.0;
 		double[] predictions = new double[m_validationSet[m_validationIndex].numInstances()];
 		for(int i = 0; i < m_validationSet[m_validationIndex].numInstances(); i++)
@@ -50,14 +51,12 @@ public class Validator
 			
 			predictions[i] = Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
 			tempMAE += Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
-			double NaNcheck = Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue()) / (m_validationSet[m_validationIndex].instance(i).classValue() + prediction);
-			if(Double.isFinite(NaNcheck))
-				tempMAPE += NaNcheck;
+			tempMAPE += Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
+			tempMAPEdiv += (m_validationSet[m_validationIndex].instance(i).classValue() + prediction);
 		}
 		
-		
 		m_MAE = tempMAE / m_validationSet[m_validationIndex].numInstances();
-		m_MAPE = tempMAPE / m_validationSet[m_validationIndex].numInstances();
+		m_MAPE = tempMAPE / tempMAPEdiv;
 		
 		for(int i = 0; i < m_validationSet[m_validationIndex].numInstances(); i++)
 			m_errorVariance += Math.pow(predictions[i] - m_MAE, 2);
