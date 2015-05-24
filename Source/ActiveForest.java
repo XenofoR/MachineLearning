@@ -27,6 +27,14 @@ public class ActiveForest extends weka.classifiers.trees.RandomForest {
 	{
 		return m_bagger.getOracleData();
 	}
+	public Instances[] GetTransductedData()
+	{
+		return m_bagger.getTransductedData();
+	}
+	public void SetTransToInd(Instances[] p_data)
+	{
+		m_bagger.setTransToInd(p_data);
+	}
 	public double GetAverageTransductionError()
 	{
 		return m_bagger.GetAverageTransductionError();

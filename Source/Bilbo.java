@@ -165,6 +165,8 @@ public class Bilbo
   protected double m_OutOfBagError;  
   protected double m_MaxOutOfBagError;  
   Instances toOracle;
+  Instances m_transductedData[];
+  boolean m_transToInd = false;
   /**
    * Constructor.
    */
@@ -232,6 +234,19 @@ public class Bilbo
   public Instances getOracleData()
   {
 	  return toOracle;
+  }
+  
+  public Instances[] getTransductedData()
+  {
+	  return m_transductedData;
+  }
+  
+  public void setTransToInd(Instances[] p_data)
+  {
+	  m_transToInd = true;
+	  m_transductedData = new Instances[p_data.length];
+	  m_transductedData = p_data;
+	  int k  = 0;
   }
   
   /**
@@ -585,6 +600,9 @@ public class Bilbo
    */
   @Override
   protected synchronized Instances getTrainingSet(Instances p_data, int iteration) throws Exception {
+	  if(m_transToInd)
+		  return m_transductedData[iteration];
+	  
     int bagSize = (int) (p_data.numInstances() * (m_BagSizePercent / 100.0));
     Instances bagData = null;
     Random r = new Random(m_Seed + iteration);
@@ -647,15 +665,13 @@ public class Bilbo
     }
      
     buildClassifiers();
-    Instances inst = new Instances(m_data , 0);
-    
+    m_transductedData = new Instances[m_Classifiers.length];
 	for(int i = 0 ; i < m_Classifiers.length; i++)
 	{
-		inst.clear();
-		Debugger.DebugPrint("Forest done! starting Induction \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
-    	((NewTree)m_Classifiers[i]).GetTransductedInstances(inst);
-    	((NewTree)m_Classifiers[i]).DoInduction(inst);
-    	Debugger.DebugPrint("Induction finished! \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+		m_transductedData[i] = new Instances(m_data,0);
+		//Debugger.DebugPrint("Forest done! starting Induction \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+    	((NewTree)m_Classifiers[i]).GetTransductedInstances(m_transductedData[i]);
+    	//Debugger.DebugPrint("Induction finished! \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
     	// Ehm, do something boyski TODO: Remove this comment
 	}
 
@@ -692,7 +708,6 @@ public class Bilbo
     // save memory
     m_data = null;
     m_unlabeledData = null;
-    inst = null;
   }
   
   

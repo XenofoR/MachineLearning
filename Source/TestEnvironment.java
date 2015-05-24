@@ -105,6 +105,7 @@ public class TestEnvironment {
 		transductionError = new double[m_numTests][];
 		Random ran = new Random();
 		ActiveForest supervisedForest = null;
+		Instances[] transToInd = new Instances[m_trees];
 		for(int i = 0; i < m_numTests; i++)
 		{
 			int testTimeIndex = t.StartTimer();
@@ -145,7 +146,7 @@ public class TestEnvironment {
 					m_activeForest.setMaxDepth(m_depth);
 					m_activeForest.setNumFeatures(m_features);
 					m_activeForest.setSeed(seed);
-					m_activeForest.setNumExecutionSlots(8);
+					m_activeForest.setNumExecutionSlots(1);
 					supervisedForest.setNumExecutionSlots(8);
 					Instances inst = new Instances(supervised[1], 0);
 					supervisedForest.buildClassifier(supervised[0], inst);
@@ -161,12 +162,28 @@ public class TestEnvironment {
 					active[0].addAll(temp);
 					supervised[0].addAll(RemoveAtRandom(temp.numInstances(), supervised[1]));
 					
-					m_validator.ValidateModel(supervisedForest);
-					supervisedMAE[i][k] += m_validator.GetMAE();
-					supervisedMAPE[i][k] += m_validator.GetMAPE();
-					m_validator.ValidateModel(m_activeForest);
-					activeMAE[i][k] += m_validator.GetMAE();
-					activeMAPE[i][k] += m_validator.GetMAPE();
+					if(k % 5 == 0)
+					{
+						transToInd = new Instances[m_trees];
+						transToInd = m_activeForest.GetTransductedData();
+						m_activeForest = null;
+						m_activeForest = new ActiveForest();
+						m_activeForest.setNumTrees(m_trees);
+						m_activeForest.setMaxDepth(m_depth);
+						m_activeForest.setNumFeatures(m_features);
+						m_activeForest.setSeed(seed);
+						m_activeForest.setNumExecutionSlots(8);
+						m_activeForest.setDontCalculateOutOfBagError(true);
+						m_activeForest.SetTransToInd(transToInd);
+						m_activeForest.buildClassifier(transToInd[0],inst);
+						m_validator.ValidateModel(supervisedForest);
+						supervisedMAE[i][k] += m_validator.GetMAE();
+						supervisedMAPE[i][k] += m_validator.GetMAPE();
+						m_validator.ValidateModel(m_activeForest);
+						activeMAE[i][k] += m_validator.GetMAE();
+						activeMAPE[i][k] += m_validator.GetMAPE();
+						transToInd = null;
+					}
 					
 					transductionError[i][k] = m_activeForest.GetAverageTransductionError();
 					if(OurUtil.g_clusterAnalysis)

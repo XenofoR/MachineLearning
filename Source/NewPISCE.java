@@ -194,7 +194,7 @@ public abstract class NewPISCE extends
         Runnable newTask = new Runnable() {
           public void run() {
             try {
-	      ((NewTree)currentClassifier).buildClassifier( getTrainingSet(m_data, iteration), m_unlabeledData);
+            	((NewTree)currentClassifier).buildClassifier( getTrainingSet(m_data, iteration), m_unlabeledData);
             } catch (Exception ex) {
               ex.printStackTrace();
 	      numFailed.incrementAndGet();
@@ -223,7 +223,7 @@ public abstract class NewPISCE extends
       }
     }
   }
-
+  
 
   /**
    * Gets a training set for a particular iteration. Implementations need

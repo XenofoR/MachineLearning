@@ -14,11 +14,11 @@ public class Boot
 				temp *= 0.5;
 			OurUtil.g_machineEpsilion = temp;
 			int i = 5;
-			Scanner scanner = new Scanner(FileSystems.getDefault().getPath("J:/master_thesis_work/MachineLearning/Meta.test"));
+			Scanner scanner = new Scanner(FileSystems.getDefault().getPath("C:/Users/Gaming/Documents/GitHub/MachineLearning/Meta.test"));
 			while(scanner.hasNextLine())	
 			{
 				TestEnvironment environment = new TestEnvironment();
-				environment.Init("J:/master_thesis_work/MachineLearning/Tests/" + scanner.nextLine(),i++ );
+				environment.Init("C:/Users/Gaming/Documents/GitHub/MachineLearning/Tests/" + scanner.nextLine(),i++ );
 				environment.Run();
 				environment = null;
 				System.gc();
