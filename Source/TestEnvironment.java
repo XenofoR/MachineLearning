@@ -141,11 +141,13 @@ public class TestEnvironment {
 					supervisedForest.setMaxDepth(m_depth);
 					supervisedForest.setNumFeatures(m_features);
 					supervisedForest.setSeed(seed);
+					supervisedForest.setDontCalculateOutOfBagError(true);
 					m_activeForest.setNumTrees(m_trees);
 					m_activeForest.setMaxDepth(m_depth);
 					m_activeForest.setNumFeatures(m_features);
 					m_activeForest.setSeed(seed);
 					m_activeForest.setNumExecutionSlots(8);
+					m_activeForest.setDontCalculateOutOfBagError(true);
 					supervisedForest.setNumExecutionSlots(8);
 					Instances inst = new Instances(supervised[1], 0);
 					supervisedForest.buildClassifier(supervised[0], inst);

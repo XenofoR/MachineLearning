@@ -194,7 +194,7 @@ public abstract class NewPISCE extends
         Runnable newTask = new Runnable() {
           public void run() {
             try {
-	      ((NewTree)currentClassifier).buildClassifier( getTrainingSet(m_data, iteration), m_unlabeledData);
+	      ((NewTree)currentClassifier).buildClassifier( getTrainingSet(m_data, iteration), getTrainingSet(m_unlabeledData, iteration));
             } catch (Exception ex) {
               ex.printStackTrace();
 	      numFailed.incrementAndGet();
