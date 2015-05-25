@@ -146,7 +146,7 @@ public class TestEnvironment {
 					m_activeForest.setMaxDepth(m_depth);
 					m_activeForest.setNumFeatures(m_features);
 					m_activeForest.setSeed(seed);
-					m_activeForest.setNumExecutionSlots(1);
+					m_activeForest.setNumExecutionSlots(8);
 					supervisedForest.setNumExecutionSlots(8);
 					Instances inst = new Instances(supervised[1], 0);
 					supervisedForest.buildClassifier(supervised[0], inst);

@@ -671,6 +671,8 @@ public class Bilbo
 		m_transductedData[i] = new Instances(m_data,0);
 		//Debugger.DebugPrint("Forest done! starting Induction \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
     	((NewTree)m_Classifiers[i]).GetTransductedInstances(m_transductedData[i]);
+    	if(m_transToInd)
+    		((NewTree)m_Classifiers[i]).DoInduction(m_data);
     	//Debugger.DebugPrint("Induction finished! \n", Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
     	// Ehm, do something boyski TODO: Remove this comment
 	}
