@@ -8,7 +8,7 @@ allData = []
 supData = []
 Ydimension = 0
 Xdimension = 0
-mapeFilter = ['MAPE:', 'Trans:', '\n']
+mapeFilter = ['MAPE:', 'Trans:', '\n', 'MAE:']
 def fileReader(p_path):
     total_files = 0
     print("entered func")
@@ -26,17 +26,17 @@ def fileReader(p_path):
             #So hardcoded it ain't even funny
             if line == "Supervised results:\n":
                  print("super")
-                 line = inputfile.readline()
+                 #line = inputfile.readline()
                  yData = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
                  yData.append("Supervised")#filename.split('.',1)[0] + "-Supervised")
                  supData.append(yData[:])
             if line == "Active results:\n":
                 print("Found area")
-                line = inputfile.readline()
+               # line = inputfile.readline()
                 yData = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
                 yData.append("Active")#filename.split('.',1)[0] + "-Active")
                 trans = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
-                trans.append(filename.split('.',1)[0] + "-Transduction")
+                trans.append("Transductive")#filename.split('.',1)[0] + "-Transduction")
                 print("Built y-data")
                 allData.append(yData[:])
                 #allData.append(trans[:])
@@ -60,11 +60,12 @@ print("reading done")
 for sublist in allData:
     myLabel = sublist.pop()
     plt.subplot(Xdimension,Ydimension, yPos)
-    if yPos % 2 == 1:
-        plt.ylabel("SMAPE")
-    if yPos > 2:
+    plt.locator_params(axis = 'y', nbins = 5)
+    if yPos % 3 == 1:
+        plt.ylabel("MAE")
+    if yPos > 5:
         plt.xlabel("Iterations")
-    plt.ylim(0,1)
+    #plt.ylim(0,60)
     plt.plot(range(0,len(allData[0])), sublist, marker=',', label=myLabel)
     yPos+=1
    
@@ -73,7 +74,8 @@ yPos = 1
 for sublist in supData:
     myLabel = sublist.pop()
     plt.subplot(Xdimension,Ydimension, yPos)
-    plt.ylim(0,1)
+    plt.locator_params(axis = 'y', nbins = 5)
+   # plt.ylim(0,1)
     yPos+=1
     plt.plot(range(0,len(supData[0])), sublist, marker='+', label=myLabel)
     
@@ -82,6 +84,7 @@ print("showing")
 fontP = FontProperties()
 fontP.set_size('small')
 #plt.legend( loc='lower center', bbox_to_anchor=(0.5,-0.1))
-plt.subplots_adjust(bottom = 0.2)
-plt.legend(bbox_to_anchor=(-0.1, -0.20), loc='upper center', borderaxespad=0., fontsize=8)
+
+plt.subplots_adjust(bottom = 0.2, wspace=0.5)
+plt.legend(bbox_to_anchor=(-1.0, -0.50), loc='upper center', borderaxespad=0., fontsize=8)
 plt.show()
