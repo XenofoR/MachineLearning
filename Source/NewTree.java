@@ -326,7 +326,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 	    m_worstDistance = dist[0];
 	    m_transductionError = m_graph.GetAverageErrorRate();
 	    m_graph.Cleanup();
-	    System.out.println("Average error rate of transduction: " + m_transductionError);
+	    //System.out.println("Average error rate of transduction: " + m_transductionError);
 	    
 	  }
 
@@ -1168,7 +1168,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			return ret;
 		}
 		
-		private double SingleConditionalCovariance(Instances p_instances) throws Exception
+		/*private double SingleConditionalCovariance(Instances p_instances) throws Exception
 		{
 			int m = p_instances.numInstances();
 			int n = p_instances.numAttributes();
@@ -1281,9 +1281,47 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			lineCovariance = null;
 			
 			return infogain;
+		}*/
+		
+		private double SingleConditionalCovariance(Instances p_instances)
+		{
+			double sum = 0.0;
+			double sumSquared = 0.0;
+			
+			double Var = 0.0;
+			
+			for(int i = 0; i < p_instances.numInstances(); i++)
+			{
+				sum += p_instances.instance(i).classValue();
+				sumSquared += p_instances.instance(i).classValue() * p_instances.instance(i).classValue();
+			}
+			
+			Var = singleVariance(sum, sumSquared, 1);
+			
+			return Math.log(2*Math.PI*Math.E*Var)/2;
 		}
 		
 		private double ConditionalCovariance(Instances[] p_instances) throws Exception
+		{
+			double sum = 0.0;
+			double sumSquared = 0.0;
+			
+			double Var = 0.0;
+			
+			for(int i = 0; i < 2; i++)
+			{
+				for(int j = 0; j < p_instances[i].numInstances(); j++)
+				{
+					sum += p_instances[i].instance(j).classValue();
+					sumSquared += p_instances[i].instance(j).classValue() * p_instances[i].instance(j).classValue();
+				}
+				Var += singleVariance(sum, sumSquared, 1);
+			}
+			
+			return Math.log(2*Math.PI*Math.E*Var)/2;
+		}
+		
+		/*private double ConditionalCovariance(Instances[] p_instances) throws Exception
 		{
 			double hejhoppiklingonskogen = 0.0, singleResult = 0.0;
 			for(int i = 0; i < 2; i++)
@@ -1295,7 +1333,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 			Debugger.DebugPrint("Leaving Covariance", Debugger.g_debug_MEDIUM, Debugger.DebugType.CONSOLE);
 			//p_instances = null;
 			return hejhoppiklingonskogen;
-		}
+		}*/
 		
 		protected Instances[] splitData(Instances p_data, double p_splitPoint, int p_attr) throws Exception {
 
@@ -1355,7 +1393,7 @@ public class NewTree extends weka.classifiers.trees.RandomTree
 					return m_meanRegressionValue;
 				
 				p_instance.setClassValue(realValue);
-				return returnValue;
+				return m_meanRegressionValue;
 
 			}
 			else

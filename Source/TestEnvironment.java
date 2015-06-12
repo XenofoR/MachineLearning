@@ -483,10 +483,11 @@ public class TestEnvironment {
 			
 			String clusterString = "";
 			int seed = ran.nextInt();
-			Instances currFold;
+			Instances currFold, emptyFold;
 			for(int j = 0; j < m_validationFolds; j++)
 			{
 				currFold = new Instances(folds[0],0);
+				emptyFold = new Instances(folds[0],0);
 				int foldTimeIndex = t.StartTimer();
 				m_validator.GetTrainingSet(currFold);
 				Instances[] supervised = SplitDataStructure(currFold, m_supervisedLabeled);
@@ -511,12 +512,12 @@ public class TestEnvironment {
 					m_supervisedForest.setNumExecutionSlots(8);
 
 					m_supervisedForest.buildClassifier(supervised[0]);
-					m_activeForest.buildClassifier(active[0], active[1]);
+					m_activeForest.buildClassifier(active[0], emptyFold);
 					Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
 					
-					RemovePredefined(temp, active[1]);
-					active[0].addAll(temp);
-					supervised[0].addAll(RemoveAtRandom(temp.numInstances(), supervised[1]));
+					//RemovePredefined(temp, active[1]);
+					active[0].addAll(RemoveAtRandom(1, active[1]));
+					supervised[0].addAll(RemoveAtRandom(1, supervised[1]));
 					
 					m_validator.ValidateModel(m_supervisedForest);
 					supervisedMAE[i][k] += m_validator.GetMAE();
