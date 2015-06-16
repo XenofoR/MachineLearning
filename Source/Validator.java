@@ -44,7 +44,6 @@ public class Validator
 		double tempMAE = 0.0;
 		double tempMSE = 0.0;
 		double tempSMAPE = 0.0;
-		double tempSMAPEdiv = 0.0;
 		double[] predictions = new double[m_validationSet[m_validationIndex].numInstances()];
 		for(int i = 0; i < m_validationSet[m_validationIndex].numInstances(); i++)
 		{
@@ -52,7 +51,7 @@ public class Validator
 			
 			predictions[i] = Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
 			tempMAE += Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
-			tempMSE += Math.sqrt(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
+			tempMSE += Math.pow(prediction - m_validationSet[m_validationIndex].instance(i).classValue(),2);
 			tempSMAPE += Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue()) / ((Math.abs(prediction) + (Math.abs(m_validationSet[m_validationIndex].instance(i).classValue()))) / 2);
 		}
 		
