@@ -8,7 +8,8 @@ public class Validator
 	Instances[] m_validationSet = null;
 	int m_validationIndex;
 	double m_MAE = 0.0;
-	double m_MAPE = 0.0;
+	double m_MSE = 0.0;
+	double m_SMAPE = 0.0;
 	double m_errorVariance = 0.0;
 	double m_errorDiviation = 0.0;
 	Validator(int p_numFolds)
@@ -41,9 +42,9 @@ public class Validator
 	void ValidateModel(RandomForest p_model) throws Exception
 	{
 		double tempMAE = 0.0;
-		double tempMAPE = 0.0;
-		double tempMAPEdiv = 0.0;
-		//double tempSMAPE = 0.0;
+		double tempMSE = 0.0;
+		double tempSMAPE = 0.0;
+		double tempSMAPEdiv = 0.0;
 		double[] predictions = new double[m_validationSet[m_validationIndex].numInstances()];
 		for(int i = 0; i < m_validationSet[m_validationIndex].numInstances(); i++)
 		{
@@ -51,12 +52,13 @@ public class Validator
 			
 			predictions[i] = Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
 			tempMAE += Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
-			tempMAPE += Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
-			tempMAPEdiv += (m_validationSet[m_validationIndex].instance(i).classValue() + prediction);
+			tempMSE += Math.sqrt(prediction - m_validationSet[m_validationIndex].instance(i).classValue());
+			tempSMAPE += Math.abs(prediction - m_validationSet[m_validationIndex].instance(i).classValue()) / ((Math.abs(prediction) + (Math.abs(m_validationSet[m_validationIndex].instance(i).classValue()))) / 2);
 		}
 		
 		m_MAE = tempMAE / m_validationSet[m_validationIndex].numInstances();
-		m_MAPE = tempMAPE / tempMAPEdiv;
+		m_MSE = tempMSE / m_validationSet[m_validationIndex].numInstances();
+		m_SMAPE = tempSMAPE / m_validationSet[m_validationIndex].numInstances();
 		
 		for(int i = 0; i < m_validationSet[m_validationIndex].numInstances(); i++)
 			m_errorVariance += Math.pow(predictions[i] - m_MAE, 2);
@@ -73,9 +75,14 @@ public class Validator
 		return m_MAE;
 	}
 	
+	double GetMSE()
+	{
+		return m_MSE;
+	}
+	
 	double GetMAPE()
 	{
-		return m_MAPE;
+		return m_SMAPE;
 	}
 	
 	double GetErrorVar()
