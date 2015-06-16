@@ -541,12 +541,14 @@ public class TestEnvironment {
 					m_supervisedForest.setNumExecutionSlots(8);
 
 					m_supervisedForest.buildClassifier(supervised[0]);
+
 					m_activeForest.buildClassifier(active[0], emptyFold);
-					Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
+					//Instances temp = m_oracle.ConsultOracle(m_activeForest.GetOracleData());
 					
 					//RemovePredefined(temp, active[1]);
 					active[0].addAll(RemoveAtRandom(1, active[1]));
 					supervised[0].addAll(RemoveAtRandom(1, supervised[1]));
+
 					
 					m_validator.ValidateModel(m_supervisedForest);
 					supervisedMAE[i][k] += m_validator.GetMAE();

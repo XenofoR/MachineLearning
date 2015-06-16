@@ -29,7 +29,7 @@ def fileReader(p_path):
                  print("super")
                  line = inputfile.readline()
                  yData = [f for f in inputfile.readline().split(' ') if f not in mapeFilter]
-                 yData.append("Supervised")#filename.split('.',1)[0] + "-Supervised")
+                # yData.append("Supervised")#filename.split('.',1)[0] + "-Supervised")
                  supData.append(yData[:])
             if line == "Active results:\n":
                 print("Found area")
@@ -67,11 +67,11 @@ allData.sort( key=lambda x : float(x[-1]))
 for sublist in allData:
     numfiles+=1
     fulkod = sublist.pop()
-    #if fulkod != '0':
-    #    nameinfo.append(fulkod)
-    #else:
-    #   nameinfo.append('0.1')
-    nameinfo.append(fulkod)
+    if fulkod != '1000000':
+        nameinfo.append(fulkod)
+    else:
+       nameinfo.append('Weight')
+    #nameinfo.append(fulkod)
     firstVal.append(float(sublist[0]))
     midVal.append(float(sublist[math.floor(len(sublist)/2)]))
     lastVal.append(float(sublist[-1]))
@@ -81,10 +81,10 @@ width = 0.2
 ind = np.arange(N)
 ax.set_xticks(ind+width*1.5)
 ax.set_xticklabels( nameinfo )
-ax.set_ylabel("SMAPE")
+ax.set_ylabel("Error rate")
 ax.set_xlabel("Alphavalue")
-rect1 = ax.bar(ind, firstVal,width, color=[1,0,0])
-rect2 = ax.bar(ind + width, midVal,width, color=[0.73,0.75,1])
-rect3 = ax.bar(ind + width * 2, lastVal,width, color=[0.0,1,0.0])
+rect1 = ax.bar(ind, firstVal,width, color=[0,0,1])
+rect2 = ax.bar(ind + width, midVal,width, color=[0.5,0.8,0.98])
+rect3 = ax.bar(ind + width * 2, lastVal,width, color=[0.87,1.0,1.0])
 
 plt.show()
