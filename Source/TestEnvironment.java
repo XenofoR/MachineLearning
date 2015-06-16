@@ -362,7 +362,7 @@ public class TestEnvironment {
 					String activeResults[] = new String[5];
 					String metaData[] = new String[3];
 					activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = activeResults[4] = supervisedResults[0] = supervisedResults[1] = supervisedResults[2] =
-							metaData[0] = metaData[1]= metaData[2] = metaData[3] = metaData[4]= metaData[5] = "";
+							metaData[0] = metaData[1]= metaData[2] = metaData[3] = "";
 		
 					metaData[0] = "Average active loop time: " + t.ConvertRawToFormated(averageActive) + "\n";
 					metaData[1] = "Average Fold loop time: " + t.ConvertRawToFormated(averageFoldTime) + "\n";
