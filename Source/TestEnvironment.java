@@ -96,12 +96,17 @@ public class TestEnvironment {
 		double[][] activeMAE;
 		double[][] supervisedMAPE;
 		double[][] activeMAPE;
+		double[][] supervisedMSE;
+		double[][] activeMSE;
+		
 		double[][] transductionError;
 		Timer t = new Timer();
 		supervisedMAE = new double[m_numTests][];
 		supervisedMAPE = new double[m_numTests][];
+		supervisedMSE = new double[m_numTests][];
 		activeMAE = new double[m_numTests][];
 		activeMAPE = new double[m_numTests][];
+		activeMSE = new double[m_numTests][];
 		transductionError = new double[m_numTests][];
 		Random ran = new Random();
 		ActiveForest supervisedForest = null;
@@ -114,8 +119,10 @@ public class TestEnvironment {
 			m_validator.Init(folds); 
 			supervisedMAE[i] = new double[m_threshold];
 			supervisedMAPE[i] = new double[m_threshold];
+			supervisedMSE[i] = new double[m_threshold];
 			activeMAE[i] = new double[m_threshold];
 			activeMAPE[i] = new double[m_threshold];
+			activeMSE[i] = new double[m_threshold];
 			transductionError[i] = new double[m_threshold];
 			Long[] graphTime = new Long[3];
 			Arrays.fill(graphTime, 0L);
@@ -164,9 +171,11 @@ public class TestEnvironment {
 					m_validator.ValidateModel(supervisedForest);
 					supervisedMAE[i][k] += m_validator.GetMAE();
 					supervisedMAPE[i][k] += m_validator.GetMAPE();
+					supervisedMSE[i][k] += m_validator.GetMSE();
 					m_validator.ValidateModel(m_activeForest);
 					activeMAE[i][k] += m_validator.GetMAE();
 					activeMAPE[i][k] += m_validator.GetMAPE();
+					activeMSE[i][k] += m_validator.GetMSE();
 					
 					transductionError[i][k] = m_activeForest.GetAverageTransductionError();
 					if(OurUtil.g_clusterAnalysis)
@@ -202,15 +211,16 @@ public class TestEnvironment {
 			{
 				supervisedMAE[i][j] /= m_validationFolds;
 				supervisedMAPE[i][j] /= m_validationFolds;
-				
+				supervisedMSE[i][j] /= m_validationFolds;
 				activeMAE[i][j] /= m_validationFolds;
 				activeMAPE[i][j] /= m_validationFolds;
+				activeMSE[i][j] /= m_validationFolds;
 			}
 			
-			String supervisedResults[] = new String[2];
-			String activeResults[] = new String[4];
+			String supervisedResults[] = new String[3];
+			String activeResults[] = new String[5];
 			String metaData[] = new String[6];
-			activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = 
+			activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = activeResults[4] = supervisedResults[0] = supervisedResults[1] = supervisedResults[2] =
 					metaData[0] = metaData[1]= metaData[2] = metaData[3] = metaData[4]= metaData[5] = "";
 			metaData[0] = "Average Average leaf time: " + t.ConvertRawToFormated(graphTime[0]) + "\n";
 			metaData[1] = "Average Total Leaf time: " + t.ConvertRawToFormated(graphTime[1]) + "\n";
@@ -225,15 +235,21 @@ public class TestEnvironment {
 				activeResults[0] += activeMAE[i][j] + " ";
 			}
 
-			for(int j = 0; j < supervisedMAE[0].length; j++)
+			for(int j = 0; j < supervisedMAPE[0].length; j++)
 			{
 				supervisedResults[1] += supervisedMAPE[i][j] + " ";
 				activeResults[1] += activeMAPE[i][j] + " ";
 			}
+			for(int j = 0; j < supervisedMSE[0].length; j++)
+			{
+				supervisedResults[2] += supervisedMSE[i][j] + " ";
+				activeResults[2] += activeMAE[i][j] + " ";
+			}
+			
 			for(int j = 0; j < transductionError[0].length; j++)
-				activeResults[2] += transductionError[i][j] + " ";
+				activeResults[3] += transductionError[i][j] + " ";
 			if(OurUtil.g_clusterAnalysis)
-				activeResults[3] = clusterString;
+				activeResults[4] = clusterString;
 			if(!m_folderInPlace)
 			{
 				SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
@@ -253,6 +269,7 @@ public class TestEnvironment {
 		
 			double[][] activeMAE;
 			double[][] activeMAPE;
+			double[][] activeMSE;
 			double[][] transductionError;
 			SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
 			Calendar cal = Calendar.getInstance();
@@ -265,6 +282,7 @@ public class TestEnvironment {
 			Timer t = new Timer();
 			activeMAE = new double[m_numTests][];
 			activeMAPE = new double[m_numTests][];
+			activeMSE = new double[m_numTests][];
 			transductionError = new double[m_numTests][];
 			Random ran = new Random();
 			OurUtil.g_alphaValue = m_alphavalueStart;
@@ -280,6 +298,7 @@ public class TestEnvironment {
 					m_validator.Init(folds); 
 					activeMAE[i] = new double[m_threshold];
 					activeMAPE[i] = new double[m_threshold];
+					activeMSE[i] = new double[m_threshold];
 					transductionError[i] = new double[m_threshold];
 					
 					String clusterString = "";
@@ -307,7 +326,8 @@ public class TestEnvironment {
 							active[0].addAll(temp);
 							m_validator.ValidateModel(m_activeForest);
 							activeMAE[i][k] += m_validator.GetMAE();
-							activeMAPE[i][k] += m_validator.GetMAPE();				
+							activeMAPE[i][k] += m_validator.GetMAPE();
+							activeMSE[i][k] += m_validator.GetMSE();
 							transductionError[i][k] += m_activeForest.GetAverageTransductionError();
 							if(OurUtil.g_clusterAnalysis)
 								clusterString += ClusterAnalysisToString();
@@ -334,14 +354,15 @@ public class TestEnvironment {
 					{	
 						activeMAE[i][j] /= m_validationFolds;
 						activeMAPE[i][j] /= m_validationFolds;
+						activeMSE[i][j] /= m_validationFolds;
 						transductionError[i][j] /= m_validationFolds;
 					}
 					
 					String supervisedResults[] = new String[2];
-					String activeResults[] = new String[4];
+					String activeResults[] = new String[5];
 					String metaData[] = new String[3];
-					activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = 
-							metaData[0] = metaData[1]= metaData[2] = "";
+					activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = activeResults[4] = supervisedResults[0] = supervisedResults[1] = supervisedResults[2] =
+							metaData[0] = metaData[1]= metaData[2] = metaData[3] = metaData[4]= metaData[5] = "";
 		
 					metaData[0] = "Average active loop time: " + t.ConvertRawToFormated(averageActive) + "\n";
 					metaData[1] = "Average Fold loop time: " + t.ConvertRawToFormated(averageFoldTime) + "\n";
@@ -352,11 +373,13 @@ public class TestEnvironment {
 		
 					for(int j = 0; j < activeMAPE[0].length; j++)
 						activeResults[1] += activeMAPE[i][j] + " ";
+					for(int j = 0; j < activeMSE[0].length; j++)
+						activeResults[2] += activeMSE[i][j] + " ";
 					for(int j = 0; j < transductionError[0].length; j++)
-						activeResults[2] += transductionError[i][j] + " ";
-					activeResults[2] += "\n Alphavalue: " + OurUtil.g_alphaValue;
+						activeResults[3] += transductionError[i][j] + " ";
+					activeResults[3] += "\n Alphavalue: " + OurUtil.g_alphaValue;
 					if(OurUtil.g_clusterAnalysis)
-						activeResults[3] = clusterString;
+						activeResults[4] = clusterString;
 					if(!m_folderInPlace)
 					{
 						new File(m_outputPath + "/" + Double.toString(OurUtil.g_alphaValue)).mkdir();
@@ -459,12 +482,16 @@ public class TestEnvironment {
 		double[][] activeMAE;
 		double[][] supervisedMAPE;
 		double[][] activeMAPE;
+		double[][] supervisedMSE;
+		double[][] activeMSE;
 		double[][] transductionError;
 		Timer t = new Timer();
 		supervisedMAE = new double[m_numTests][];
 		supervisedMAPE = new double[m_numTests][];
+		supervisedMSE = new double[m_numTests][];
 		activeMAE = new double[m_numTests][];
 		activeMAPE = new double[m_numTests][];
+		activeMSE = new double[m_numTests][];
 		transductionError = new double[m_numTests][];
 		Random ran = new Random();
 		
@@ -477,8 +504,10 @@ public class TestEnvironment {
 			m_validator.Init(folds); 
 			supervisedMAE[i] = new double[m_threshold];
 			supervisedMAPE[i] = new double[m_threshold];
+			supervisedMSE[i] = new double[m_threshold];
 			activeMAE[i] = new double[m_threshold];
 			activeMAPE[i] = new double[m_threshold];
+			activeMSE[i] = new double[m_threshold];
 			transductionError[i] = new double[m_threshold];
 			
 			String clusterString = "";
@@ -522,9 +551,11 @@ public class TestEnvironment {
 					m_validator.ValidateModel(m_supervisedForest);
 					supervisedMAE[i][k] += m_validator.GetMAE();
 					supervisedMAPE[i][k] += m_validator.GetMAPE();
+					supervisedMSE[i][k] += m_validator.GetMSE();
 					m_validator.ValidateModel(m_activeForest);
 					activeMAE[i][k] += m_validator.GetMAE();
 					activeMAPE[i][k] += m_validator.GetMAPE();
+					activeMSE[i][k] += m_validator.GetMSE();
 					
 					transductionError[i][k] = m_activeForest.GetAverageTransductionError();
 					if(OurUtil.g_clusterAnalysis)
@@ -557,15 +588,16 @@ public class TestEnvironment {
 			{
 				supervisedMAE[i][j] /= m_validationFolds;
 				supervisedMAPE[i][j] /= m_validationFolds;
-				
+				supervisedMSE[i][j] /= m_validationFolds;
 				activeMAE[i][j] /= m_validationFolds;
 				activeMAPE[i][j] /= m_validationFolds;
+				activeMSE[i][j] /= m_validationFolds;
 			}
 			
 			String supervisedResults[] = new String[2];
 			String activeResults[] = new String[4];
 			String metaData[] = new String[3];
-			activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = supervisedResults[0] = supervisedResults[1] = 
+			activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = activeResults[4] = supervisedResults[0] = supervisedResults[1] = supervisedResults[2] =
 					metaData[0] = metaData[1]= metaData[2] = "";
 
 			metaData[0] = "Average active loop time: " + t.ConvertRawToFormated(averageActive) + "\n";
@@ -578,15 +610,20 @@ public class TestEnvironment {
 				activeResults[0] += activeMAE[i][j] + " ";
 			}
 
-			for(int j = 0; j < supervisedMAE[0].length; j++)
+			for(int j = 0; j < supervisedMAPE[0].length; j++)
 			{
 				supervisedResults[1] += supervisedMAPE[i][j] + " ";
 				activeResults[1] += activeMAPE[i][j] + " ";
 			}
+			for(int j = 0; j < supervisedMSE[0].length; j++)
+			{
+				supervisedResults[2] += supervisedMSE[i][j] + " ";
+				activeResults[2] += activeMSE[i][j] + " ";
+			}
 			for(int j = 0; j < transductionError[0].length; j++)
-				activeResults[2] += transductionError[i][j] + " ";
+				activeResults[3] += transductionError[i][j] + " ";
 			if(OurUtil.g_clusterAnalysis)
-				activeResults[3] = clusterString;
+				activeResults[4] = clusterString;
 			if(!m_folderInPlace)
 			{
 				SimpleDateFormat timeAndDate = new SimpleDateFormat("dd-MMM-yyyy HH-mm-ss");
@@ -649,7 +686,8 @@ public class TestEnvironment {
 
 					w.write("Supervised Results: \n");
 					w.write("\t" +"MAE: " + p_supervisedRes[0] + "\n");
-					w.write("\t" +"MAPE: " + p_supervisedRes[1] + "\n");
+					w.write("\t" +"SMAPE: " + p_supervisedRes[1] + "\n");
+					w.write("\t" + "MSE: " +p_supervisedRes[2] + "\n");
 					
 					w.write("Active choice parameters(t/at/nc): " + m_threshold + " " + ((OurUtil.g_activeTech == OurUtil.ActiveTechnique.Random) ? "Random" : 
 																								(OurUtil.g_activeTech == OurUtil.ActiveTechnique.Worst) ? "Worst" : 
@@ -657,10 +695,11 @@ public class TestEnvironment {
 																								(OurUtil.g_activeTech == OurUtil.ActiveTechnique.Ensemble) ? "Ensemble" : "NONE") + " " + OurUtil.g_activeNumber + "\n");
 					w.write("Active Results: \n");
 					w.write("\t" +"MAE: " + p_activeRes[0] + "\n");
-					w.write("\t" +"MAPE: " + p_activeRes[1] + "\n");
-					w.write("\t" + "Trans: " + p_activeRes[2] +"\n");
+					w.write("\t" +"SMAPE: " + p_activeRes[1] + "\n");
+					w.write("\t" + "MSE: " +p_activeRes[2] + "\n");
+					w.write("\t" + "Trans: " + p_activeRes[3] +"\n");
 					if(OurUtil.g_clusterAnalysis)
-						w.write(p_activeRes[3]);
+						w.write(p_activeRes[4]);
 					w.write("Performance: \n");
 					for(int i = 0; i < p_metaData.length; i++)
 						w.write("\t" + p_metaData[i]);
