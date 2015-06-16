@@ -594,8 +594,8 @@ public class TestEnvironment {
 				activeMSE[i][j] /= m_validationFolds;
 			}
 			
-			String supervisedResults[] = new String[2];
-			String activeResults[] = new String[4];
+			String supervisedResults[] = new String[3];
+			String activeResults[] = new String[5];
 			String metaData[] = new String[3];
 			activeResults[0] = activeResults[1]= activeResults[2] = activeResults[3] = activeResults[4] = supervisedResults[0] = supervisedResults[1] = supervisedResults[2] =
 					metaData[0] = metaData[1]= metaData[2] = "";

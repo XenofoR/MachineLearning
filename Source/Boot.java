@@ -30,7 +30,7 @@ public class Boot
 			String stack = "";
 			for(int i = 0; i < E.getStackTrace().length; i++)
 				stack += E.getStackTrace()[i];
-			Debugger.DebugPrint("Exception caught in Boot: " + E.toString() + " Stacktrace: " + stack, Debugger.g_debug_LOW, Debugger.DebugType.CONSOLE);
+			Debugger.DebugPrint("Exception caught in Boot: " + E.toString() + " Stacktrace: " + stack, Debugger.g_debug_NONE, Debugger.DebugType.CONSOLE);
 		}
 	}
 }
